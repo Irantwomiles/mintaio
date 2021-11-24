@@ -1,0 +1,16 @@
+:root {
+    --background-color: #242523;
+    --color: #50d799;
+}
+
+.header-wrapper {
+    background-color: var(--background-color);
+}
+
+.header-wrapper .header .header-btn {
+    color: white;
+}
+
+.header-wrapper .header .header-btn:hover {
+    color: white;
+}
