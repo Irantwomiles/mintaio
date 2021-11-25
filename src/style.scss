@@ -1,16 +1,153 @@
 :root {
-    --background-color: #242523;
-    --color: #50d799;
+    --background-color: #121E2A;
+    --background-color-light: #172231;
+    --color-warning: #FAC762;
+    --color-positive: #35DF91;
+    --color-negative: #F47960;
+    --color-separator: #29405B;
+}
+
+html {
+    height: 100vh;
+}
+
+body, #root {
+    height: 100%;
+    overflow: hidden;
 }
 
 .header-wrapper {
     background-color: var(--background-color);
+
+    .header-btn {
+        color: white;
+        transition: color 300ms ease-in;
+
+        &:hover {
+            cursor: pointer;
+            color: var(--color-positive);
+        }
+    }
+
+    .header-text {
+        color: white;
+    }
 }
 
-.header-wrapper .header .header-btn {
-    color: white;
+.wallet-wrapper {
+    background-color: var(--background-color-light);
+
+    .wallet-address, .wallet-name {
+        color: white;
+    }
+
+    .add-wallet {
+        color: white;
+        transition: color 300ms ease-in;
+
+        &:hover {
+            cursor: pointer;
+            color: var(--color-positive);
+        }
+    }
+
+    .wallet-balance {
+        color: white;
+    }
+
+    .wallet-toolbar {
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #353d54;
+    }
+
+    .wallet-list {
+        height: 36rem;
+        background-color: var(--background-color);
+
+        .wallet-item:nth-child(odd) {
+            background-color: #192a3b;
+        }
+
+        .wallet-item:first-child {
+            border-top-right-radius: 0.3rem;
+            border-top-left-radius: 0.3rem;
+        }
+
+        .wallet-item:last-child {
+            border-bottom-right-radius: 0.3rem;
+            border-bottom-left-radius: 0.3rem;
+        }
+    }
 }
 
-.header-wrapper .header .header-btn:hover {
-    color: white;
+.modal-content {
+    background-color: var(--background-color) !important;
+
+    input {
+        background-color: var(--background-color-light);
+        border-color: #263250;
+    }
+
+    .btn-cancel {
+        background-color: var(--color-negative);
+        color: white;
+        transition: background-color 300ms ease-in;
+
+        &:hover {
+            background-color: #c54f3a;
+            color: white !important;
+        }
+    }
+
+    .btn-add {
+        background-color: var(--color-positive);
+        color: white;
+        transition: background-color 300ms ease-in;
+
+        &:hover {
+            background-color: #349f6f;
+            color: white !important;
+        }
+    }
+
+    .modal-header {
+        border-bottom: none;
+    }
+
+    .modal-footer {
+        border-bottom: none;
+    }
+
+    .modal-title {
+        color: white;
+    }
+
+    .modal-close {
+        color: var(--color-negative);
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+}
+
+.toast {
+
+    .toast-header {
+        background-color: var(--background-color) !important;
+        border-bottom: none;
+    }
+
+    .toast-body {
+
+        border-bottom-left-radius: 0.3rem !important;
+        border-bottom-right-radius: 0.3rem !important;
+
+        background-color: var(--background-color-light) !important;
+        color: white;
+    }
+
+    .toast-close {
+        color: var(--color-negative);
+    }
 }
