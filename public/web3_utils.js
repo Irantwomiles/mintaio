@@ -1,7 +1,8 @@
 const axios = require('axios');
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 
-const websocket_key = "wss://eth-mainnet.alchemyapi.io/v2/dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4";
+// const websocket_key = "wss://eth-mainnet.alchemyapi.io/v2/dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4";
+const websocket_key = "wss://eth-ropsten.alchemyapi.io/v2/TXfnSpyeUAtYXqHerL1im8uOj-Yckrw5";
 const etherscan_api = "1RCRV15RRHI5VYSJ44N4K17MG4TX1TCTV9";
 
 const web3 = createAlchemyWeb3(websocket_key);
@@ -23,7 +24,7 @@ async function getMintMethod(contract_address) {
 
     const abi = await getContractABI(contract_address);
 
-    if(abi === 'Contract source code not verified') {
+    if(abi === 'Contract source code not verified' || abi === 'Invalid Address format') {
         return null;
     }
 
@@ -35,7 +36,7 @@ async function getMintMethod(contract_address) {
         const obj = jsonInterface[i];
 
         if(obj.stateMutability === 'payable') {
-            return obj.name;
+            return obj;
         }
     }
 
@@ -49,7 +50,7 @@ async function sendTransaction(contract_address, private_key, price, gas, nonce,
     const mint_method = await getMintMethod(contract_address);
     const contract = new web3.eth.Contract(JSON.parse(abi), contract_address);
 
-    const data = contract.methods[mint_method](args).encodeABI();
+    const data = contract.methods[mint_method.name](args).encodeABI();
 
     const tx = {
         from: account.address,
@@ -65,5 +66,5 @@ async function sendTransaction(contract_address, private_key, price, gas, nonce,
 }
 
 module.exports = {
-    web3
+    web3, getMintMethod, getContractABI, sendTransaction
 }

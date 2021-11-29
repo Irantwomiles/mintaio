@@ -1,11 +1,12 @@
 const { ipcMain } = require('electron');
 const bcrypt = require('bcrypt');
-const { web3 } = require('./web3_utils.js');
+const { web3, getMintMethod } = require('./web3_utils.js');
 const crypto = require('crypto');
 const { getStorage } = require('./storage');
 
 const db = getStorage();
 
+let tasks = [];
 let wallets = [];
 
 loadWallets();
@@ -130,6 +131,29 @@ ipcMain.on('delete-wallet', (event, id) => {
 
 ipcMain.on('load-wallets', (event, data) => {
     return event.returnValue = wallets;
+})
+
+ipcMain.on('contract-info', async (event, data) => {
+
+    /*
+    errors
+    0 - no errors
+    1 - mint method is null
+     */
+
+    const method = await getMintMethod(data);
+
+    if(method === null) {
+        return event.returnValue = {
+            error: 1
+        }
+    }
+
+    return event.returnValue = {
+        error: 0,
+        obj: method
+    }
+
 })
 
 function loadWallets() {

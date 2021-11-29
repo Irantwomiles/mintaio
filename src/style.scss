@@ -5,6 +5,7 @@
     --color-positive: #35DF91;
     --color-negative: #F47960;
     --color-separator: #29405B;
+    --border-color: #263250;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Mulish&display=swap');
@@ -137,6 +138,10 @@ body, #root {
         }
     }
 
+    .mint-forms {
+        border-top: 1px solid var(--border-color);
+    }
+
 }
 
 .modal-content {
@@ -144,7 +149,7 @@ body, #root {
 
     input {
         background-color: var(--background-color-light);
-        border-color: #263250;
+        border-color: var(--border-color);
         color: white;
 
         &:focus {
