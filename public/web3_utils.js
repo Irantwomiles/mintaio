@@ -43,21 +43,24 @@ async function getMintMethod(contract_address) {
     return null;
 }
 
-async function sendTransaction(contract_address, private_key, price, gas, nonce, args) {
+async function sendTransaction(contract_address, private_key, price, gas, gasLimit, nonce, args) {
     const account = web3.eth.accounts.privateKeyToAccount(private_key);
+
+    console.log(account);
 
     const abi = await getContractABI(contract_address);
     const mint_method = await getMintMethod(contract_address);
     const contract = new web3.eth.Contract(JSON.parse(abi), contract_address);
 
-    const data = contract.methods[mint_method.name](args).encodeABI();
+    const data = contract.methods[mint_method.name](...args).encodeABI();
 
     const tx = {
         from: account.address,
         to: contract_address,
         value: `${web3.utils.toWei(price)}`,
         nonce: nonce,
-        gas: gas,
+        gas: parseFloat(gas),
+        gasLimit: parseFloat(gasLimit),
         data: data
     }
 

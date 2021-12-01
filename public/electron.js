@@ -1,15 +1,14 @@
-// main.js
-
-// Modules to control application life and create native browser window
 const { app, BrowserWindow } = require('electron')
 const path = require('path')
 const is_dev = require('electron-is-dev');
 
 require('./ipcmain_events.js');
 
+let mainWindow = null;
+
 const createWindow = () => {
     // Create the browser window.
-    const mainWindow = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         webPreferences: {
@@ -48,3 +47,7 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
+
+module.exports = {
+    mainWindow
+}

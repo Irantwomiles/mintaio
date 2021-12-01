@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const { web3, getMintMethod } = require('./web3_utils.js');
 const crypto = require('crypto');
 const { getStorage } = require('./storage');
+const { Task } = require('./task/Task');
 
 const db = getStorage();
 
@@ -10,6 +11,7 @@ let tasks = [];
 let wallets = [];
 
 loadWallets();
+loadTasks();
 
 ipcMain.on('add-wallet', (event, data) => {
 
@@ -156,6 +158,153 @@ ipcMain.on('contract-info', async (event, data) => {
 
 })
 
+ipcMain.on('add-task', (event, data) => {
+
+    /*
+    errors:
+    1: invalid wallet id
+    2: invalid wallet password
+    3: insert error
+     */
+    const wallet = getWallet(data.walletId);
+
+    if(wallet === null) {
+        return event.returnValue = {
+            error: 1
+        }
+    }
+
+    bcrypt.compare(data.walletPassword, wallet.password, function(err, result) {
+
+        if(err) {
+            return event.returnValue = {
+                error: 2
+            }
+        }
+
+        const account = web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
+
+        const task = new Task(data.contractAddress, account.privateKey, account.address, wallet.id, data.price, data.gas, data.gasLimit, data.functionName, data.args);
+
+        const obj = {
+            id: task.id,
+            contract_address: task.contract_address,
+            publicKey: task.publicKey,
+            walletId: task.walletId,
+            price: task.price,
+            gas: task.gas,
+            gasLimit: task.gasLimit,
+            functionName: task.functionName,
+            args: task.args
+        }
+
+        db.tasks.insert(obj, function (err, doc) {
+            if(err) {
+                return event.returnValue = {
+                    error: 3
+                }
+            }
+
+            tasks.push(task);
+
+            return event.returnValue = {
+                error: 0,
+                tasks: tasks
+            }
+        });
+    })
+
+})
+
+ipcMain.on('delete-task', (event, id) => {
+
+    /*
+    errors:
+    1: task not found
+    3: error while removing
+     */
+
+    const task = getTask(id);
+
+    if(task === null) {
+        const index = getTaskIndex(id);
+        tasks.splice(index, 1);
+
+        return event.returnValue = {
+            error: 1,
+            tasks: tasks
+        }
+    }
+
+    db.tasks.find({id: task.id}, function (err, docs) {
+
+        if(err) {
+
+            const index = getTaskIndex(id);
+            tasks.splice(index, 1);
+
+            return event.returnValue = {
+                error: 1,
+                tasks: tasks
+            }
+        }
+
+
+        if(docs.length > 0) {
+
+            db.tasks.remove({id: task.id}, function(err, number) {
+                if(err) {
+                    return event.returnValue = {
+                        error: 3
+                    }
+                }
+
+                const index = getTaskIndex(id);
+                tasks.splice(index, 1);
+
+                return event.returnValue = {
+                    error: 0,
+                    tasks: tasks
+                }
+
+            })
+
+        } else {
+            return event.returnValue = {
+                error: 0,
+                tasks: tasks
+            }
+        }
+
+    })
+
+})
+
+ipcMain.on('start-task', (event, id) => {
+
+    const task = getTask(id);
+
+    if(task === null) {
+        const index = getTaskIndex(id);
+        tasks.splice(index, 1);
+
+        return event.returnValue = {
+            error: 1,
+            tasks: tasks
+        }
+    }
+
+    task.start();
+
+    return event.returnValue = {
+        error: 0
+    }
+})
+
+ipcMain.on('load-tasks', (event, data) => {
+    return event.returnValue = tasks;
+})
+
 function loadWallets() {
     db.wallets.find({}, function(err, docs) {
 
@@ -183,14 +332,45 @@ const hasWallet = (address) => {
     return false;
 }
 
-/**
- * Returns the wallet with the matching id, null otherwise.
- * @param id | id of the wallet we are looking for.
- * @returns {null|*}
- */
 const getWallet = (id) => {
     for(const wallet of wallets) {
         if(wallet.id === id) return wallet;
+    }
+
+    return null;
+}
+
+function loadTasks() {
+    db.tasks.find({}, function(err, docs) {
+
+        if(err) {
+            console.log('error while loading wallets');
+            return;
+        }
+
+        if(docs.length > 0) {
+            for(const doc of docs) {
+                const task = new Task(doc.contract_address, null, doc.publicKey, doc.walletId, doc.price, doc.gas, doc.gasLimit, doc.functionName, doc.args);
+                task.id = doc.id;
+                tasks.push(task);
+            }
+        }
+
+    })
+}
+
+const getTask = (id) => {
+    for(const t of tasks) {
+        if(t.id === id) return t;
+    }
+
+    return null;
+}
+
+const getTaskIndex = (id) => {
+    for(let i = 0; i < tasks.length; i++) {
+        const t = tasks[i];
+        if(t.id === id) return i;
     }
 
     return null;
