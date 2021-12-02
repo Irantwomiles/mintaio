@@ -22,11 +22,10 @@ class Task {
         this.functionName = functionName;
         this.args = args;
         this.nonce = null;
+        this.active = false;
     }
 
     async start() {
-
-        console.log("inside start");
 
         if(!this.wallet_loaded) return;
 
@@ -37,6 +36,8 @@ class Task {
 
         const transaction_promise = sendTransaction(this.contract_address, this.privateKey, this.price, gas, gasLimit, this.nonce, this.args);
 
+        this.active = true;
+
         transaction_promise.then((result) => {
 
             console.log(result);
@@ -46,6 +47,8 @@ class Task {
                 result: result,
                 obj: this
             });
+
+            this.active = false;
         }).catch((error) => {
             console.log("error:", error)
 
@@ -54,6 +57,8 @@ class Task {
                 result: error,
                 obj: this
             });
+
+            this.active = false;
         })
     }
 

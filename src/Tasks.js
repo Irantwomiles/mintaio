@@ -11,9 +11,11 @@ function Tasks() {
     const [wallet, setWallet] = useContext(WalletContext);
 
     const modalRef = useRef();
+    const unlockModalRef = useRef();
     const walletDropdownRef = useRef();
 
     const [modal, setModal] = useState([]);
+    const [unlockModal, setUnlockModal] = useState([]);
     const [walletDropdown, setWalletDropdown] = useState([]);
 
     const [contract, setContract] = useState("");
@@ -28,6 +30,9 @@ function Tasks() {
     const [price, setPrice] = useState("");
     const [gas, setGas] = useState("");
     const [gasLimit, setGasLimit] = useState("");
+
+    const [unlockWalletId, setUnlockWalletId] = useState("");
+    const [unlockPassword, setUnlockPassword] = useState("");
 
     const [tasks, setTasks] = useState([]);
 
@@ -81,6 +86,16 @@ function Tasks() {
         if(output.error === 2) return;
 
         setTasks(output.tasks);
+        modal.hide();
+
+        setContract('');
+        setPrice('');
+        setGas('');
+        setGasLimit('');
+        setWalletPassword('');
+        setSelectedWallet(null);
+        setFunctionName('');
+        setInputs([]);
     }
 
     const handleDelete = (e, id) => {
@@ -96,8 +111,6 @@ function Tasks() {
         if(output.error === 1) {
             setTasks(output.tasks);
         }
-
-        console.log(output);
     }
 
     const handleInput = (e, index) => {
@@ -106,6 +119,44 @@ function Tasks() {
         setInputs(values);
     }
 
+    const getWalletName = (publicKey) => {
+        let output = '';
+
+        for(const w of wallet) {
+            if(`${publicKey}`.toLowerCase() === `0x${w.encrypted.address}`.toLowerCase()) {
+                output = (w.name.length > 0 ? w.name : publicKey);
+            }
+        }
+
+        return output;
+    }
+
+    const getWalletNameById = (id) => {
+        let output = '';
+
+        for(const w of wallet) {
+            if(id === w.id) {
+                output = (w.name.length > 0 ? w.name : w.encrypted.address);
+            }
+        }
+
+        return output;
+    }
+
+    const handleUnlockWallet = (task) => {
+        console.log(wallet);
+        setUnlockWalletId(task.walletId);
+        unlockModal.show();
+    }
+
+    const unlockWallet = (walletId) => {
+        const output = ipcRenderer.sendSync('unlock-wallet', {walletId: unlockWalletId, password: unlockPassword});
+
+        if(output.error === 1) return;
+
+        setTasks(output.tasks);
+
+    }
 
     useEffect(() => {
 
@@ -120,6 +171,9 @@ function Tasks() {
 
         const modal = new Modal(modalRef.current, {keyboard: false});
         setModal(modal);
+
+        const unlockModal = new Modal(unlockModalRef.current, {keyboard: false});
+        setUnlockModal(unlockModal);
 
         const walletDropdown = new Dropdown(walletDropdownRef.current, {});
         setWalletDropdown(walletDropdown);
@@ -156,20 +210,35 @@ function Tasks() {
 
                 {
                     tasks.length > 0 ?
+                        <div className="row d-flex p-3">
+                            <div className="col-2 border-bottom pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Wallet</span></div>
+                            <div className="col-6 border-bottom pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Contract Address</span></div>
+                            <div className="col-2 border-bottom pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Current Status</span></div>
+                            <div className="col-2 border-bottom pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Actions</span></div>
+                        </div>
+                        :
+                        ''
+                }
+
+                {
+                    tasks.length > 0 ?
 
                         tasks.map((task, index) => (
-                            <div key={Math.random()} className="d-flex justify-content-between p-3">
-                                <div>
-                                    <span style={{color: 'white'}}>{task.privateKey !== null ? '' :
-                                        <i className="fas fa-lock me-2"></i>}{task.publicKey}</span>
+                            <div key={Math.random()} className="row d-flex p-3">
+                                <div className="col-2" style={{textAlign: 'center'}}>
+                                    {
+                                        task.privateKey !== null ? <span style={{color: 'green'}}><i className="fas fa-unlock me-2"></i></span> :
+                                        <span style={{color: 'red'}} onClick={() => {handleUnlockWallet(task)} }><i className="fas fa-lock me-2"></i></span>
+                                    }
+                                    <span style={{color: 'white'}}>{getWalletName(task.publicKey)}</span>
                                 </div>
-                                <div>
+                                <div className="col-6" style={{textAlign: 'center'}}>
                                     <span style={{color: 'white'}}>{task.contract_address}</span>
                                 </div>
-                                <div>
+                                <div className="col-2" style={{textAlign: 'center'}}>
                                     <span style={{color: 'white'}}>Status</span>
                                 </div>
-                                <div style={{color: 'white'}}>
+                                <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
                                     <span className="ms-1 me-1" onClick={(e) => {handleStart(e, task.id)}}><i className="fas fa-play-circle"></i></span>
                                     <span className="ms-1 me-1"><i className="fas fa-pause-circle"></i></span>
                                     <span className="ms-1 me-1" onClick={(e) =>{handleDelete(e, task.id)}}><i className="fas fa-trash-alt"></i></span>
@@ -251,6 +320,27 @@ function Tasks() {
                         <div className="modal-footer">
                             <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
                             <button type="button" className="btn btn-add" onClick={(e) => {handleAdd(e)}}>Add Task</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="modal" ref={unlockModalRef} tabIndex="-1">
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Unlock Wallet</h5>
+                            <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
+                        </div>
+                        <div className="modal-body">
+                            <div className="d-flex justify-content-center">
+                                <span className="mb-1" style={{color: 'white'}}>{getWalletNameById(unlockWalletId)}</span>
+                            </div>
+                            <input type="text" className="form-control m-1" onChange={(e) => {setUnlockPassword(e.target.value)}} placeholder="Password" value={unlockPassword}/>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" className="btn btn-add" onClick={(e) => unlockWallet() }>Unlock</button>
                         </div>
                     </div>
                 </div>

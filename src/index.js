@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {HashRouter as Router, Route, Switch} from 'react-router-dom';
 
+import App from "./App";
+
 import Header from './Header';
 import Wallet from './Wallet';
 import Tasks from "./Tasks";
@@ -15,22 +17,9 @@ import '@popperjs/core';
 
 ReactDOM.render(
     <React.StrictMode>
-
-        <Router>
-            <WalletProvider>
-                <Header/>
-                <Switch>
-                    <Route path="/wallet">
-                        <Wallet/>
-                    </Route>
-                    <Route path="/tasks">
-                        <Tasks/>
-                    </Route>
-                </Switch>
-            </WalletProvider>
-        </Router>
-
-
+        <WalletProvider>
+            <App/>
+        </WalletProvider>
     </React.StrictMode>,
     document.getElementById('root')
 );

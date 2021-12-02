@@ -21,6 +21,7 @@ function Wallet() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [name, setName] = useState("");
+    const [balance, setBalance] = useState("");
 
     const addWallet = () => {
 
@@ -117,28 +118,27 @@ function Wallet() {
         return;
     }
 
+    const handleBalanceRefresh = () => {
+        const output = ipcRenderer.sendSync('refresh-balance', wallet);
+
+        setBalance(output.balance);
+    }
+
     useEffect(() => {
-
-        const loadWallets = () => {
-
-            const wallets = ipcRenderer.sendSync("load-wallets");
-
-            setWallet(wallets);
-
-        }
-
-        loadWallets();
 
         const modal = new Modal(modalRef.current, {keyboard: false});
         setModal(modal);
 
         const toast = new Toast(toastRef.current, {autohide: true});
         setToast(toast);
-        // toast.show();
-
-        console.log(wallet);
 
     }, []);
+
+    useEffect(() => {
+
+        handleBalanceRefresh();
+
+    }, [wallet])
 
     return (
         <div className="wallet-wrapper p-3 h-100">
@@ -149,7 +149,8 @@ function Wallet() {
                     <span className="ms-2">Add Wallet</span>
                 </div>
                 <div className="wallet-balance m-1">
-                    <span>Total balance: 1Ξ</span>
+                    <span className="me-3">Total balance: {balance} Ξ</span>
+                    <span onClick={() => {handleBalanceRefresh()}}><i className="fas fa-sync-alt"></i></span>
                 </div>
             </div>
 

@@ -1,6 +1,6 @@
 const { ipcMain } = require('electron');
 const bcrypt = require('bcrypt');
-const { web3, getMintMethod } = require('./web3_utils.js');
+const { web3, getMintMethod, getBalance } = require('./web3_utils.js');
 const crypto = require('crypto');
 const { getStorage } = require('./storage');
 const { Task } = require('./task/Task');
@@ -128,6 +128,56 @@ ipcMain.on('delete-wallet', (event, id) => {
         }
 
     })
+
+})
+
+ipcMain.on('refresh-balance', async (event, data) => {
+
+    if(data.length === 0) {
+        return event.returnValue = {
+            error: 0,
+            balance: '0'
+        }
+    }
+
+    let balance = 0;
+
+    for(const w of data) {
+        balance += await getBalance(w.encrypted.address);
+    }
+
+    return event.returnValue = {
+        error: 0,
+        balance: `${balance}`
+    }
+
+})
+
+ipcMain.on('unlock-wallet', async (event, data) => {
+
+    console.log(data);
+
+    const wallet = getWallet(data.walletId);
+
+    if(wallet === null) return event.returnValue = {
+        error: 1
+    }
+
+    const compare = await compareAsync(data.password, wallet.password);
+
+    if(compare) {
+        const account = web3.eth.accounts.decrypt(wallet.encrypted, data.password);
+        for(const t of tasks) {
+            if(t.walletId === data.walletId) {
+                t.privateKey = account.privateKey;
+            }
+        }
+    }
+
+    return event.returnValue = {
+        error: 0,
+        tasks
+    }
 
 })
 
@@ -305,6 +355,17 @@ ipcMain.on('load-tasks', (event, data) => {
     return event.returnValue = tasks;
 })
 
+ipcMain.on('gas-price', async (event) => {
+
+    const gas = await web3.eth.getGasPrice();
+    const gasLimit = (await web3.eth.getBlock("latest")).gasLimit;
+
+    return event.returnValue = {
+        gas: web3.utils.fromWei(`${gas}`, 'gwei'),
+        gasLimit: web3.utils.fromWei(`${gasLimit}`, 'gwei')
+    };
+})
+
 function loadWallets() {
     db.wallets.find({}, function(err, docs) {
 
@@ -374,4 +435,16 @@ const getTaskIndex = (id) => {
     }
 
     return null;
+}
+
+function compareAsync(param1, param2) {
+    return new Promise(function(resolve, reject) {
+        bcrypt.compare(param1, param2, function(err, res) {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(res);
+            }
+        });
+    });
 }

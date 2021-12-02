@@ -69,5 +69,5 @@ async function sendTransaction(contract_address, private_key, price, gas, gasLim
 }
 
 module.exports = {
-    web3, getMintMethod, getContractABI, sendTransaction
+    web3, getMintMethod, getContractABI, sendTransaction, getBalance
 }
