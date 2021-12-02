@@ -155,8 +155,6 @@ ipcMain.on('refresh-balance', async (event, data) => {
 
 ipcMain.on('unlock-wallet', async (event, data) => {
 
-    console.log(data);
-
     const wallet = getWallet(data.walletId);
 
     if(wallet === null) return event.returnValue = {

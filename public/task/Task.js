@@ -1,6 +1,6 @@
 const { sendTransaction, web3 } = require('../web3_utils');
-const {mainWindow} = require('../electron');
 const crypto = require('crypto');
+const {getWindow} = require('../window_utils');
 
 class Task {
 
@@ -23,6 +23,7 @@ class Task {
         this.args = args;
         this.nonce = null;
         this.active = false;
+        this.status = "Inactive";
     }
 
     async start() {
@@ -32,28 +33,39 @@ class Task {
         this.nonce = await web3.eth.getTransactionCount(this.publicKey, "latest");
 
         const gas = await web3.eth.getGasPrice();
-        const gasLimit = (await web3.eth.getBlock("latest")).gasLimit;
+        const gasGwei = Number.parseFloat(web3.utils.fromWei(`${gas}`, 'gwei'));
 
-        const transaction_promise = sendTransaction(this.contract_address, this.privateKey, this.price, gas, gasLimit, this.nonce, this.args);
+        const block = await web3.eth.getBlock("latest");
+        const gasLimit = block.gasLimit / block.transactions.length;
+
+        const transaction_promise = sendTransaction(this.contract_address, this.privateKey, this.price, web3.utils.toWei(`${gasGwei}`, 'gwei'), Math.ceil(gasLimit), this.nonce, this.args);
 
         this.active = true;
 
+        this.status = "Starting...";
+
+        this.sendMessage('task-status-update', {
+            error: 0,
+            result: {},
+            obj: this
+        });
+
         transaction_promise.then((result) => {
 
-            console.log(result);
+            this.status = "Successful";
 
-            mainWindow.webContents.send('task-status-update', {
-                error: 0,
+            this.sendMessage('task-status-update', {
+                error: 1,
                 result: result,
                 obj: this
             });
 
             this.active = false;
         }).catch((error) => {
-            console.log("error:", error)
+            this.status = "Error";
 
-            mainWindow.webContents.send('task-status-update', {
-                error: 1,
+            this.sendMessage('task-status-update', {
+                error: 2,
                 result: error,
                 obj: this
             });
@@ -64,6 +76,10 @@ class Task {
 
     get wallet_loaded() {
         return this.privateKey !== null;
+    }
+
+    sendMessage(channel, data) {
+        getWindow().webContents.send(channel, data);
     }
 
 }

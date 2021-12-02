@@ -149,28 +149,52 @@ function Wallet() {
                     <span className="ms-2">Add Wallet</span>
                 </div>
                 <div className="wallet-balance m-1">
-                    <span className="me-3">Total balance: {balance} Ξ</span>
-                    <span onClick={() => {handleBalanceRefresh()}}><i className="fas fa-sync-alt"></i></span>
+                    <span className="me-3 wallet-balance-text">Total balance: <span style={{color: 'white'}}>{balance}</span> Ξ</span>
+                    <span className="refresh-wallet" onClick={() => {handleBalanceRefresh()}}><i className="fas fa-sync-alt"></i></span>
                 </div>
             </div>
 
             <div className="wallet-list mt-3">
+
                 {
-                    wallet.map((w) => (
-                        <div key={w.id} className="wallet-item d-flex p-3">
-                            <div className="col-2 wallet-name">
-                                <span>{w.name}</span>
+                    wallet.length > 0
+                        ?
+                        <div className="row wallet-item d-flex p-3">
+                            <div className="col-3 wallet-name wallet-header pb-2">
+                                <span>Wallet Name</span>
                             </div>
-                            <div className="col-7 wallet-address">
+                            <div className="col-6 wallet-address wallet-header pb-2">
+                                <span>Public Address</span>
+                            </div>
+                            <div className="col-3 wallet-action wallet-header pb-2">
+                                <span>Actions</span>
+                            </div>
+                        </div>
+                        :
+                        ''
+                }
+
+                {
+
+                    wallet.length > 0
+                        ?
+                    wallet.map((w) => (
+                        <div key={w.id} className="row wallet-item d-flex p-3">
+                            <div className="col-3 wallet-name">
+                                <span className="wallet-name-text">{w.name}</span>
+                            </div>
+                            <div className="col-6 wallet-address">
                                 <span>0x{w.encrypted.address}</span>
                             </div>
-                            <div className="col-3" style={{color: 'white', textAlign: 'end'}}>
-                                <span className="ms-1 me-1"><i className="fas fa-copy"></i></span>
-                                <span className="ms-1 me-1"><i className="fas fa-eye"></i></span>
-                                <span className="ms-1 me-1" onClick={() => {deleteWallet(w.id)}}><i className="fas fa-trash-alt"></i></span>
+                            <div className="col-3 wallet-action">
+                                <span className="ms-1 me-1 copy-wallet"><i className="fas fa-copy"></i></span>
+                                <span className="ms-1 me-1 toggle-wallet"><i className="fas fa-eye"></i></span>
+                                <span className="ms-1 me-1 delete-wallet" onClick={() => {deleteWallet(w.id)}}><i className="fas fa-trash-alt"></i></span>
                             </div>
                         </div>
                     ))
+                        :
+                        ''
                 }
             </div>
 

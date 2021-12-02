@@ -144,7 +144,6 @@ function Tasks() {
     }
 
     const handleUnlockWallet = (task) => {
-        console.log(wallet);
         setUnlockWalletId(task.walletId);
         unlockModal.show();
     }
@@ -179,7 +178,17 @@ function Tasks() {
         setWalletDropdown(walletDropdown);
 
         const task_status_updater = (event, data) => {
-            console.log(data);
+
+            let values = [...tasks];
+
+            for(const t of values) {
+                if(t.id === data.obj.id) {
+                    t.status = data.obj.status;
+                }
+            }
+
+            setTasks(values);
+
         }
 
         ipcRenderer.on('task-status-update', task_status_updater)
@@ -211,10 +220,10 @@ function Tasks() {
                 {
                     tasks.length > 0 ?
                         <div className="row d-flex p-3">
-                            <div className="col-2 border-bottom pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Wallet</span></div>
-                            <div className="col-6 border-bottom pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Contract Address</span></div>
-                            <div className="col-2 border-bottom pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Current Status</span></div>
-                            <div className="col-2 border-bottom pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Actions</span></div>
+                            <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Wallet</span></div>
+                            <div className="col-6 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Contract Address</span></div>
+                            <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Current Status</span></div>
+                            <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Actions</span></div>
                         </div>
                         :
                         ''
@@ -227,8 +236,8 @@ function Tasks() {
                             <div key={Math.random()} className="row d-flex p-3">
                                 <div className="col-2" style={{textAlign: 'center'}}>
                                     {
-                                        task.privateKey !== null ? <span style={{color: 'green'}}><i className="fas fa-unlock me-2"></i></span> :
-                                        <span style={{color: 'red'}} onClick={() => {handleUnlockWallet(task)} }><i className="fas fa-lock me-2"></i></span>
+                                        task.privateKey !== null ? <span style={{color: '#45d39d'}}><i className="fas fa-unlock me-2"></i></span> :
+                                        <span style={{color: '#8a78e9'}} onClick={() => {handleUnlockWallet(task)} }><i className="fas fa-lock me-2"></i></span>
                                     }
                                     <span style={{color: 'white'}}>{getWalletName(task.publicKey)}</span>
                                 </div>
@@ -236,12 +245,12 @@ function Tasks() {
                                     <span style={{color: 'white'}}>{task.contract_address}</span>
                                 </div>
                                 <div className="col-2" style={{textAlign: 'center'}}>
-                                    <span style={{color: 'white'}}>Status</span>
+                                    <span style={{color: 'white'}}>{task.status}</span>
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
-                                    <span className="ms-1 me-1" onClick={(e) => {handleStart(e, task.id)}}><i className="fas fa-play-circle"></i></span>
-                                    <span className="ms-1 me-1"><i className="fas fa-pause-circle"></i></span>
-                                    <span className="ms-1 me-1" onClick={(e) =>{handleDelete(e, task.id)}}><i className="fas fa-trash-alt"></i></span>
+                                    <span className="ms-1 me-1 start-btn" onClick={(e) => {handleStart(e, task.id)}}><i className="fas fa-play-circle"></i></span>
+                                    {/*<span className="ms-1 me-1"><i className="fas fa-pause-circle"></i></span>*/}
+                                    <span className="ms-1 me-1 delete-btn" onClick={(e) =>{handleDelete(e, task.id)}}><i className="fas fa-trash-alt"></i></span>
                                 </div>
                             </div>
                         ))

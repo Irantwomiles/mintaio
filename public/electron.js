@@ -1,6 +1,7 @@
 const { app, BrowserWindow } = require('electron')
 const path = require('path')
 const is_dev = require('electron-is-dev');
+const { setWindow } = require('./window_utils');
 
 require('./ipcmain_events.js');
 
@@ -23,6 +24,8 @@ const createWindow = () => {
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools()
+
+    setWindow(mainWindow);
 }
 
 // This method will be called when Electron has finished
@@ -47,7 +50,3 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
-
-module.exports = {
-    mainWindow
-}

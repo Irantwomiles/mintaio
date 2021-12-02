@@ -27,18 +27,18 @@ function Header() {
     }, [])
 
     return(
-        <div className="header-wrapper">
+        <div className="header-wrapper d-flex justify-content-between">
             <div className="header d-flex p-3">
-                <div className="header-btn border rounded-3 pt-2 pb-2 ps-3 pe-3 m-1">
-                    <span className="ms-2"><Link to="/wallet"><i className="fas fa-wallet"></i> Wallets</Link></span>
+                <div className="header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1">
+                    <span><Link to="/wallet"><i className="fas fa-wallet me-2"></i>Wallets</Link></span>
                 </div>
-                <div className="header-btn border rounded-3 pt-2 pb-2 ps-3 pe-3 m-1">
-                    <span className="ms-2"><Link to="/"><i className="fas fa-list-ul"></i> Tasks</Link></span>
+                <div className="header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1">
+                    <span className="ms-2"><Link to="/"><i className="fas fa-list-ul me-2"></i>Tasks</Link></span>
                 </div>
             </div>
 
-            <div>
-                <span style={{color: 'white'}}>Gas {gas.gas} Gas limit {gas.gasLimit}</span>
+            <div className="d-flex align-items-center p-3">
+                <span style={{color: 'white'}}><i className="fas fa-gas-pump me-2" style={{color: '#8a78e9'}}></i>{Number.parseFloat(gas.gas).toFixed(0)} Gwei</span>
             </div>
         </div>
     );

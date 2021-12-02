@@ -1,11 +1,11 @@
 :root {
-    --background-color: #121E2A;
-    --background-color-light: #172231;
+    --background-color: #0B0C10;
+    --background-color-light: #13151c;
     --color-warning: #FAC762;
-    --color-positive: #35DF91;
+    --color-positive: #8a78e9;
     --color-negative: #F47960;
     --color-separator: #29405B;
-    --border-color: #263250;
+    --border-color: #45d39d;
 }
 
 @import url('https://fonts.googleapis.com/css2?family=Mulish&display=swap');
@@ -32,7 +32,7 @@ body, #root {
 
         a {
             text-decoration: none;
-            color: white;
+            color: var(--border-color);
             transition: color 300ms ease-in;
 
             &:hover {
@@ -56,10 +56,38 @@ body, #root {
 }
 
 .wallet-wrapper {
+
     background-color: var(--background-color-light);
 
-    .wallet-address, .wallet-name {
+    .refresh-wallet {
+        transition: color 300ms ease-in;
+
+        &:hover {
+            color: var(--color-warning);
+            cursor: pointer;
+        }
+    }
+
+    .delete-wallet {
+        transition: color 300ms ease-in;
+
+        &:hover {
+            color: var(--color-negative);
+            cursor: pointer;
+        }
+    }
+
+    .wallet-address, .wallet-name, .wallet-action {
         color: white;
+        text-align: center;
+    }
+
+    .wallet-balance-text {
+        color: var(--color-positive);
+    }
+
+    .wallet-header {
+        border-bottom: 2px solid var(--border-color);
     }
 
     .add-wallet {
@@ -72,32 +100,38 @@ body, #root {
         }
     }
 
+    .wallet-name-text {
+        color: var(--color-positive);
+    }
+
     .wallet-balance {
         color: white;
     }
 
     .wallet-toolbar {
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #353d54;
+        //padding-bottom: 1rem;
+        //border-bottom: 2px solid #353d54;
     }
 
     .wallet-list {
-        height: 36rem;
+        height: 37rem;
         background-color: var(--background-color);
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
 
-        .wallet-item:nth-child(odd) {
-            background-color: #192a3b;
-        }
-
-        .wallet-item:first-child {
-            border-top-right-radius: 0.3rem;
-            border-top-left-radius: 0.3rem;
-        }
-
-        .wallet-item:last-child {
-            border-bottom-right-radius: 0.3rem;
-            border-bottom-left-radius: 0.3rem;
-        }
+        //.wallet-item:nth-child(odd) {
+        //    background-color: #192a3b;
+        //}
+        //
+        //.wallet-item:first-child {
+        //    border-top-right-radius: 0.3rem;
+        //    border-top-left-radius: 0.3rem;
+        //}
+        //
+        //.wallet-item:last-child {
+        //    border-bottom-right-radius: 0.3rem;
+        //    border-bottom-left-radius: 0.3rem;
+        //}
     }
 }
 
@@ -114,14 +148,11 @@ body, #root {
         }
     }
 
-    .tasks-toolbar {
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #353d54;
-    }
-
     .tasks-list {
-        height: 36rem;
+        height: 37rem;
         background-color: var(--background-color);
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
 
         .tasks-item:nth-child(odd) {
             background-color: #192a3b;
@@ -136,10 +167,32 @@ body, #root {
             border-bottom-right-radius: 0.3rem;
             border-bottom-left-radius: 0.3rem;
         }
+
+        .tasks-header {
+            border-bottom: 2px solid var(--border-color);
+        }
     }
 
     .mint-forms {
         border-top: 1px solid var(--border-color);
+    }
+
+    .start-btn {
+        transition: color 300ms ease-in;
+
+        &:hover {
+            color: var(--color-positive);
+            cursor: pointer;
+        }
+    }
+
+    .delete-btn {
+        transition: color 300ms ease-in;
+
+        &:hover {
+            color: var(--color-negative);
+            cursor: pointer;
+        }
     }
 
 }
