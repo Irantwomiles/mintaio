@@ -149,7 +149,7 @@ function Wallet() {
                     <span className="ms-2">Add Wallet</span>
                 </div>
                 <div className="wallet-balance m-1">
-                    <span className="me-3 wallet-balance-text">Total balance: <span style={{color: 'white'}}>{balance}</span> Ξ</span>
+                    <span className="me-3 wallet-balance-text">Total balance: <span style={{color: 'white'}}>{Number.parseFloat(balance)}</span> Ξ</span>
                     <span className="refresh-wallet" onClick={() => {handleBalanceRefresh()}}><i className="fas fa-sync-alt"></i></span>
                 </div>
             </div>

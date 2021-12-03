@@ -18,7 +18,7 @@ function Header() {
 
             setGas(output);
 
-        }, 10 * 1000);
+        }, 15 * 1000);
 
         return () => {
             clearInterval(interval);
@@ -28,7 +28,7 @@ function Header() {
 
     return(
         <div className="header-wrapper d-flex justify-content-between">
-            <div className="header d-flex p-3">
+            <div className="header d-flex px-2 py-3">
                 <div className="header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1">
                     <span><Link to="/wallet"><i className="fas fa-wallet me-2"></i>Wallets</Link></span>
                 </div>

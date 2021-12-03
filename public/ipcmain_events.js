@@ -303,7 +303,7 @@ ipcMain.on('delete-task', (event, id) => {
             db.tasks.remove({id: task.id}, function(err, number) {
                 if(err) {
                     return event.returnValue = {
-                        error: 3
+                        error: 2
                     }
                 }
 
@@ -330,6 +330,13 @@ ipcMain.on('delete-task', (event, id) => {
 
 ipcMain.on('start-task', (event, id) => {
 
+    /*
+    errors:
+    1 - invalid task
+    2 - wallet not loaded
+    3 - task already running
+     */
+
     const task = getTask(id);
 
     if(task === null) {
@@ -342,10 +349,25 @@ ipcMain.on('start-task', (event, id) => {
         }
     }
 
+    if(!task.wallet_loaded) {
+        return event.returnValue = {
+            error: 2,
+            tasks: tasks
+        }
+    }
+
+    if(task.active) {
+        return event.returnValue = {
+            error: 3,
+            tasks: tasks
+        }
+    }
+
     task.start();
 
     return event.returnValue = {
-        error: 0
+        error: 0,
+        tasks: tasks
     }
 })
 

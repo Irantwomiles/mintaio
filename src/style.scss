@@ -195,6 +195,26 @@ body, #root {
         }
     }
 
+    .status-inactive {
+        color: white;
+    }
+
+    .status-starting {
+        color: var(--color-warning);
+    }
+
+    .status-pending {
+        color: var(--color-positive);
+    }
+
+    .status-success {
+        color: var(--border-color);
+    }
+
+    .status-error {
+        color: var(--color-negative);
+    }
+
 }
 
 .modal-content {

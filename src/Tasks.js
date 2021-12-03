@@ -1,6 +1,7 @@
 import './style.scss';
 import {useContext, useEffect, useRef, useState} from "react";
 import { WalletContext } from "./state/WalletContext";
+import { TaskContext } from "./state/TaskContext";
 import {Modal, Toast, Dropdown} from "bootstrap";
 
 const electron = window.require('electron');
@@ -9,14 +10,18 @@ const ipcRenderer = electron.ipcRenderer;
 function Tasks() {
 
     const [wallet, setWallet] = useContext(WalletContext);
+    const [tasks, setTasks] = useContext(TaskContext);
 
     const modalRef = useRef();
     const unlockModalRef = useRef();
     const walletDropdownRef = useRef();
+    const toastRef = useRef();
 
+    const [toast, setToast] = useState([]);
     const [modal, setModal] = useState([]);
     const [unlockModal, setUnlockModal] = useState([]);
     const [walletDropdown, setWalletDropdown] = useState([]);
+    const [toastValue, setToastValue] = useState({});
 
     const [contract, setContract] = useState("");
 
@@ -34,7 +39,6 @@ function Tasks() {
     const [unlockWalletId, setUnlockWalletId] = useState("");
     const [unlockPassword, setUnlockPassword] = useState("");
 
-    const [tasks, setTasks] = useState([]);
 
     // 0x63e0Cd76d11da01aef600E56175523aD39e35b01
 
@@ -56,19 +60,27 @@ function Tasks() {
 
     const handleAdd = (e) => {
 
-        if(contract.length === 0) return; //send toast
-        if(price.length === 0) return; //send toast
-        if(gas.length === 0) return; //send toast
-        if(gasLimit.length === 0) return; //send toast
-        if(walletPassword.length === 0) return; //send toast
-        if(selectedWallet === null) return; // send toast
-        if(functionName.length === 0) return;
+        if(contract.length === 0 || price.length === 0 || gas.length === 0 || gasLimit.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
+            setToastValue({
+                message: "You must fill out all of the input fields.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
 
         let args = [];
 
         for(const i of inputs) {
             args.push(i.value);
-            if(i.value.length === 0) return; // send toast
+            if(i.value.length === 0) {
+                setToastValue({
+                    message: "You must fill out all of the input fields.",
+                    color: "#d97873"
+                });
+                toast.show();
+                return;
+            }
         }
 
         const output = ipcRenderer.sendSync('add-task', {
@@ -82,8 +94,23 @@ function Tasks() {
             functionName: functionName
         });
 
-        if(output.error === 1) return;
-        if(output.error === 2) return;
+        if(output.error === 1) {
+            setToastValue({
+                message: "Invalid wallet ID.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "Incorrect wallet password.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
 
         setTasks(output.tasks);
         modal.hide();
@@ -96,21 +123,83 @@ function Tasks() {
         setSelectedWallet(null);
         setFunctionName('');
         setInputs([]);
+
+        setToastValue({
+            message: "New task created successfully.",
+            color: "#73d9b0"
+        });
+        toast.show();
     }
 
     const handleDelete = (e, id) => {
 
         const output = ipcRenderer.sendSync('delete-task', id);
 
+        if(output.error === 1) {
+            setToastValue({
+                message: "Could not find this task.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "Unknown error occurred.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
         setTasks(output.tasks);
+
+        setToastValue({
+            message: "Deleted task successfully.",
+            color: "#73d9b0"
+        });
+        toast.show();
     }
 
     const handleStart = (e, id) => {
         const output = ipcRenderer.sendSync('start-task', id);
 
         if(output.error === 1) {
-            setTasks(output.tasks);
+            setToastValue({
+                message: "Could not find this task.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
         }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "You must unlock your wallet first.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 4) {
+            setToastValue({
+                message: "This task is already active.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        setTasks(output.tasks);
+
+        setToastValue({
+            message: "Started task successfully.",
+            color: "#73d9b0"
+        });
+
+        toast.show();
     }
 
     const handleInput = (e, index) => {
@@ -148,25 +237,15 @@ function Tasks() {
         unlockModal.show();
     }
 
-    const unlockWallet = (walletId) => {
+    const unlockWallet = () => {
         const output = ipcRenderer.sendSync('unlock-wallet', {walletId: unlockWalletId, password: unlockPassword});
 
         if(output.error === 1) return;
 
         setTasks(output.tasks);
-
     }
 
     useEffect(() => {
-
-        const loadTasks = () => {
-
-            const tasks = ipcRenderer.sendSync("load-tasks");
-
-            setTasks(tasks);
-        }
-
-        loadTasks();
 
         const modal = new Modal(modalRef.current, {keyboard: false});
         setModal(modal);
@@ -177,18 +256,12 @@ function Tasks() {
         const walletDropdown = new Dropdown(walletDropdownRef.current, {});
         setWalletDropdown(walletDropdown);
 
+        const toast = new Toast(toastRef.current, {autohide: true});
+        setToast(toast);
+
         const task_status_updater = (event, data) => {
-
-            let values = [...tasks];
-
-            for(const t of values) {
-                if(t.id === data.obj.id) {
-                    t.status = data.obj.status;
-                }
-            }
-
-            setTasks(values);
-
+            const output = ipcRenderer.sendSync('load-tasks');
+            setTasks(output);
         }
 
         ipcRenderer.on('task-status-update', task_status_updater)
@@ -245,7 +318,7 @@ function Tasks() {
                                     <span style={{color: 'white'}}>{task.contract_address}</span>
                                 </div>
                                 <div className="col-2" style={{textAlign: 'center'}}>
-                                    <span style={{color: 'white'}}>{task.status}</span>
+                                    <span className={task.status === -1 ? 'status-inactive' : task.status === 0 ? 'status-starting' :  task.status === 1 ? 'status-success' : task.status === 2 ? 'status-error' : 'status-pending'}>{task.status === -1 ? 'Inactive' : task.status === 0 ? 'Starting' :  task.status === 1 ? 'Success' : task.status === 2 ? 'Error' : 'Pending'}</span>
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
                                     <span className="ms-1 me-1 start-btn" onClick={(e) => {handleStart(e, task.id)}}><i className="fas fa-play-circle"></i></span>
@@ -352,6 +425,16 @@ function Tasks() {
                             <button type="button" className="btn btn-add" onClick={(e) => unlockWallet() }>Unlock</button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div className="toast position-fixed bottom-0 end-0 m-4" ref={toastRef} role="alert" aria-live="assertive" aria-atomic="true" style={{borderColor: `${toastValue.color}`}}>
+                <div className="toast-header">
+                    <strong className="me-auto" style={{color: toastValue.color}}>MintAIO</strong>
+                    <div className="toast-close" data-bs-dismiss="toast"><i className="far fa-times-circle"></i></div>
+                </div>
+                <div className="toast-body">
+                    {toastValue.message}
                 </div>
             </div>
 

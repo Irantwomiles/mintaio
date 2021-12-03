@@ -1,5 +1,8 @@
 import { useContext, useEffect, useState } from "react";
+
 import { WalletContext } from "./state/WalletContext";
+import { TaskContext } from "./state/TaskContext";
+
 import {HashRouter as Router, Route, Switch} from 'react-router-dom';
 
 import Header from './Header';
@@ -14,8 +17,7 @@ const ipcRenderer = electron.ipcRenderer;
 function App() {
 
     const [wallet, setWallet] = useContext(WalletContext);
-
-    console.log(wallet);
+    const [tasks, setTasks] = useContext(TaskContext);
 
     useEffect(() => {
 
@@ -25,6 +27,13 @@ function App() {
         }
 
         loadWallets();
+
+        const loadTasks = () => {
+            const tasks = ipcRenderer.sendSync("load-tasks");
+            setTasks(tasks);
+        }
+
+        loadTasks();
 
     }, []);
 

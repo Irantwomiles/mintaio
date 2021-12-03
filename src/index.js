@@ -1,14 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {HashRouter as Router, Route, Switch} from 'react-router-dom';
 
 import App from "./App";
 
-import Header from './Header';
-import Wallet from './Wallet';
-import Tasks from "./Tasks";
-
 import {WalletProvider} from "./state/WalletContext";
+import {TaskProvider} from "./state/TaskContext";
+
 import reportWebVitals from './reportWebVitals';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -18,7 +15,9 @@ import '@popperjs/core';
 ReactDOM.render(
     <React.StrictMode>
         <WalletProvider>
-            <App/>
+            <TaskProvider>
+                <App/>
+            </TaskProvider>
         </WalletProvider>
     </React.StrictMode>,
     document.getElementById('root')
