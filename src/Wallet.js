@@ -21,7 +21,7 @@ function Wallet() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [name, setName] = useState("");
-    const [balance, setBalance] = useState("");
+    const [balance, setBalance] = useState("0");
 
     const addWallet = () => {
 
@@ -225,7 +225,7 @@ function Wallet() {
                 </div>
             </div>
 
-            <div className="toast position-fixed bottom-0 end-0 m-3" ref={toastRef} role="alert" aria-live="assertive" aria-atomic="true" style={{borderColor: `${toastValue.color}`}}>
+            <div className="toast position-fixed bottom-0 end-0 m-4" ref={toastRef} role="alert" aria-live="assertive" aria-atomic="true" style={{borderColor: `${toastValue.color}`}}>
                 <div className="toast-header">
                     <strong className="me-auto" style={{color: toastValue.color}}>MintAIO</strong>
                     <div className="toast-close" data-bs-dismiss="toast"><i className="far fa-times-circle"></i></div>

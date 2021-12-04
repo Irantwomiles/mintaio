@@ -8,7 +8,7 @@ const ipcRenderer = electron.ipcRenderer;
 
 function Header() {
 
-    const [gas, setGas] = useState({gas: '', gasLimit: ''});
+    const [gas, setGas] = useState({gas: '0', gasLimit: ''});
 
     useEffect(() => {
 

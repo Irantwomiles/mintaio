@@ -29,19 +29,28 @@ class Task {
          0 : Starting
          1 : Success
          2 : Error
+         3 : pending
          */
-        this.status = -1;
+        this.status = {
+            error: -1,
+            result: {}
+        }
     }
 
     async start() {
 
         if(!this.wallet_loaded) return;
 
+        if(this.active) return;
+
         this.active = true;
 
         this.nonce = await web3.eth.getTransactionCount(this.publicKey, "latest");
 
-        this.status = 0;
+        this.status = {
+            error: 0,
+            result: {}
+        };
 
         this.sendMessage('task-status-update');
 
@@ -53,19 +62,28 @@ class Task {
 
         const transaction_promise = sendTransaction(this.contract_address, this.privateKey, this.price, web3.utils.toWei(`${gasGwei}`, 'gwei'), Math.ceil(gasLimit), this.nonce, this.args);
 
-        this.status = 3;
+        this.status = {
+            error: 3,
+            result: {}
+        };
 
         this.sendMessage('task-status-update');
 
         transaction_promise.then((result) => {
 
-            this.status = 1;
+            this.status = {
+                error: 1,
+                result: result
+            };
 
             this.sendMessage('task-status-update', result);
 
             this.active = false;
         }).catch((error) => {
-            this.status = 2;
+            this.status = {
+                error: 2,
+                result: error
+            };
 
             this.sendMessage('task-status-update', error);
 

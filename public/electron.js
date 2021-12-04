@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, Menu } = require('electron')
 const path = require('path')
 const is_dev = require('electron-is-dev');
 const { setWindow } = require('./window_utils');
@@ -16,14 +16,23 @@ const createWindow = () => {
             nodeIntegration: true,
             contextIsolation: false
         },
-        resizable: false
+        resizable: false,
+        show: false
+    })
+
+    Menu.setApplicationMenu(null);
+
+    mainWindow.on('ready-to-show', () => {
+        mainWindow.show();
     })
 
     // and load the index.html of the app.
     mainWindow.loadURL(is_dev ? 'http://localhost:3000/' : `file://${path.join(__dirname, "../build/index.html")}`);
 
     // Open the DevTools.
-    mainWindow.webContents.openDevTools()
+    if(is_dev) {
+        mainWindow.webContents.openDevTools();
+    }
 
     setWindow(mainWindow);
 }

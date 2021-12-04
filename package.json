@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "main": "public/electron.js",
+  "build": {
+    "productName": "MintAIO",
+    "appId": "aio.mint"
+  },
+  "homepage": ".",
   "dependencies": {
     "@alch/alchemy-web3": "^1.1.8",
     "@popperjs/core": "^2.10.2",

@@ -13,12 +13,14 @@ function Tasks() {
     const [tasks, setTasks] = useContext(TaskContext);
 
     const modalRef = useRef();
+    const taskModalRef = useRef();
     const unlockModalRef = useRef();
     const walletDropdownRef = useRef();
     const toastRef = useRef();
 
     const [toast, setToast] = useState([]);
     const [modal, setModal] = useState([]);
+    const [taskModal, setTaskModal] = useState([]);
     const [unlockModal, setUnlockModal] = useState([]);
     const [walletDropdown, setWalletDropdown] = useState([]);
     const [toastValue, setToastValue] = useState({});
@@ -38,7 +40,7 @@ function Tasks() {
 
     const [unlockWalletId, setUnlockWalletId] = useState("");
     const [unlockPassword, setUnlockPassword] = useState("");
-
+    const [selectedTask, setSelectedTask] = useState(null);
 
     // 0x63e0Cd76d11da01aef600E56175523aD39e35b01
 
@@ -183,7 +185,7 @@ function Tasks() {
             return;
         }
 
-        if(output.error === 4) {
+        if(output.error === 3) {
             setToastValue({
                 message: "This task is already active.",
                 color: "#d97873"
@@ -238,17 +240,62 @@ function Tasks() {
     }
 
     const unlockWallet = () => {
+
+        unlockModal.hide();
+        setUnlockPassword("");
+
         const output = ipcRenderer.sendSync('unlock-wallet', {walletId: unlockWalletId, password: unlockPassword});
 
-        if(output.error === 1) return;
+        if(output.error === 1) {
+            setToastValue({
+                message: "Could not find this wallet.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "Incorrect wallet password.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
 
         setTasks(output.tasks);
+
+        setToastValue({
+            message: "Wallet unlocked.",
+            color: "#73d9b0"
+        });
+
+        toast.show();
+    }
+
+    const handleTaskModal = (task) => {
+
+        console.log("clicked", task.status.error);
+        if(task.status.error !== 1 && task.status.error !== 2) {
+            console.log("clicked4", task);
+            return;
+        }
+
+        console.log("clicked2", task);
+        setSelectedTask(task);
+
+        taskModal.show();
+        console.log("here");
     }
 
     useEffect(() => {
 
         const modal = new Modal(modalRef.current, {keyboard: false});
         setModal(modal);
+
+        const tModal = new Modal(taskModalRef.current, {keyboard: false});
+        setTaskModal(tModal);
 
         const unlockModal = new Modal(unlockModalRef.current, {keyboard: false});
         setUnlockModal(unlockModal);
@@ -261,6 +308,7 @@ function Tasks() {
 
         const task_status_updater = (event, data) => {
             const output = ipcRenderer.sendSync('load-tasks');
+            console.log(output);
             setTasks(output);
         }
 
@@ -318,7 +366,20 @@ function Tasks() {
                                     <span style={{color: 'white'}}>{task.contract_address}</span>
                                 </div>
                                 <div className="col-2" style={{textAlign: 'center'}}>
-                                    <span className={task.status === -1 ? 'status-inactive' : task.status === 0 ? 'status-starting' :  task.status === 1 ? 'status-success' : task.status === 2 ? 'status-error' : 'status-pending'}>{task.status === -1 ? 'Inactive' : task.status === 0 ? 'Starting' :  task.status === 1 ? 'Success' : task.status === 2 ? 'Error' : 'Pending'}</span>
+                                    <span onClick={() => {handleTaskModal(task)}} className={
+                                        task.status.error === -1 ?
+                                            'status-inactive' : task.status.error === 0 ?
+                                                'status-starting' :  task.status.error === 1 ?
+                                                    'status-success' : task.status.error === 2 ?
+                                                        'status-error' : 'status-pending'
+                                    }>
+                                        {
+                                            task.status.error === -1 ?
+                                                'Inactive' : task.status.error === 0 ?
+                                                    'Starting' : task.status.error === 1 ?
+                                                        'Success' : task.status.error === 2 ?
+                                                            'Error' : 'Pending'
+                                        }</span>
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
                                     <span className="ms-1 me-1 start-btn" onClick={(e) => {handleStart(e, task.id)}}><i className="fas fa-play-circle"></i></span>
@@ -423,6 +484,44 @@ function Tasks() {
                         <div className="modal-footer">
                             <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
                             <button type="button" className="btn btn-add" onClick={(e) => unlockWallet() }>Unlock</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="modal" ref={taskModalRef} tabIndex="-1">
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Task Status</h5>
+                            <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
+                        </div>
+                        <div className="modal-body">
+                            {
+                                selectedTask !== null ?
+                                    <div>
+                                        {
+                                            selectedTask.status.error === 1
+                                                ?
+                                                <div className="d-flex flex-column">
+                                                    <span className="mb-2" style={{color: '#45d39d'}}>Success</span>
+                                                    <span style={{color: 'white'}}>Tx Hash: {selectedTask.status.result.transactionHash}</span>
+                                                </div>
+                                                :
+                                                <div className="d-flex flex-column">
+                                                    <span className="mb-2" style={{color: '#F47960'}}>Error</span>
+                                                    <span style={{color: 'white'}}>{selectedTask.status.result.message}</span>
+                                                </div>
+                                        }
+
+                                    </div>
+
+                                    :
+                                    ''
+                            }
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Close</button>
                         </div>
                     </div>
                 </div>

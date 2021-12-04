@@ -10,6 +10,20 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Mulish&display=swap');
 
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0);
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--color-positive);
+    border: 2px solid var(--background-color);
+    border-radius: 10px;
+}
+
 * {
     font-family: 'Mulish', sans-serif;
 }
@@ -114,7 +128,7 @@ body, #root {
     }
 
     .wallet-list {
-        height: 37rem;
+        height: 38rem;
         background-color: var(--background-color);
         border: 2px solid var(--border-color);
         border-radius: 10px;
@@ -149,10 +163,13 @@ body, #root {
     }
 
     .tasks-list {
-        height: 37rem;
+        height: 38rem;
         background-color: var(--background-color);
         border: 2px solid var(--border-color);
         border-radius: 10px;
+
+        overflow-y: auto;
+        overflow-x: hidden;
 
         .tasks-item:nth-child(odd) {
             background-color: #192a3b;
@@ -219,6 +236,9 @@ body, #root {
 
 .modal-content {
     background-color: var(--background-color) !important;
+
+    border: 2px solid var(--color-positive) !important;
+    border-radius: 10px !important;;
 
     input {
         background-color: var(--background-color-light);

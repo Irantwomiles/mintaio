@@ -155,10 +155,18 @@ ipcMain.on('refresh-balance', async (event, data) => {
 
 ipcMain.on('unlock-wallet', async (event, data) => {
 
+    /*
+    error:
+    0: no error
+    1: invalid wallet
+    2: incorrect password
+     */
+
     const wallet = getWallet(data.walletId);
 
     if(wallet === null) return event.returnValue = {
-        error: 1
+        error: 1,
+        tasks: tasks
     }
 
     const compare = await compareAsync(data.password, wallet.password);
@@ -170,11 +178,17 @@ ipcMain.on('unlock-wallet', async (event, data) => {
                 t.privateKey = account.privateKey;
             }
         }
+    } else {
+        return event.returnValue = {
+            error: 2,
+            tasks: tasks
+        }
     }
+
 
     return event.returnValue = {
         error: 0,
-        tasks
+        tasks: tasks
     }
 
 })
