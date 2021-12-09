@@ -1,27 +1,54 @@
 const { ipcMain } = require('electron');
 const bcrypt = require('bcrypt');
-const { web3, getMintMethod, getBalance } = require('./web3_utils.js');
+const { web3, getMintMethod, getBalance, validToken } = require('./web3_utils.js');
 const crypto = require('crypto');
 const { getStorage } = require('./storage');
 const { Task } = require('./task/Task');
+const axios = require('axios');
+
+const erc721_abi = require("./ERC721-ABI.json");
+const {getWindow} = require("./window_utils");
 
 const db = getStorage();
 
 let tasks = [];
 let wallets = [];
 
+let isAuth = false;
+
 loadWallets();
 loadTasks();
+
+ipcMain.on('is-auth', (event, data) => {
+    return event.returnValue = isAuth;
+})
+
+ipcMain.on('auth-user', async (event, data) => {
+    const output = await axios.get(`https://mintaio-auth.herokuapp.com/api/${data}`);
+
+    console.log(output.status, output.data);
+
+    if(output.data.length > 0) isAuth = true;
+
+    return event.returnValue = isAuth;
+})
 
 ipcMain.on('add-wallet', (event, data) => {
 
     /*
     errors:
+     - 500: no auth
      - 0: no error
      - 1: invalid private key
      - 2: account already exists
      - 3: unknown error
      */
+
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
 
     const private_key = data.private_key;
     const password = data.password;
@@ -85,6 +112,12 @@ ipcMain.on('delete-wallet', (event, id) => {
     - 3: unknown error
      */
 
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     const wallet = getWallet(id);
 
     if(wallet === null) {
@@ -133,6 +166,13 @@ ipcMain.on('delete-wallet', (event, id) => {
 
 ipcMain.on('refresh-balance', async (event, data) => {
 
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500,
+            balance: '0'
+        }
+    }
+
     if(data.length === 0) {
         return event.returnValue = {
             error: 0,
@@ -143,7 +183,8 @@ ipcMain.on('refresh-balance', async (event, data) => {
     let balance = 0;
 
     for(const w of data) {
-        balance += await getBalance(w.encrypted.address);
+        const out = await getBalance(w.encrypted.address);
+        balance += Number.parseFloat(out);
     }
 
     return event.returnValue = {
@@ -161,6 +202,13 @@ ipcMain.on('unlock-wallet', async (event, data) => {
     1: invalid wallet
     2: incorrect password
      */
+
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500,
+            tasks: []
+        }
+    }
 
     const wallet = getWallet(data.walletId);
 
@@ -205,6 +253,12 @@ ipcMain.on('contract-info', async (event, data) => {
     1 - mint method is null
      */
 
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     const method = await getMintMethod(data);
 
     if(method === null) {
@@ -228,6 +282,13 @@ ipcMain.on('add-task', (event, data) => {
     2: invalid wallet password
     3: insert error
      */
+
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     const wallet = getWallet(data.walletId);
 
     if(wallet === null) {
@@ -244,36 +305,44 @@ ipcMain.on('add-task', (event, data) => {
             }
         }
 
-        const account = web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
+        if(result) {
+            const account = web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
 
-        const task = new Task(data.contractAddress, account.privateKey, account.address, wallet.id, data.price, data.gas, data.gasLimit, data.functionName, data.args);
+            const task = new Task(data.contractAddress, account.privateKey, account.address, wallet.id, data.price, data.gas, data.gasPriorityFee, data.functionName, data.args);
 
-        const obj = {
-            id: task.id,
-            contract_address: task.contract_address,
-            publicKey: task.publicKey,
-            walletId: task.walletId,
-            price: task.price,
-            gas: task.gas,
-            gasLimit: task.gasLimit,
-            functionName: task.functionName,
-            args: task.args
+            const obj = {
+                id: task.id,
+                contract_address: task.contract_address,
+                publicKey: task.publicKey,
+                walletId: task.walletId,
+                price: task.price,
+                gas: task.gas,
+                gasPriorityFee: task.gasPriorityFee,
+                functionName: task.functionName,
+                args: task.args
+            }
+
+            db.tasks.insert(obj, function (err, doc) {
+                if(err) {
+                    return event.returnValue = {
+                        error: 3
+                    }
+                }
+
+                tasks.push(task);
+
+                return event.returnValue = {
+                    error: 0,
+                    tasks: tasks
+                }
+            });
+        } else {
+            return event.returnValue = {
+                error: 2
+            }
         }
 
-        db.tasks.insert(obj, function (err, doc) {
-            if(err) {
-                return event.returnValue = {
-                    error: 3
-                }
-            }
 
-            tasks.push(task);
-
-            return event.returnValue = {
-                error: 0,
-                tasks: tasks
-            }
-        });
     })
 
 })
@@ -285,6 +354,12 @@ ipcMain.on('delete-task', (event, id) => {
     1: task not found
     3: error while removing
      */
+
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
 
     const task = getTask(id);
 
@@ -350,6 +425,12 @@ ipcMain.on('start-task', (event, id) => {
     2 - wallet not loaded
     3 - task already running
      */
+
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
 
     const task = getTask(id);
 
@@ -445,7 +526,7 @@ function loadTasks() {
 
         if(docs.length > 0) {
             for(const doc of docs) {
-                const task = new Task(doc.contract_address, null, doc.publicKey, doc.walletId, doc.price, doc.gas, doc.gasLimit, doc.functionName, doc.args);
+                const task = new Task(doc.contract_address, null, doc.publicKey, doc.walletId, doc.price, doc.gas, doc.gasPriorityFee, doc.functionName, doc.args);
                 task.id = doc.id;
                 tasks.push(task);
             }
@@ -482,3 +563,58 @@ function compareAsync(param1, param2) {
         });
     });
 }
+
+// let log = web3.eth.subscribe('logs', async function(err, result) {
+//     if(!err) {
+//
+//         const transaction_receipt = await web3.eth.getTransactionReceipt(result.transactionHash);
+//
+//         if(transaction_receipt === null) return;
+//
+//         if(!transaction_receipt.hasOwnProperty('logs')) return;
+//
+//         if(transaction_receipt.logs && transaction_receipt.logs.length >= 1) {
+//             const logs = transaction_receipt.logs[0];
+//
+//             if(!validToken(transaction_receipt.logs)) return;
+//
+//             if(logs.topics.length === 4) {
+//                 const topic1 = logs.topics[0]; // event
+//                 const topic2 = logs.topics[1]; // from address (0x00..000)
+//                 const topic3 = logs.topics[2]; // to address
+//                 const topic4 = logs.topics[3]; // amount
+//
+//                 if(topic1.toLowerCase() !== '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'.toLowerCase() || topic2.toLowerCase() !== '0x0000000000000000000000000000000000000000000000000000000000000000') return;
+//
+//                 // if the value is undefined or the tokenId > 12000 skip
+//                 if(typeof topic4 === 'undefined' || topic4 > 12000) return;
+//
+//                 const transaction = await web3.eth.getTransaction(result.transactionHash);
+//                 // console.log(result.transactionHash, transaction.to);
+//
+//                 const contract_address = transaction.to;
+//
+//                 const contract = new web3.eth.Contract(erc721_abi, contract_address);
+//
+//                 let obj = {
+//                     contract_address: contract_address,
+//                     name: 'N/A',
+//                     value: web3.utils.fromWei(transaction.value, 'ether')
+//                 }
+//
+//                 if(contract !== null) {
+//                     try{
+//                         const name = await contract.methods.name().call();
+//                         obj.name = name;
+//                     } catch(e) {
+//                     }
+//                 }
+//
+//                 getWindow().webContents.send('mint-watch', obj);
+//
+//             }
+//
+//         }
+//
+//     }
+// })

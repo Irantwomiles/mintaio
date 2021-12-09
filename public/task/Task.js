@@ -10,7 +10,7 @@ class Task {
      * @param account | Account object of the wallet that is to be used to mint this NFT
      * @param price | Price in ETH (Should account for how many you are buying ex: 1 = 0.06 -> 4 = 0.24)
      */
-    constructor(contract_address, privateKey, publicKey, walletId, price, gas, gasLimit, functionName, args) {
+    constructor(contract_address, privateKey, publicKey, walletId, price, gas, gasPriorityFee, functionName, args) {
         this.id = crypto.randomBytes(16).toString('hex');
         this.contract_address = contract_address;
         this.privateKey = privateKey;
@@ -18,7 +18,7 @@ class Task {
         this.walletId = walletId;
         this.price = price;
         this.gas = gas;
-        this.gasLimit = gasLimit;
+        this.gasPriorityFee = gasPriorityFee;
         this.functionName = functionName;
         this.args = args;
         this.nonce = null;
@@ -45,7 +45,11 @@ class Task {
 
         this.active = true;
 
-        this.nonce = await web3.eth.getTransactionCount(this.publicKey, "latest");
+        if(this.nonce == null) {
+            this.nonce = await web3.eth.getTransactionCount(this.publicKey, "latest");
+        } else {
+            this.nonce++;
+        }
 
         this.status = {
             error: 0,
@@ -54,13 +58,28 @@ class Task {
 
         this.sendMessage('task-status-update');
 
-        const gas = await web3.eth.getGasPrice();
-        const gasGwei = Number.parseFloat(web3.utils.fromWei(`${gas}`, 'gwei'));
+        let gasGwei = '0';
+
+        if(this.gas === -1) {
+            this.gas = await web3.eth.getGasPrice();
+            gasGwei = web3.utils.fromWei(`${this.gas}`, 'gwei');
+        } else {
+            gasGwei = this.gas;
+        }
 
         const block = await web3.eth.getBlock("latest");
-        const gasLimit = block.gasLimit / block.transactions.length;
+        const gasLimit = block.gasLimit / (block.transactions.length > 0 ? block.transactions.length : 1);
 
-        const transaction_promise = sendTransaction(this.contract_address, this.privateKey, this.price, web3.utils.toWei(`${gasGwei}`, 'gwei'), Math.ceil(gasLimit), this.nonce, this.args);
+        const transaction_promise = sendTransaction(
+            this.contract_address,
+            this.privateKey,
+            this.functionName,
+            `${web3.utils.toWei(`${this.price}`, 'ether')}`,
+            `${web3.utils.toWei(`${gasGwei}`, 'gwei')}`,
+            gasLimit <= 100000 ? Math.ceil(gasLimit + 150000) : 300000,
+            `${web3.utils.toWei(`${this.gasPriorityFee}`, 'gwei')}`,
+            this.nonce,
+            this.args);
 
         this.status = {
             error: 3,

@@ -1,11 +1,14 @@
 {
   "name": "mintaio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "main": "public/electron.js",
   "build": {
     "productName": "MintAIO",
-    "appId": "aio.mint"
+    "appId": "aio.mint",
+    "win": {
+      "icon": "build/ic.png"
+    }
   },
   "homepage": ".",
   "dependencies": {

@@ -8,6 +8,7 @@ import {HashRouter as Router, Route, Switch} from 'react-router-dom';
 import Header from './Header';
 import Wallet from './Wallet';
 import Tasks from "./Tasks";
+import MintWatch from "./MintWatch";
 
 import React from "react";
 
@@ -41,11 +42,14 @@ function App() {
         <Router>
             <Header/>
             <Switch>
-                <Route path="/wallet">
+                <Route exact path="/">
+                    <Tasks/>
+                </Route>
+                <Route exact path="/wallet">
                     <Wallet/>
                 </Route>
-                <Route path="/">
-                    <Tasks/>
+                <Route exact path="/mint">
+                    <MintWatch/>
                 </Route>
             </Switch>
         </Router>

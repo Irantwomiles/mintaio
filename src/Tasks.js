@@ -17,6 +17,7 @@ function Tasks() {
     const unlockModalRef = useRef();
     const walletDropdownRef = useRef();
     const toastRef = useRef();
+    const methodsDropdownRef = useRef();
 
     const [toast, setToast] = useState([]);
     const [modal, setModal] = useState([]);
@@ -24,19 +25,21 @@ function Tasks() {
     const [unlockModal, setUnlockModal] = useState([]);
     const [walletDropdown, setWalletDropdown] = useState([]);
     const [toastValue, setToastValue] = useState({});
+    const [methodsDropdown, setMethodsDropdown] = useState([]);
 
     const [contract, setContract] = useState("");
 
     const [inputs, setInputs] = useState([]);
     const [functionName, setFunctionName] = useState("");
-    const [methodObj, setMethodObj] = useState(null);
+    const [methods, setMethods] = useState([]);
 
     const [selectedWallet, setSelectedWallet] = useState(null);
+    const [selectedMethod, setSelectedMethod] = useState(null);
     const [walletPassword, setWalletPassword] = useState("");
 
     const [price, setPrice] = useState("");
     const [gas, setGas] = useState("");
-    const [gasLimit, setGasLimit] = useState("");
+    const [gasPriorityFee, setGasPriorityFee] = useState("");
 
     const [unlockWalletId, setUnlockWalletId] = useState("");
     const [unlockPassword, setUnlockPassword] = useState("");
@@ -50,19 +53,19 @@ function Tasks() {
 
         let output = ipcRenderer.sendSync('contract-info', contract);
 
-        if(output.error === 1) return; //send toast
+        if(output.error === 1) {
+            setMethods([]);
+            return;
+        } //send toast
 
-        setMethodObj(output.obj);
-        for(const i of output.obj.inputs) {
-            setInputs([...inputs, {name: i.name, value: ''}]);
-        }
-        setInputs(output.obj.inputs);
+        setMethods(output.obj);
+
         // send toast
     }
 
     const handleAdd = (e) => {
 
-        if(contract.length === 0 || price.length === 0 || gas.length === 0 || gasLimit.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
+        if(contract.length === 0 || price.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
             setToastValue({
                 message: "You must fill out all of the input fields.",
                 color: "#d97873"
@@ -89,7 +92,7 @@ function Tasks() {
             contractAddress: contract,
             price: price,
             gas: gas,
-            gasLimit: gasLimit,
+            gasPriorityFee: gasPriorityFee,
             walletPassword: walletPassword,
             walletId: selectedWallet.id,
             args: args,
@@ -120,7 +123,7 @@ function Tasks() {
         setContract('');
         setPrice('');
         setGas('');
-        setGasLimit('');
+        setGasPriorityFee('');
         setWalletPassword('');
         setSelectedWallet(null);
         setFunctionName('');
@@ -276,17 +279,27 @@ function Tasks() {
 
     const handleTaskModal = (task) => {
 
-        console.log("clicked", task.status.error);
         if(task.status.error !== 1 && task.status.error !== 2) {
-            console.log("clicked4", task);
             return;
         }
 
-        console.log("clicked2", task);
         setSelectedTask(task);
 
         taskModal.show();
-        console.log("here");
+    }
+
+    const handleMethodSelect = (method) => {
+        setSelectedMethod(method);
+        setFunctionName(method.name);
+        console.log(method);
+
+        let inputValues = [];
+
+        for(const i of method.inputs) {
+            inputValues.push({name: i.name, value: ''});
+        }
+
+        setInputs(inputValues);
     }
 
     useEffect(() => {
@@ -308,6 +321,7 @@ function Tasks() {
 
         const task_status_updater = (event, data) => {
             const output = ipcRenderer.sendSync('load-tasks');
+
             console.log(output);
             setTasks(output);
         }
@@ -321,10 +335,11 @@ function Tasks() {
     }, []);
 
     useEffect(() => {
-        if(methodObj !== null) {
-            setFunctionName(methodObj.name);
+        if(methods.length > 0) {
+            const methodsDropdown = new Dropdown(methodsDropdownRef.current, {});
+            setMethodsDropdown(methodsDropdown);
         }
-    }, [methodObj]);
+    }, [methods]);
 
     return (
         <div className="tasks-wrapper p-3 h-100">
@@ -375,9 +390,9 @@ function Tasks() {
                                     }>
                                         {
                                             task.status.error === -1 ?
-                                                'Inactive' : task.status.error === 0 ?
-                                                    'Starting' : task.status.error === 1 ?
-                                                        'Success' : task.status.error === 2 ?
+                                                `Inactive ${task.gas}` : task.status.error === 0 ?
+                                                    `Starting ${task.gas}` : task.status.error === 1 ?
+                                                        `Success ${task.gas}` : task.status.error === 2 ?
                                                             'Error' : 'Pending'
                                         }</span>
                                 </div>
@@ -409,7 +424,7 @@ function Tasks() {
                             <div className="d-flex justify-content-evenly">
                                 <input type="number" className="form-control m-1" onChange={(e) => {setPrice(e.target.value)}} value={price || ''} placeholder="Price in ether"/>
                                 <input type="text" className="form-control m-1" onChange={(e) => {setGas(e.target.value)}} value={gas || ''} placeholder="Gas price"/>
-                                <input type="text" className="form-control m-1" onChange={(e) => {setGasLimit(e.target.value)}} value={gasLimit || ''} placeholder="Gas limit"/>
+                                <input type="text" className="form-control m-1" onChange={(e) => {setGasPriorityFee(e.target.value)}} value={gasPriorityFee || ''} placeholder="Gas Priority Fee"/>
                             </div>
 
                             <div className="d-flex">
@@ -433,8 +448,26 @@ function Tasks() {
                             </div>
 
                             {
-                                methodObj !== null ?
+                                methods.length > 0 ?
                                     <div className="d-flex flex-column mint-forms mt-3 m-1">
+
+                                        <div className="dropdown w-25 m-1">
+                                            <button className="btn btn-primary dropdown-toggle w-100" type="button"
+                                                    id="methods-dropdown" data-bs-toggle="dropdown"
+                                                    aria-expanded="false"
+                                                    ref={methodsDropdownRef}
+                                                    onClick={() => {methodsDropdown.toggle()}}>
+                                                {selectedMethod === null ? "Select Mint method" : selectedMethod.name}
+                                            </button>
+                                            <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                                                {
+                                                    methods.map((m) => (
+                                                        <li key={Math.random()}><a className="dropdown-item" onClick={() => {handleMethodSelect(m)} }>{m.name}</a></li>
+                                                    ))
+                                                }
+                                            </ul>
+                                        </div>
+
                                         <div className="d-flex mt-3">
                                             <input type="text" className="form-control w-50" onChange={(e) => {setFunctionName(e.target.value)}} placeholder="Function name" value={functionName}/>
                                         </div>
