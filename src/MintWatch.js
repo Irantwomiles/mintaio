@@ -9,8 +9,12 @@ function MintWatch() {
 
     useEffect(() => {
 
+        const past_logs = ipcRenderer.sendSync('mint-logs');
+
+        setMints(past_logs);
+
         const mint_updater = (event, data) => {
-            setMints([...mints, data]);
+            setMints(data);
         }
 
         ipcRenderer.on('mint-watch', mint_updater);
@@ -22,25 +26,43 @@ function MintWatch() {
     }, [])
 
     return (
-        <div className="p-3" style={{overflowY: 'auto', overflowX: 'hidden'}}>
-            {
-                mints.length > 0 ?
-                    mints.map((m) => (
-                        <div key={Math.random()} className="d-flex justify-content-between">
-                            <div>
-                                <span>{m.name}</span>
-                            </div>
-                            <div>
-                                <span>{m.contract_address}</span>
-                            </div>
-                            <div>
-                                <span>{m.value}</span>
-                            </div>
+        <div className="mint-logs-wrapper p-3 h-100" style={{overflowY: 'auto', overflowX: 'hidden'}}>
+            <div className="mint-logs">
+                { mints.length > 0
+                    ?
+                    <div className="row log-item-header log-item d-flex p-3">
+                        <div className="col-3">
+                            <span>NFT Name</span>
                         </div>
-                        ))
+                        <div className="col-6">
+                            <span>Contract Address</span>
+                        </div>
+                        <div className="col-3">
+                            <span>Price</span>
+                        </div>
+                    </div>
                     :
                     ''
-            }
+                }
+                {
+                    mints.length > 0 ?
+                        mints.map((m, index) => (
+                            <div key={index} className="row log-item d-flex justify-content-between p-3">
+                                <div className="col-3">
+                                    <span>{m.name}</span>
+                                </div>
+                                <div className="col-6">
+                                    <span>{m.contract_address}</span>
+                                </div>
+                                <div className="col-3">
+                                    <span>{m.value}</span>
+                                </div>
+                            </div>
+                        ))
+                        :
+                        ''
+                }
+            </div>
         </div>
     )
 }

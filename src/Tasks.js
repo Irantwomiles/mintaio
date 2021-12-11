@@ -319,10 +319,13 @@ function Tasks() {
         const toast = new Toast(toastRef.current, {autohide: true});
         setToast(toast);
 
+        const output = ipcRenderer.sendSync('load-tasks');
+
+        setTasks(output);
+
         const task_status_updater = (event, data) => {
             const output = ipcRenderer.sendSync('load-tasks');
 
-            console.log(output);
             setTasks(output);
         }
 

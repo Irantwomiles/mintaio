@@ -54,11 +54,6 @@ function Header() {
 
     }, []);
 
-    useEffect(() => {
-
-
-    }, [authModal]);
-
     return(
         <div className="header-wrapper d-flex justify-content-between">
             <div className="header d-flex px-2 py-3">

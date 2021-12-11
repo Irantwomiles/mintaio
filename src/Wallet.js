@@ -163,10 +163,13 @@ function Wallet() {
                             <div className="col-3 wallet-name wallet-header pb-2">
                                 <span>Wallet Name</span>
                             </div>
-                            <div className="col-6 wallet-address wallet-header pb-2">
+                            <div className="col-5 wallet-address wallet-header pb-2">
                                 <span>Public Address</span>
                             </div>
-                            <div className="col-3 wallet-action wallet-header pb-2">
+                            <div className="col-2 wallet-action wallet-header pb-2">
+                                <span>Balance</span>
+                            </div>
+                            <div className="col-2 wallet-action wallet-header pb-2">
                                 <span>Actions</span>
                             </div>
                         </div>
@@ -183,10 +186,13 @@ function Wallet() {
                             <div className="col-3 wallet-name">
                                 <span className="wallet-name-text">{w.name}</span>
                             </div>
-                            <div className="col-6 wallet-address">
+                            <div className="col-5 wallet-address">
                                 <span>0x{w.encrypted.address}</span>
                             </div>
-                            <div className="col-3 wallet-action">
+                            <div className="col-2 wallet-single-balance">
+                                <span>~{Number.parseFloat(w.balance).toFixed(5)} <span style={{color: '#8a78e9'}}>Ξ</span></span>
+                            </div>
+                            <div className="col-2 wallet-action">
                                 <span className="ms-1 me-1 copy-wallet"><i className="fas fa-copy"></i></span>
                                 <span className="ms-1 me-1 toggle-wallet"><i className="fas fa-eye"></i></span>
                                 <span className="ms-1 me-1 delete-wallet" onClick={() => {deleteWallet(w.id)}}><i className="fas fa-trash-alt"></i></span>

@@ -13,6 +13,7 @@ const db = getStorage();
 
 let tasks = [];
 let wallets = [];
+let mint_logs = [];
 
 let isAuth = false;
 
@@ -481,8 +482,13 @@ ipcMain.on('gas-price', async (event) => {
     };
 })
 
+ipcMain.on('mint-logs', async (event) => {
+
+    return event.returnValue = mint_logs;
+})
+
 function loadWallets() {
-    db.wallets.find({}, function(err, docs) {
+    db.wallets.find({}, async function(err, docs) {
 
         if(err) {
             console.log('error while loading wallets');
@@ -491,7 +497,10 @@ function loadWallets() {
 
         if(docs.length > 0) {
             for(const doc of docs) {
-                wallets.push(doc);
+                wallets.push({
+                    ...doc,
+                    balance: await getBalance(doc.encrypted.address)
+                });
             }
         }
 
@@ -599,7 +608,7 @@ function compareAsync(param1, param2) {
 //                 let obj = {
 //                     contract_address: contract_address,
 //                     name: 'N/A',
-//                     value: web3.utils.fromWei(transaction.value, 'ether')
+//                     value: transaction_receipt.logs.length > 0 ? Number.parseFloat(web3.utils.fromWei(transaction.value, 'ether')) / transaction_receipt.logs.length : web3.utils.fromWei(transaction.value, 'ether')
 //                 }
 //
 //                 if(contract !== null) {
@@ -610,7 +619,13 @@ function compareAsync(param1, param2) {
 //                     }
 //                 }
 //
-//                 getWindow().webContents.send('mint-watch', obj);
+//                 if(mint_logs.length >= 1000) {
+//                     mint_logs = [];
+//                 }
+//
+//                 mint_logs.unshift(obj);
+//
+//                 getWindow().webContents.send('mint-watch', mint_logs);
 //
 //             }
 //
