@@ -1,6 +1,6 @@
 const { ipcMain } = require('electron');
 const bcrypt = require('bcrypt');
-const { web3, getMintMethod, getBalance, validToken } = require('./web3_utils.js');
+const { web3, web3_logger, getMintMethod, getBalance, validToken } = require('./web3_utils.js');
 const crypto = require('crypto');
 const { getStorage } = require('./storage');
 const { Task } = require('./task/Task');
@@ -309,7 +309,7 @@ ipcMain.on('add-task', (event, data) => {
         if(result) {
             const account = web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
 
-            const task = new Task(data.contractAddress, account.privateKey, account.address, wallet.id, data.price, data.gas, data.gasPriorityFee, data.functionName, data.args);
+            const task = new Task(data.contractAddress, account.privateKey, account.address, wallet.id, data.price, data.amount, data.gas, data.gasPriorityFee, data.functionName, data.args);
 
             const obj = {
                 id: task.id,
@@ -317,6 +317,7 @@ ipcMain.on('add-task', (event, data) => {
                 publicKey: task.publicKey,
                 walletId: task.walletId,
                 price: task.price,
+                amount: task.amount,
                 gas: task.gas,
                 gasPriorityFee: task.gasPriorityFee,
                 functionName: task.functionName,
@@ -535,7 +536,7 @@ function loadTasks() {
 
         if(docs.length > 0) {
             for(const doc of docs) {
-                const task = new Task(doc.contract_address, null, doc.publicKey, doc.walletId, doc.price, doc.gas, doc.gasPriorityFee, doc.functionName, doc.args);
+                const task = new Task(doc.contract_address, null, doc.publicKey, doc.walletId, doc.price, Number.parseInt(doc.amount), doc.gas, doc.gasPriorityFee, doc.functionName, doc.args);
                 task.id = doc.id;
                 tasks.push(task);
             }
@@ -573,63 +574,63 @@ function compareAsync(param1, param2) {
     });
 }
 
-// let log = web3.eth.subscribe('logs', async function(err, result) {
-//     if(!err) {
-//
-//         const transaction_receipt = await web3.eth.getTransactionReceipt(result.transactionHash);
-//
-//         if(transaction_receipt === null) return;
-//
-//         if(!transaction_receipt.hasOwnProperty('logs')) return;
-//
-//         if(transaction_receipt.logs && transaction_receipt.logs.length >= 1) {
-//             const logs = transaction_receipt.logs[0];
-//
-//             if(!validToken(transaction_receipt.logs)) return;
-//
-//             if(logs.topics.length === 4) {
-//                 const topic1 = logs.topics[0]; // event
-//                 const topic2 = logs.topics[1]; // from address (0x00..000)
-//                 const topic3 = logs.topics[2]; // to address
-//                 const topic4 = logs.topics[3]; // amount
-//
-//                 if(topic1.toLowerCase() !== '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'.toLowerCase() || topic2.toLowerCase() !== '0x0000000000000000000000000000000000000000000000000000000000000000') return;
-//
-//                 // if the value is undefined or the tokenId > 12000 skip
-//                 if(typeof topic4 === 'undefined' || topic4 > 12000) return;
-//
-//                 const transaction = await web3.eth.getTransaction(result.transactionHash);
-//                 // console.log(result.transactionHash, transaction.to);
-//
-//                 const contract_address = transaction.to;
-//
-//                 const contract = new web3.eth.Contract(erc721_abi, contract_address);
-//
-//                 let obj = {
-//                     contract_address: contract_address,
-//                     name: 'N/A',
-//                     value: transaction_receipt.logs.length > 0 ? Number.parseFloat(web3.utils.fromWei(transaction.value, 'ether')) / transaction_receipt.logs.length : web3.utils.fromWei(transaction.value, 'ether')
-//                 }
-//
-//                 if(contract !== null) {
-//                     try{
-//                         const name = await contract.methods.name().call();
-//                         obj.name = name;
-//                     } catch(e) {
-//                     }
-//                 }
-//
-//                 if(mint_logs.length >= 1000) {
-//                     mint_logs = [];
-//                 }
-//
-//                 mint_logs.unshift(obj);
-//
-//                 getWindow().webContents.send('mint-watch', mint_logs);
-//
-//             }
-//
-//         }
-//
-//     }
-// })
+let log = web3_logger.eth.subscribe('logs', async function(err, result) {
+    if(!err) {
+
+        const transaction_receipt = await web3.eth.getTransactionReceipt(result.transactionHash);
+
+        if(transaction_receipt === null) return;
+
+        if(!transaction_receipt.hasOwnProperty('logs')) return;
+
+        if(transaction_receipt.logs && transaction_receipt.logs.length >= 1) {
+            const logs = transaction_receipt.logs[0];
+
+            if(!validToken(transaction_receipt.logs)) return;
+
+            if(logs.topics.length === 4) {
+                const topic1 = logs.topics[0]; // event
+                const topic2 = logs.topics[1]; // from address (0x00..000)
+                const topic3 = logs.topics[2]; // to address
+                const topic4 = logs.topics[3]; // amount
+
+                if(topic1.toLowerCase() !== '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'.toLowerCase() || topic2.toLowerCase() !== '0x0000000000000000000000000000000000000000000000000000000000000000') return;
+
+                // if the value is undefined or the tokenId > 12000 skip
+                if(typeof topic4 === 'undefined' || topic4 > 12000) return;
+
+                const transaction = await web3.eth.getTransaction(result.transactionHash);
+                // console.log(result.transactionHash, transaction.to);
+
+                const contract_address = transaction.to;
+
+                const contract = new web3.eth.Contract(erc721_abi, contract_address);
+
+                let obj = {
+                    contract_address: contract_address,
+                    name: 'N/A',
+                    value: transaction_receipt.logs.length > 0 ? Number.parseFloat(web3.utils.fromWei(transaction.value, 'ether')) / transaction_receipt.logs.length : web3.utils.fromWei(transaction.value, 'ether')
+                }
+
+                if(contract !== null) {
+                    try{
+                        const name = await contract.methods.name().call();
+                        obj.name = name;
+                    } catch(e) {
+                    }
+                }
+
+                if(mint_logs.length >= 1000) {
+                    mint_logs = [];
+                }
+
+                mint_logs.unshift(obj);
+
+                getWindow().webContents.send('mint-watch', mint_logs);
+
+            }
+
+        }
+
+    }
+})

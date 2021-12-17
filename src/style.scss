@@ -42,11 +42,22 @@ body, #root {
 
 
 
+    .selected-header {
+        a {
+            color: var(--color-positive);
+        }
+    }
+
+    .default-header {
+        a {
+            color: var(--border-color);
+        }
+    }
+
     .header-btn {
 
         a {
             text-decoration: none;
-            color: var(--border-color);
             transition: color 300ms ease-in;
 
             &:hover {

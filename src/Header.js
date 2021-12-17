@@ -13,6 +13,7 @@ function Header() {
     const [gas, setGas] = useState({gas: '0', gasLimit: ''});
     const [authModal, setAuthModal] = useState([]);
     const [api, setApi] = useState("");
+    const [current, setCurrent] = useState("tasks");
 
     const authRef = useRef();
 
@@ -46,7 +47,7 @@ function Header() {
 
         const interval = setInterval(() => {
             handleGas();
-        }, 2 * 1000);
+        }, 15 * 1000);
 
         return () => {
             clearInterval(interval);
@@ -57,14 +58,14 @@ function Header() {
     return(
         <div className="header-wrapper d-flex justify-content-between">
             <div className="header d-flex px-2 py-3">
-                <div className="header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1">
-                    <span><Link to="/wallet"><i className="fas fa-wallet me-2"></i>Wallets</Link></span>
+                <div className={current === "wallet" ? "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 selected-header" : "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 default-header"}>
+                    <span><Link to="/wallet" onClick={() => setCurrent("wallet")}><i className="fas fa-wallet me-2"></i>Wallets</Link></span>
                 </div>
-                <div className="header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1">
-                    <span className="ms-2"><Link to="/"><i className="fas fa-list-ul me-2"></i>Tasks</Link></span>
+                <div className={current === "tasks" ? "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 selected-header" : "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 default-header"}>
+                    <span className="ms-2"><Link to="/" onClick={() => setCurrent("tasks")}><i className="fas fa-list-ul me-2"></i>Tasks</Link></span>
                 </div>
-                <div className="header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1">
-                    <span className="ms-2"><Link to="/mint"><i className="fas fa-list-ul me-2"></i>Mint Watch</Link></span>
+                <div className={current === "mint-watch" ? "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 selected-header" : "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 default-header"}>
+                    <span className="ms-2"><Link to="/mint" onClick={() => setCurrent("mint-watch")}><i className="far fa-eye me-2"></i>Mint Watch</Link></span>
                 </div>
             </div>
 

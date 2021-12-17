@@ -10,13 +10,14 @@ class Task {
      * @param account | Account object of the wallet that is to be used to mint this NFT
      * @param price | Price in ETH (Should account for how many you are buying ex: 1 = 0.06 -> 4 = 0.24)
      */
-    constructor(contract_address, privateKey, publicKey, walletId, price, gas, gasPriorityFee, functionName, args) {
+    constructor(contract_address, privateKey, publicKey, walletId, price, amount, gas, gasPriorityFee, functionName, args) {
         this.id = crypto.randomBytes(16).toString('hex');
         this.contract_address = contract_address;
         this.privateKey = privateKey;
         this.publicKey = publicKey;
         this.walletId = walletId;
         this.price = price;
+        this.amount = amount;
         this.gas = gas;
         this.gasPriorityFee = gasPriorityFee;
         this.functionName = functionName;
@@ -68,7 +69,8 @@ class Task {
         }
 
         const block = await web3.eth.getBlock("latest");
-        const gasLimit = block.gasLimit / (block.transactions.length > 0 ? block.transactions.length : 1);
+        let gasLimit = block.gasLimit / (block.transactions.length > 0 ? block.transactions.length : 1);
+        gasLimit = (gasLimit <= 100000 ? Math.ceil(gasLimit + 175000) : 300000) * Number.parseFloat(this.amount);
 
         const transaction_promise = sendTransaction(
             this.contract_address,
@@ -76,7 +78,7 @@ class Task {
             this.functionName,
             `${web3.utils.toWei(`${this.price}`, 'ether')}`,
             `${web3.utils.toWei(`${gasGwei}`, 'gwei')}`,
-            gasLimit <= 100000 ? Math.ceil(gasLimit + 150000) : 300000,
+            Math.ceil(gasLimit),
             `${web3.utils.toWei(`${this.gasPriorityFee}`, 'gwei')}`,
             this.nonce,
             this.args);

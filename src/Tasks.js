@@ -40,6 +40,7 @@ function Tasks() {
     const [price, setPrice] = useState("");
     const [gas, setGas] = useState("");
     const [gasPriorityFee, setGasPriorityFee] = useState("");
+    const [amount, setAmount] = useState("");
 
     const [unlockWalletId, setUnlockWalletId] = useState("");
     const [unlockPassword, setUnlockPassword] = useState("");
@@ -65,7 +66,7 @@ function Tasks() {
 
     const handleAdd = (e) => {
 
-        if(contract.length === 0 || price.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
+        if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
             setToastValue({
                 message: "You must fill out all of the input fields.",
                 color: "#d97873"
@@ -91,6 +92,7 @@ function Tasks() {
         const output = ipcRenderer.sendSync('add-task', {
             contractAddress: contract,
             price: price,
+            amount: amount,
             gas: gas,
             gasPriorityFee: gasPriorityFee,
             walletPassword: walletPassword,
@@ -128,6 +130,8 @@ function Tasks() {
         setSelectedWallet(null);
         setFunctionName('');
         setInputs([]);
+        setSelectedMethod(null);
+        setMethods([]);
 
         setToastValue({
             message: "New task created successfully.",
@@ -393,9 +397,9 @@ function Tasks() {
                                     }>
                                         {
                                             task.status.error === -1 ?
-                                                `Inactive ${task.gas}` : task.status.error === 0 ?
-                                                    `Starting ${task.gas}` : task.status.error === 1 ?
-                                                        `Success ${task.gas}` : task.status.error === 2 ?
+                                                `Inactive` : task.status.error === 0 ?
+                                                    `Starting` : task.status.error === 1 ?
+                                                        `Success` : task.status.error === 2 ?
                                                             'Error' : 'Pending'
                                         }</span>
                                 </div>
@@ -426,6 +430,7 @@ function Tasks() {
                             </div>
                             <div className="d-flex justify-content-evenly">
                                 <input type="number" className="form-control m-1" onChange={(e) => {setPrice(e.target.value)}} value={price || ''} placeholder="Price in ether"/>
+                                <input type="number" min="1" className="form-control m-1" onChange={(e) => {setAmount(e.target.value)}} value={amount || ''} placeholder="Total amount"/>
                                 <input type="text" className="form-control m-1" onChange={(e) => {setGas(e.target.value)}} value={gas || ''} placeholder="Gas price"/>
                                 <input type="text" className="form-control m-1" onChange={(e) => {setGasPriorityFee(e.target.value)}} value={gasPriorityFee || ''} placeholder="Gas Priority Fee"/>
                             </div>
@@ -454,7 +459,7 @@ function Tasks() {
                                 methods.length > 0 ?
                                     <div className="d-flex flex-column mint-forms mt-3 m-1">
 
-                                        <div className="dropdown w-25 m-1">
+                                        <div className="dropdown w-25 mt-3">
                                             <button className="btn btn-primary dropdown-toggle w-100" type="button"
                                                     id="methods-dropdown" data-bs-toggle="dropdown"
                                                     aria-expanded="false"
@@ -539,12 +544,12 @@ function Tasks() {
                                         {
                                             selectedTask.status.error === 1
                                                 ?
-                                                <div className="d-flex flex-column">
+                                                <div className="d-flex flex-column flex-wrap">
                                                     <span className="mb-2" style={{color: '#45d39d'}}>Success</span>
                                                     <span style={{color: 'white'}}>Tx Hash: {selectedTask.status.result.transactionHash}</span>
                                                 </div>
                                                 :
-                                                <div className="d-flex flex-column">
+                                                <div className="d-flex flex-column flex-wrap">
                                                     <span className="mb-2" style={{color: '#F47960'}}>Error</span>
                                                     <span style={{color: 'white'}}>{selectedTask.status.result.message}</span>
                                                 </div>
