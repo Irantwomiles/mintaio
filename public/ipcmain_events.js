@@ -1,6 +1,6 @@
 const { ipcMain } = require('electron');
 const bcrypt = require('bcrypt');
-const { web3, web3_logger, getMintMethod, getBalance, validToken } = require('./web3_utils.js');
+const { web3, web3_logger, getMintMethod, getBalance, validToken, getContractABI } = require('./web3_utils.js');
 const crypto = require('crypto');
 const { getStorage } = require('./storage');
 const { Task } = require('./task/Task');
@@ -26,8 +26,6 @@ ipcMain.on('is-auth', (event, data) => {
 
 ipcMain.on('auth-user', async (event, data) => {
     const output = await axios.get(`https://mintaio-auth.herokuapp.com/api/${data}`);
-
-    console.log(output.status, output.data);
 
     if(output.data.length > 0) isAuth = true;
 
@@ -470,6 +468,32 @@ ipcMain.on('start-task', (event, id) => {
 
 ipcMain.on('load-tasks', (event, data) => {
     return event.returnValue = tasks;
+})
+
+ipcMain.on('load-task-abi', async (event, id) => {
+
+    /*
+    errors:
+    1: Task not found
+     */
+
+    const task = getTask(id);
+
+    if(task === null) {
+        return event.returnValue = {
+            error: 1,
+            tasks: tasks
+        }
+    }
+
+    const abi = await getContractABI(task.contract_address);
+
+    task.abi = abi;
+
+    return event.returnValue = {
+        error: 0,
+        tasks: tasks
+    }
 })
 
 ipcMain.on('gas-price', async (event) => {

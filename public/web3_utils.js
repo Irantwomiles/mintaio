@@ -4,7 +4,7 @@ const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 
 const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4`;
 const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/22SFODSbXp_n6Zedhj_4w1o5M4FmS-C_`;
-const etherscan_api = "1RCRV15RRHI5VYSJ44N4K17MG4TX1TCTV9";
+const etherscan_api = ["1RCRV15RRHI5VYSJ44N4K17MG4TX1TCTV9", "6TMJCWZWW2E2JVJYFJIS3JDN3YPM2QQXNH", "EE6FKZBIKTKRR9M86F186U1HCMBQGW3P49"];
 
 const erc721_abi = require('./ERC721-ABI.json');
 
@@ -19,12 +19,14 @@ async function getBalance(wallet) {
 }
 
 async function getContractABI(contract_address) {
-    const response = await axios.get(`https://api${is_dev ? '-ropsten' : ''}.etherscan.io/api?module=contract&action=getabi&address=${contract_address}&apikey=${etherscan_api}`);
+
+    const api_key = etherscan_api[Math.floor(Math.random() * etherscan_api.length)];
+
+    const response = await axios.get(`https://api${is_dev ? '-ropsten' : ''}.etherscan.io/api?module=contract&action=getabi&address=${contract_address}&apikey=${api_key}`);
     return response.data.result;
 }
 
 async function getMintMethod(contract_address) {
-
 
     const abi = await getContractABI(contract_address);
 
@@ -47,10 +49,15 @@ async function getMintMethod(contract_address) {
     return output;
 }
 
-async function sendTransaction(contract_address, private_key, mint_method, price, gas, gasLimit, gasPriorityFee, nonce, args) {
+async function sendTransaction(contract_address, private_key, mint_method, price, gas, gasLimit, gasPriorityFee, nonce, args, taskAbi) {
     const account = web3.eth.accounts.privateKeyToAccount(private_key);
 
-    const abi = await getContractABI(contract_address);
+    let abi = taskAbi;
+
+    if(abi === null) {
+        abi = await getContractABI(contract_address);
+    }
+
     const contract = new web3.eth.Contract(JSON.parse(abi), contract_address);
 
     const data = contract.methods[mint_method](...args).encodeABI();
@@ -65,8 +72,6 @@ async function sendTransaction(contract_address, private_key, mint_method, price
         maxPriorityFeePerGas: gasPriorityFee,
         data: data
     }
-
-    console.log(tx);
 
     const sign = await web3.eth.accounts.signTransaction(tx, account.privateKey);
 

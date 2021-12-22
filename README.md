@@ -1,9 +1,11 @@
 TODO:
 * Wallets:
     * Enable/Disable preview
-    * Add tooltop to total balance that shows total balance in USD.
+    * Delete all button
 * Tasks:
   * Force gas price on active tasks
+  * Start all/Delete all button
+  * Start task on a specific time
 * Mintwatch
   * Enable/Disable viewing of all mints happening at the moment.
   * Setup notifications based on parameters.
@@ -11,5 +13,4 @@ TODO:
 * OpenSea sniper
   * Snipe listings that are at a certain price.
 * Multiple API keys
-  * Etherscan
   * Alchemy

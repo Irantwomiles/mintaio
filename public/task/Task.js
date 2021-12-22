@@ -36,6 +36,7 @@ class Task {
             error: -1,
             result: {}
         }
+        this.abi = null;
     }
 
     async start() {
@@ -81,7 +82,7 @@ class Task {
             Math.ceil(gasLimit),
             `${web3.utils.toWei(`${this.gasPriorityFee}`, 'gwei')}`,
             this.nonce,
-            this.args);
+            this.args, this.abi);
 
         this.status = {
             error: 3,

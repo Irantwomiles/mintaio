@@ -295,7 +295,6 @@ function Tasks() {
     const handleMethodSelect = (method) => {
         setSelectedMethod(method);
         setFunctionName(method.name);
-        console.log(method);
 
         let inputValues = [];
 
@@ -304,6 +303,13 @@ function Tasks() {
         }
 
         setInputs(inputValues);
+    }
+
+    const handleLoadABI = (e, id) => {
+
+        let output = ipcRenderer.sendSync('load-task-abi', id);
+
+        setTasks(output.tasks);
     }
 
     useEffect(() => {
@@ -405,7 +411,14 @@ function Tasks() {
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
                                     <span className="ms-1 me-1 start-btn" onClick={(e) => {handleStart(e, task.id)}}><i className="fas fa-play-circle"></i></span>
-                                    {/*<span className="ms-1 me-1"><i className="fas fa-pause-circle"></i></span>*/}
+
+                                    {
+                                        task.abi === null ?
+                                            <span className="ms-1 me-1 load-abi-btn" onClick={(e) => handleLoadABI(e, task.id)}><i className="fas fa-sync-alt"></i></span>
+                                            :
+                                            ''
+                                    }
+
                                     <span className="ms-1 me-1 delete-btn" onClick={(e) =>{handleDelete(e, task.id)}}><i className="fas fa-trash-alt"></i></span>
                                 </div>
                             </div>
