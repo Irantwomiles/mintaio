@@ -312,6 +312,16 @@ function Tasks() {
         setTasks(output.tasks);
     }
 
+    const handleStartAll = () => {
+        let output = ipcRenderer.sendSync('start-all-tasks');
+
+        setTasks(output);
+    }
+
+    const handleDeleteAll = () => {
+
+    }
+
     useEffect(() => {
 
         const modal = new Modal(modalRef.current, {keyboard: false});
@@ -358,9 +368,17 @@ function Tasks() {
         <div className="tasks-wrapper p-3 h-100">
 
             <div className="tasks-toolbar d-flex">
-                <div className="new-task m-1" onClick={() => {modal.show()}}>
+                <div className="new-task m-1 me-4" onClick={() => {modal.show()}}>
                     <span><i className="fas fa-plus-circle"></i></span>
                     <span className="ms-2">New Task</span>
+                </div>
+                <div className="new-task m-1 me-4" onClick={() => {handleStartAll()}}>
+                    <span><i className="fas fa-play-circle"></i></span>
+                    <span className="ms-2">Start All</span>
+                </div>
+                <div className="new-task m-1" onClick={() => {}}>
+                    <span><i className="fas fa-trash-alt"></i></span>
+                    <span className="ms-2">Delete All</span>
                 </div>
             </div>
 

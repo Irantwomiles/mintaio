@@ -496,6 +496,19 @@ ipcMain.on('load-task-abi', async (event, id) => {
     }
 })
 
+ipcMain.on('start-all-tasks', (event) => {
+
+    for(const task of tasks) {
+        if(task.active) continue;
+        if(task.abi === null) continue;
+        if(!task.wallet_loaded) continue;
+
+        task.start();
+    }
+
+    return event.returnValue = tasks;
+})
+
 ipcMain.on('gas-price', async (event) => {
 
     const gas = await web3.eth.getGasPrice();
