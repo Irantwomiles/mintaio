@@ -27,6 +27,9 @@ function MintWatch() {
 
     return (
         <div className="mint-logs-wrapper p-3 h-100" style={{overflowY: 'auto', overflowX: 'hidden'}}>
+            <div className="d-flex justify-content-center">
+                <h4 style={{color: "#F47960"}}>Currently Disabled<i className="fas fa-exclamation-circle ms-2"></i></h4>
+            </div>
             <div className="mint-logs">
                 { mints.length > 0
                     ?

@@ -2,8 +2,8 @@ const axios = require('axios');
 const is_dev = require('electron-is-dev');
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 
-const websocket_key = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4`;
-const websocket_key_logger = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/22SFODSbXp_n6Zedhj_4w1o5M4FmS-C_`;
+const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4`;
+const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/22SFODSbXp_n6Zedhj_4w1o5M4FmS-C_`;
 const etherscan_api = "1RCRV15RRHI5VYSJ44N4K17MG4TX1TCTV9";
 
 const erc721_abi = require('./ERC721-ABI.json');
