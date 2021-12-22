@@ -320,6 +320,35 @@ function Tasks() {
 
     const handleDeleteAll = () => {
 
+        if(tasks.length === 0) {
+            setToastValue({
+                message: "You don't have any tasks to delete.",
+                color: "#d97873"
+            });
+
+            toast.show();
+            return;
+        }
+
+        let output = ipcRenderer.sendSync('delete-all-tasks');
+
+        if(output.error === 1) {
+            setToastValue({
+                message: "Error while deleting all tasks.",
+                color: "#d97873"
+            });
+            toast.show();
+            setTasks(output.tasks);
+            return;
+        }
+
+        setToastValue({
+            message: "Deleted all tasks successfully.",
+            color: "#73d9b0"
+        });
+        toast.show();
+
+        setTasks(output.tasks);
     }
 
     useEffect(() => {
@@ -376,7 +405,7 @@ function Tasks() {
                     <span><i className="fas fa-play-circle"></i></span>
                     <span className="ms-2">Start All</span>
                 </div>
-                <div className="new-task m-1" onClick={() => {}}>
+                <div className="new-task m-1" onClick={() => {handleDeleteAll()}}>
                     <span><i className="fas fa-trash-alt"></i></span>
                     <span className="ms-2">Delete All</span>
                 </div>

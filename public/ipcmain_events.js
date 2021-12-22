@@ -509,6 +509,23 @@ ipcMain.on('start-all-tasks', (event) => {
     return event.returnValue = tasks;
 })
 
+ipcMain.on('delete-all-tasks', (event) => {
+
+    db.tasks.remove({}, {multi: true}, (err, numRemoved) => {
+        if(err) return event.returnValue = {
+            error: 1,
+            tasks
+        };
+
+        tasks = [];
+        return event.returnValue = {
+            error: 0,
+            tasks
+        };
+    })
+
+})
+
 ipcMain.on('gas-price', async (event) => {
 
     const gas = await web3.eth.getGasPrice();
