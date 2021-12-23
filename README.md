@@ -4,7 +4,6 @@ TODO:
     * Delete all button
 * Tasks:
   * Force gas price on active tasks
-  * Start all/Delete all button
   * Start task on a specific time
 * Mintwatch
   * Enable/Disable viewing of all mints happening at the moment.

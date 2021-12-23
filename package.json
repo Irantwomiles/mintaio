@@ -1,6 +1,6 @@
 {
   "name": "mintaio",
-  "version": "0.6.1",
+  "version": "0.6.3",
   "private": true,
   "main": "public/electron.js",
   "build": {
@@ -8,6 +8,9 @@
     "appId": "aio.mint",
     "win": {
       "icon": "build/ic.png"
+    },
+    "mac": {
+      "target": "dmg"
     }
   },
   "homepage": ".",
@@ -37,8 +40,10 @@
     "react-build": "react-scripts build",
     "react-test": "react-scripts test",
     "react-eject": "react-scripts eject",
-    "electron-build": "electron-builder",
-    "build": "npm run react-build && npm run electron-build",
+    "builder-win": "electron-builder --win",
+    "builder-mac": "electron-builder --mac",
+    "build-win": "npm run react-build && npm run builder-win",
+    "build-mac": "npm run react-build && npm run builder-mac",
     "start": "concurrently \"cross-env BROWSER=none npm run react-start\" \"wait-on http://localhost:3000 && electron .\""
   },
   "eslintConfig": {
