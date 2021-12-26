@@ -31,12 +31,17 @@ class Task {
          1 : Success
          2 : Error
          3 : pending
+         4 : ABI not set
+         5 : Checking Status
          */
         this.status = {
             error: -1,
             result: {}
         }
+
         this.abi = null;
+        this.timer = null;
+        this.delay = 0;
     }
 
     async start() {
@@ -111,6 +116,66 @@ class Task {
 
             this.active = false;
         })
+    }
+
+    async start_timer(delay) {
+
+        if(this.delay === 0) {
+            this.start();
+            return;
+        }
+
+        this.timer = setTimeout(() => {
+            this.start();
+        }, delay);
+    }
+
+    cancel_timer() {
+        if(this.timer === null) return;
+
+        clearTimeout(this.timer);
+    }
+
+    async start_when_ready() {
+
+        if(this.abi === null) {
+            this.status = {
+                error: 4,
+                result: {}
+            };
+
+            this.sendMessage('task-status-update');
+            return;
+        }
+
+        const contract = new web3.eth.Contract(JSON.parse(this.abi), this.contract_address);
+
+        let value = "2";
+
+        this.status = {
+            error: 5,
+            result: {
+                message: "Initial"
+            }
+        }
+        ;
+
+        this.sendMessage('task-status-update');
+
+        while(value.toString().toLowerCase() === "2".toLowerCase()) {
+            value = await contract.methods["stage"]().call();
+            this.status = {
+                error: 5,
+                result: {
+                    message: `Waiting (${value}) ` + Math.random().toFixed(4)
+                }
+            };
+
+            this.sendMessage('task-status-update');
+            console.log(value);
+        }
+
+        this.start();
     }
 
     get wallet_loaded() {

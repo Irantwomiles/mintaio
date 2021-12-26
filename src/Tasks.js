@@ -18,9 +18,11 @@ function Tasks() {
     const walletDropdownRef = useRef();
     const toastRef = useRef();
     const methodsDropdownRef = useRef();
+    const timerModalRef = useRef();
 
     const [toast, setToast] = useState([]);
     const [modal, setModal] = useState([]);
+    const [timerModal, setTimerModal] = useState([]);
     const [taskModal, setTaskModal] = useState([]);
     const [unlockModal, setUnlockModal] = useState([]);
     const [walletDropdown, setWalletDropdown] = useState([]);
@@ -45,6 +47,8 @@ function Tasks() {
     const [unlockWalletId, setUnlockWalletId] = useState("");
     const [unlockPassword, setUnlockPassword] = useState("");
     const [selectedTask, setSelectedTask] = useState(null);
+
+    const [timer, setTimer] = useState("");
 
     // 0x63e0Cd76d11da01aef600E56175523aD39e35b01
 
@@ -351,6 +355,13 @@ function Tasks() {
         setTasks(output.tasks);
     }
 
+    const handleTimer = (task) => {
+
+        setSelectedTask(task);
+
+        timerModal.show();
+    }
+
     useEffect(() => {
 
         const modal = new Modal(modalRef.current, {keyboard: false});
@@ -361,6 +372,9 @@ function Tasks() {
 
         const unlockModal = new Modal(unlockModalRef.current, {keyboard: false});
         setUnlockModal(unlockModal);
+
+        const timer_modal = new Modal(timerModalRef.current, {keyboard: false});
+        setTimerModal(timer_modal);
 
         const walletDropdown = new Dropdown(walletDropdownRef.current, {});
         setWalletDropdown(walletDropdown);
@@ -453,7 +467,9 @@ function Tasks() {
                                                 `Inactive` : task.status.error === 0 ?
                                                     `Starting` : task.status.error === 1 ?
                                                         `Success` : task.status.error === 2 ?
-                                                            'Error' : 'Pending'
+                                                            `Error` : task.status.error === 3 ?
+                                                                `Pending` : task.status.error === 4 ?
+                                                                    `ABI not loaded` : task.status.result.message
                                         }</span>
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
@@ -465,6 +481,8 @@ function Tasks() {
                                             :
                                             ''
                                     }
+
+                                    <span className="ms-1 me-1" onClick={(e) => handleTimer(task)}><i className="fas fa-stopwatch"></i></span>
 
                                     <span className="ms-1 me-1 delete-btn" onClick={(e) =>{handleDelete(e, task.id)}}><i className="fas fa-trash-alt"></i></span>
                                 </div>
@@ -580,7 +598,7 @@ function Tasks() {
                             <div className="d-flex justify-content-center">
                                 <span className="mb-1" style={{color: 'white'}}>{getWalletNameById(unlockWalletId)}</span>
                             </div>
-                            <input type="text" className="form-control m-1" onChange={(e) => {setUnlockPassword(e.target.value)}} placeholder="Password" value={unlockPassword}/>
+                            <input type="password" className="form-control m-1" onChange={(e) => {setUnlockPassword(e.target.value)}} placeholder="Password" value={unlockPassword}/>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
@@ -620,6 +638,23 @@ function Tasks() {
                                     :
                                     ''
                             }
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="modal" ref={timerModalRef} tabIndex="-1">
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Set Timer</h5>
+                            <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
+                        </div>
+                        <div className="modal-body">
+                            <input type="text" className="form-control m-1" onChange={(e) => {setTimer(e.target.value)}} placeholder="hh:mm:ss" value={timer}/>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Close</button>

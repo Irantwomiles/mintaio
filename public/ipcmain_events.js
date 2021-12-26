@@ -460,6 +460,8 @@ ipcMain.on('start-task', (event, id) => {
 
     task.start();
 
+    // task.start_when_ready();
+
     return event.returnValue = {
         error: 0,
         tasks: tasks
