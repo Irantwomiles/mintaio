@@ -40,8 +40,14 @@ class Task {
         }
 
         this.abi = null;
+
+        this.start_mode = 'MANUAL'; // MANUAL, AUTOMATIC, TIMER
+
         this.timer = null;
         this.delay = 0;
+
+        this.contract_status = null; // value of the current state of the smart contract.
+        this.contract_status_method = null; // method to check against for automatic starts.
     }
 
     async start() {
@@ -150,32 +156,67 @@ class Task {
 
         const contract = new web3.eth.Contract(JSON.parse(this.abi), this.contract_address);
 
-        let value = "2";
-
         this.status = {
             error: 5,
             result: {
                 message: "Initial"
             }
-        }
-        ;
+        };
 
         this.sendMessage('task-status-update');
 
-        while(value.toString().toLowerCase() === "2".toLowerCase()) {
-            value = await contract.methods["stage"]().call();
+        let found = false;
+
+        this.status = {
+            error: 5,
+            result: {
+                message: "Waiting..."
+            }
+        };
+
+        this.sendMessage('task-status-update');
+
+        this.automatic_interval = setInterval(() => {
+
+            for(let i = 0; i < 30; i++) {
+
+                contract.methods[this.contract_status_method]().call({defaultBlock: 'pending'}).then((result) => {
+
+                    if(`${result}`.toLowerCase() !== `${this.contract_status}`.toLowerCase()) {
+                        clearInterval(this.automatic_interval);
+
+                        if(found) return;
+
+                        found = true;
+                        this.start();
+                    }
+                });
+            }
+
+        }, 1000 * 1);
+
+        this.start();
+    }
+
+    stop_automatic() {
+
+        if(this.automatic_interval) {
+
+            if(this.status.error === 3) return;
+
+            clearInterval(this.automatic_interval);
+
             this.status = {
-                error: 5,
+                error: -1,
                 result: {
-                    message: `Waiting (${value}) ` + Math.random().toFixed(4)
+                    message: "Inactive"
                 }
             };
 
             this.sendMessage('task-status-update');
-            console.log(value);
+
         }
 
-        this.start();
     }
 
     get wallet_loaded() {

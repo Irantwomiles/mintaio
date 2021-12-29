@@ -26,7 +26,7 @@ async function getContractABI(contract_address) {
     return response.data.result;
 }
 
-async function getMintMethod(contract_address) {
+async function getMintMethods(contract_address) {
 
     const abi = await getContractABI(contract_address);
 
@@ -38,15 +38,15 @@ async function getMintMethod(contract_address) {
 
     const jsonInterface = contract._jsonInterface;
 
-    let output = [];
+    // let output = [];
+    //
+    // for(const j of jsonInterface) {
+    //     if(j.stateMutability === 'payable') {
+    //         output.push(j);
+    //     }
+    // }
 
-    for(const j of jsonInterface) {
-        if(j.stateMutability === 'payable') {
-            output.push(j);
-        }
-    }
-
-    return output;
+    return jsonInterface;
 }
 
 async function sendTransaction(contract_address, private_key, mint_method, price, gas, gasLimit, gasPriorityFee, nonce, args, taskAbi) {
@@ -98,5 +98,5 @@ function validToken(logs) {
 }
 
 module.exports = {
-    web3, web3_logger, getMintMethod, getContractABI, sendTransaction, getBalance, validToken
+    web3, web3_logger, getMintMethods, getContractABI, sendTransaction, getBalance, validToken
 }

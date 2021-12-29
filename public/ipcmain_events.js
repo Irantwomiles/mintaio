@@ -1,6 +1,6 @@
 const { ipcMain } = require('electron');
 const bcrypt = require('bcrypt');
-const { web3, web3_logger, getMintMethod, getBalance, validToken, getContractABI } = require('./web3_utils.js');
+const { web3, web3_logger, getMintMethods, getBalance, validToken, getContractABI } = require('./web3_utils.js');
 const crypto = require('crypto');
 const { getStorage } = require('./storage');
 const { Task } = require('./task/Task');
@@ -258,17 +258,31 @@ ipcMain.on('contract-info', async (event, data) => {
         }
     }
 
-    const method = await getMintMethod(data);
+    const methods = await getMintMethods(data);
 
-    if(method === null) {
+    if(methods === null) {
         return event.returnValue = {
             error: 1
         }
     }
 
+    let payable_methods = [];
+    let view_methods = [];
+
+    for(const m of methods) {
+        if(m.stateMutability === 'payable') {
+            payable_methods.push(m);
+        } else if(m.stateMutability === 'view') {
+            view_methods.push(m);
+        }
+    }
+
     return event.returnValue = {
         error: 0,
-        obj: method
+        obj: {
+            payable_methods,
+            view_methods
+        }
     }
 
 })
