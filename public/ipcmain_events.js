@@ -213,7 +213,7 @@ ipcMain.on('unlock-wallet', async (event, data) => {
 
     if(wallet === null) return event.returnValue = {
         error: 1,
-        tasks: tasks
+        tasks: getRendererTasks()
     }
 
     const compare = await compareAsync(data.password, wallet.password);
@@ -228,14 +228,14 @@ ipcMain.on('unlock-wallet', async (event, data) => {
     } else {
         return event.returnValue = {
             error: 2,
-            tasks: tasks
+            tasks: getRendererTasks()
         }
     }
 
 
     return event.returnValue = {
         error: 0,
-        tasks: tasks
+        tasks: getRendererTasks()
     }
 
 })
@@ -319,9 +319,18 @@ ipcMain.on('add-task', (event, data) => {
         }
 
         if(result) {
+
+            console.log(result);
+
             const account = web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
 
             const task = new Task(data.contractAddress, account.privateKey, account.address, wallet.id, data.price, data.amount, data.gas, data.gasPriorityFee, data.functionName, data.args);
+
+            task.start_mode = data.mode;
+            task.timer = data.timer;
+
+            task.contract_status = data.readCurrentValue;
+            task.contract_status_method = data.readFunction;
 
             const obj = {
                 id: task.id,
@@ -332,9 +341,16 @@ ipcMain.on('add-task', (event, data) => {
                 amount: task.amount,
                 gas: task.gas,
                 gasPriorityFee: task.gasPriorityFee,
+                args: task.args,
                 functionName: task.functionName,
-                args: task.args
+                readFunction: task.contract_status_method,
+                readCurrentValue: task.contract_status,
+                timer: task.timer,
+                mode: task.start_mode
             }
+
+            console.log("task", task);
+            console.log("obj", obj);
 
             db.tasks.insert(obj, function (err, doc) {
                 if(err) {
@@ -347,7 +363,7 @@ ipcMain.on('add-task', (event, data) => {
 
                 return event.returnValue = {
                     error: 0,
-                    tasks: tasks
+                    tasks: getRendererTasks()
                 }
             });
         } else {
@@ -383,7 +399,7 @@ ipcMain.on('delete-task', (event, id) => {
 
         return event.returnValue = {
             error: 1,
-            tasks: tasks
+            tasks: getRendererTasks()
         }
     }
 
@@ -396,7 +412,7 @@ ipcMain.on('delete-task', (event, id) => {
 
             return event.returnValue = {
                 error: 1,
-                tasks: tasks
+                tasks: getRendererTasks()
             }
         }
 
@@ -415,7 +431,7 @@ ipcMain.on('delete-task', (event, id) => {
 
                 return event.returnValue = {
                     error: 0,
-                    tasks: tasks
+                    tasks: getRendererTasks()
                 }
 
             })
@@ -423,7 +439,7 @@ ipcMain.on('delete-task', (event, id) => {
         } else {
             return event.returnValue = {
                 error: 0,
-                tasks: tasks
+                tasks: getRendererTasks()
             }
         }
 
@@ -454,36 +470,34 @@ ipcMain.on('start-task', (event, id) => {
 
         return event.returnValue = {
             error: 1,
-            tasks: tasks
+            tasks: getRendererTasks()
         }
     }
 
     if(!task.wallet_loaded) {
         return event.returnValue = {
             error: 2,
-            tasks: tasks
+            tasks: getRendererTasks()
         }
     }
 
     if(task.active) {
         return event.returnValue = {
             error: 3,
-            tasks: tasks
+            tasks: getRendererTasks()
         }
     }
 
-    task.start();
-
-    // task.start_when_ready();
+    task.activate();
 
     return event.returnValue = {
         error: 0,
-        tasks: tasks
+        tasks: getRendererTasks()
     }
 })
 
 ipcMain.on('load-tasks', (event, data) => {
-    return event.returnValue = tasks;
+    return event.returnValue = getRendererTasks();
 })
 
 ipcMain.on('load-task-abi', async (event, id) => {
@@ -498,7 +512,7 @@ ipcMain.on('load-task-abi', async (event, id) => {
     if(task === null) {
         return event.returnValue = {
             error: 1,
-            tasks: tasks
+            tasks: getRendererTasks()
         }
     }
 
@@ -508,7 +522,7 @@ ipcMain.on('load-task-abi', async (event, id) => {
 
     return event.returnValue = {
         error: 0,
-        tasks: tasks
+        tasks: getRendererTasks()
     }
 })
 
@@ -519,10 +533,21 @@ ipcMain.on('start-all-tasks', (event) => {
         if(task.abi === null) continue;
         if(!task.wallet_loaded) continue;
 
-        task.start();
+        task.activate();
     }
 
-    return event.returnValue = tasks;
+    return event.returnValue = getRendererTasks();
+})
+
+ipcMain.on('stop-all-tasks', (event) => {
+
+    for(const task of tasks) {
+        if(task.active) continue;
+        task.cancel_timer();
+        task.stop_automatic();
+    }
+
+    return event.returnValue = getRendererTasks();
 })
 
 ipcMain.on('delete-all-tasks', (event) => {
@@ -530,13 +555,13 @@ ipcMain.on('delete-all-tasks', (event) => {
     db.tasks.remove({}, {multi: true}, (err, numRemoved) => {
         if(err) return event.returnValue = {
             error: 1,
-            tasks
+            tasks: getRendererTasks()
         };
 
         tasks = [];
         return event.returnValue = {
             error: 0,
-            tasks
+            tasks: getRendererTasks()
         };
     })
 
@@ -608,6 +633,11 @@ function loadTasks() {
             for(const doc of docs) {
                 const task = new Task(doc.contract_address, null, doc.publicKey, doc.walletId, doc.price, Number.parseInt(doc.amount), doc.gas, doc.gasPriorityFee, doc.functionName, doc.args);
                 task.id = doc.id;
+                task.contract_status = doc.readCurrentValue;
+                task.contract_status_method = doc.readFunction;
+                task.timer = doc.timer;
+                task.start_mode = doc.mode;
+
                 tasks.push(task);
             }
         }
@@ -630,6 +660,38 @@ const getTaskIndex = (id) => {
     }
 
     return null;
+}
+
+const getRendererTasks = () => {
+    let arr = [];
+
+    for(const task of tasks) {
+
+        arr.push({
+            id: task.id,
+            contract_address: task.contract_address,
+            publicKey: task.publicKey,
+            privateKey: task.privateKey,
+            walletId: task.walletId,
+            price: task.price,
+            amount: task.amount,
+            gas: task.gas,
+            gasPriorityFee: task.gasPriorityFee,
+            args: task.args,
+            abi: task.abi,
+            functionName: task.functionName,
+            contract_status_method: task.contract_status_method,
+            contract_status: task.contract_status,
+            status: task.status,
+            active: task.active,
+            delay: task.delay,
+            timer: task.timer,
+            start_mode: task.start_mode
+        });
+
+    }
+
+    return arr;
 }
 
 function compareAsync(param1, param2) {

@@ -33,6 +33,9 @@ class Task {
          3 : pending
          4 : ABI not set
          5 : Checking Status
+         6 : Current value not set (contract_status)
+         7 : Read method not set (contract_status_method)
+         8 : Timer not set (timer)
          */
         this.status = {
             error: -1,
@@ -43,11 +46,26 @@ class Task {
 
         this.start_mode = 'MANUAL'; // MANUAL, AUTOMATIC, TIMER
 
-        this.timer = null;
+        this.timer = "";
         this.delay = 0;
 
-        this.contract_status = null; // value of the current state of the smart contract.
-        this.contract_status_method = null; // method to check against for automatic starts.
+        this.contract_status = ""; // value of the current state of the smart contract.
+        this.contract_status_method = ""; // method to check against for automatic starts.
+    }
+
+    async activate() {
+
+        if(this.start_mode === "MANUAL") {
+            this.start();
+            console.log("manual_mode");
+        } else if(this.start_mode === "TIMER") {
+            this.start_timer();
+            console.log("timer_mode");
+        } else if(this.start_mode === "AUTOMATIC") {
+            this.start_when_ready();
+            console.log("start_when_ready");
+        }
+
     }
 
     async start() {
@@ -124,25 +142,75 @@ class Task {
         })
     }
 
-    async start_timer(delay) {
+    async start_timer() {
 
-        if(this.delay === 0) {
+        let time = this.timer.split(":");
+
+        if(time.length !== 3)  {
+            //invalid time set
+            return;
+        }
+
+        if(isNaN(time[0]) || isNaN(time[1]) || isNaN(time[2])) {
+            // one of them is not a valid number
+            return;
+        }
+
+        const hour = Number.parseInt(time[0]);
+        const min = Number.parseInt(time[1]);
+        const sec = Number.parseInt(time[2]);
+
+        const later = new Date();
+
+        later.setHours(hour);
+        later.setMinutes(min);
+        later.setSeconds(sec);
+
+        this.delay = later.getTime() - Date.now();
+
+        console.log("Delay:", this.delay);
+
+        if(this.delay <= 0) {
             this.start();
             return;
         }
 
-        this.timer = setTimeout(() => {
+        this.timer_timeout = setTimeout(() => {
             this.start();
-        }, delay);
+        }, this.delay);
     }
 
     cancel_timer() {
-        if(this.timer === null) return;
+        if(typeof this.timer_timeout === 'undefined') return;
 
-        clearTimeout(this.timer);
+        clearTimeout(this.timer_timeout);
     }
 
     async start_when_ready() {
+
+        if(this.contract_status_method.length === 0) {
+            this.status = {
+                error: 5,
+                result: {
+                    message: `Initial`
+                }
+            };
+
+            this.sendMessage('task-status-update');
+            return;
+        }
+
+        if(this.contract_status.length === 0) {
+            this.status = {
+                error: 5,
+                result: {
+                    message: `Initial`
+                }
+            };
+
+            this.sendMessage('task-status-update');
+            return;
+        }
 
         if(this.abi === null) {
             this.status = {
@@ -159,7 +227,7 @@ class Task {
         this.status = {
             error: 5,
             result: {
-                message: "Initial"
+                message: `Initial`
             }
         };
 
@@ -170,7 +238,7 @@ class Task {
         this.status = {
             error: 5,
             result: {
-                message: "Waiting..."
+                message: `Waiting...`
             }
         };
 
@@ -185,7 +253,10 @@ class Task {
                     if(`${result}`.toLowerCase() !== `${this.contract_status}`.toLowerCase()) {
                         clearInterval(this.automatic_interval);
 
-                        if(found) return;
+                        if(found) {
+                            this.start();
+                            return;
+                        }
 
                         found = true;
                         this.start();
@@ -194,8 +265,6 @@ class Task {
             }
 
         }, 1000 * 1);
-
-        this.start();
     }
 
     stop_automatic() {
@@ -209,7 +278,7 @@ class Task {
             this.status = {
                 error: -1,
                 result: {
-                    message: "Inactive"
+                    message: `Inactive`
                 }
             };
 

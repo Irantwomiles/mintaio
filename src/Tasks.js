@@ -19,7 +19,6 @@ function Tasks() {
     const toastRef = useRef();
     const methodsDropdownRef = useRef();
     const readMethodsDropdownRef = useRef();
-    const timerModalRef = useRef();
 
     const [toast, setToast] = useState([]);
     const [modal, setModal] = useState([]);
@@ -53,6 +52,7 @@ function Tasks() {
     const [unlockWalletId, setUnlockWalletId] = useState("");
     const [unlockPassword, setUnlockPassword] = useState("");
     const [selectedTask, setSelectedTask] = useState(null);
+    const [mode, setMode] = useState("MANUAL");
 
     const [timer, setTimer] = useState("");
 
@@ -109,7 +109,11 @@ function Tasks() {
             walletPassword: walletPassword,
             walletId: selectedWallet.id,
             args: args,
-            functionName: functionName
+            functionName: functionName,
+            readFunction: readFunctionName,
+            readCurrentValue: readValue,
+            timer: timer,
+            mode: mode
         });
 
         if(output.error === 1) {
@@ -367,13 +371,6 @@ function Tasks() {
         setTasks(output.tasks);
     }
 
-    const handleTimer = (task) => {
-
-        setSelectedTask(task);
-
-        timerModal.show();
-    }
-
     useEffect(() => {
 
         const modal = new Modal(modalRef.current, {keyboard: false});
@@ -384,9 +381,6 @@ function Tasks() {
 
         const unlockModal = new Modal(unlockModalRef.current, {keyboard: false});
         setUnlockModal(unlockModal);
-
-        const timer_modal = new Modal(timerModalRef.current, {keyboard: false});
-        setTimerModal(timer_modal);
 
         const walletDropdown = new Dropdown(walletDropdownRef.current, {});
         setWalletDropdown(walletDropdown);
@@ -400,7 +394,6 @@ function Tasks() {
 
         const task_status_updater = (event, data) => {
             const output = ipcRenderer.sendSync('load-tasks');
-
             setTasks(output);
         }
 
@@ -424,8 +417,6 @@ function Tasks() {
             const readMethodDropdown = new Dropdown(readMethodsDropdownRef.current, {});
             setReadDropdown(readMethodDropdown);
 
-            console.log(readMethods);
-
         }
     }, [readMethods]);
 
@@ -440,6 +431,10 @@ function Tasks() {
                 <div className="new-task m-1 me-4" onClick={() => {handleStartAll()}}>
                     <span><i className="fas fa-play-circle"></i></span>
                     <span className="ms-2">Start All</span>
+                </div>
+                <div className="new-task m-1 me-4" onClick={() => {handleStartAll()}}>
+                    <span><i className="fas fa-stop-circle"></i></span>
+                    <span className="ms-2">Stop All</span>
                 </div>
                 <div className="new-task m-1" onClick={() => {handleDeleteAll()}}>
                     <span><i className="fas fa-trash-alt"></i></span>
@@ -496,6 +491,7 @@ function Tasks() {
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
                                     <span className="ms-1 me-1 start-btn" onClick={(e) => {handleStart(e, task.id)}}><i className="fas fa-play-circle"></i></span>
+                                    <span className="ms-1 me-1"><i className="fas fa-stop-circle"></i></span>
 
                                     {
                                         task.abi === null ?
@@ -503,8 +499,6 @@ function Tasks() {
                                             :
                                             ''
                                     }
-
-                                    <span className="ms-1 me-1" onClick={(e) => handleTimer(task)}><i className="fas fa-stopwatch"></i></span>
 
                                     <span className="ms-1 me-1 delete-btn" onClick={(e) =>{handleDelete(e, task.id)}}><i className="fas fa-trash-alt"></i></span>
                                 </div>
@@ -553,6 +547,50 @@ function Tasks() {
                                     </ul>
                                 </div>
                                 <input type="password" className="form-control w-75 m-1" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
+                            </div>
+
+                            <div className="m-1">
+
+                                <div>
+                                    <input
+                                        type="radio"
+                                        name="manual"
+                                        value="Manual"
+                                        checked={mode === "MANUAL"}
+                                        onChange={() => {
+                                            setMode("MANUAL")
+                                        }}
+                                    />
+                                    <span className="ms-2" style={{color: "white"}}>Manual Mode</span>
+                                </div>
+
+                                <div>
+                                    <input
+                                        type="radio"
+                                        name="automatic"
+                                        value="Automatic"
+                                        checked={mode === "AUTOMATIC"}
+                                        onChange={() => {
+                                            setMode("AUTOMATIC")
+                                        }}
+                                    />
+                                    <span className="ms-2" style={{color: "white"}}>Automatic Mode</span>
+                                </div>
+
+                                <div>
+                                    <input
+                                        type="radio"
+                                        name="timer"
+                                        value="Timer"
+                                        checked={mode === "TIMER"}
+                                        onChange={() => {
+                                            setMode("TIMER")
+                                        }}
+                                    />
+                                    <span className="ms-2" style={{color: "white"}}>Timed Mode</span>
+
+                                </div>
+
                             </div>
 
                             {
@@ -718,23 +756,6 @@ function Tasks() {
                                     :
                                     ''
                             }
-                        </div>
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Close</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="modal" ref={timerModalRef} tabIndex="-1">
-                <div className="modal-dialog modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title">Set Timer</h5>
-                            <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
-                        </div>
-                        <div className="modal-body">
-                            <input type="text" className="form-control m-1" onChange={(e) => {setTimer(e.target.value)}} placeholder="hh:mm:ss" value={timer}/>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Close</button>

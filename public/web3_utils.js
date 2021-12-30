@@ -38,14 +38,6 @@ async function getMintMethods(contract_address) {
 
     const jsonInterface = contract._jsonInterface;
 
-    // let output = [];
-    //
-    // for(const j of jsonInterface) {
-    //     if(j.stateMutability === 'payable') {
-    //         output.push(j);
-    //     }
-    // }
-
     return jsonInterface;
 }
 
