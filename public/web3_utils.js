@@ -1,9 +1,19 @@
 const axios = require('axios');
 const is_dev = require('electron-is-dev');
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
+const fs = require('fs');
 
-const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4`;
-const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/22SFODSbXp_n6Zedhj_4w1o5M4FmS-C_`;
+const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
+
+const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
+const json_value = JSON.parse(output);
+
+const primary_key = json_value.primary_key;
+const secondary_key = json_value.secondary_key;
+
+const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
+const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${secondary_key}`;
+
 const etherscan_api = ["1RCRV15RRHI5VYSJ44N4K17MG4TX1TCTV9", "6TMJCWZWW2E2JVJYFJIS3JDN3YPM2QQXNH", "EE6FKZBIKTKRR9M86F186U1HCMBQGW3P49"];
 
 const erc721_abi = require('./ERC721-ABI.json');

@@ -294,6 +294,45 @@ body, #root {
     }
 }
 
+.settings-wrapper {
+    background-color: var(--background-color-light);
+
+    .settings {
+
+        height: 41rem;
+
+        background-color: var(--background-color);
+        border: 2px solid var(--border-color);
+        border-radius: 10px;
+
+        color: white;
+
+        input {
+            background-color: var(--background-color-light);
+            border-color: var(--border-color);
+            color: white;
+
+            &:focus {
+                background-color: var(--background-color-light);
+                color: white;
+                outline: none !important;
+            }
+
+        }
+
+        .btn-update {
+            background-color: var(--border-color);
+            color: white;
+            transition: background-color 300ms ease-in;
+
+            &:hover {
+                background-color: var(--color-positive);
+                color: white !important;
+            }
+        }
+
+    }
+}
 
 .modal-content {
     background-color: var(--background-color) !important;

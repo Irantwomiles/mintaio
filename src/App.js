@@ -9,6 +9,7 @@ import Header from './Header';
 import Wallet from './Wallet';
 import Tasks from "./Tasks";
 import MintWatch from "./MintWatch";
+import Settings from "./Settings";
 
 import React from "react";
 
@@ -50,6 +51,9 @@ function App() {
                 </Route>
                 <Route exact path="/mint">
                     <MintWatch/>
+                </Route>
+                <Route exact path="/settings">
+                    <Settings/>
                 </Route>
             </Switch>
         </Router>

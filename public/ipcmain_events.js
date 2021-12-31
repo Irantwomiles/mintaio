@@ -1,15 +1,18 @@
 const { ipcMain } = require('electron');
 const bcrypt = require('bcrypt');
+const { getStorage, saveApiKeys } = require('./storage');
+const fs = require('fs');
+
+const db = getStorage();
+
 const { web3, web3_logger, getMintMethods, getBalance, validToken, getContractABI } = require('./web3_utils.js');
 const crypto = require('crypto');
-const { getStorage } = require('./storage');
 const { Task } = require('./task/Task');
 const axios = require('axios');
 
 const erc721_abi = require("./ERC721-ABI.json");
 const {getWindow} = require("./window_utils");
 
-const db = getStorage();
 
 let tasks = [];
 let wallets = [];
@@ -19,6 +22,26 @@ let isAuth = false;
 
 loadWallets();
 loadTasks();
+
+ipcMain.on('update-alchemy-key-primary', (event, data) => {
+    getStorage().default_keys.primary_key = data;
+    saveApiKeys();
+
+    return event.returnValue = {
+        error: 0,
+        output: data
+    }
+})
+
+ipcMain.on('update-alchemy-key-secondary', (event, data) => {
+    getStorage().default_keys.secondary_key = data;
+    saveApiKeys();
+
+    return event.returnValue = {
+        error: 0,
+        output: data
+    }
+})
 
 ipcMain.on('is-auth', (event, data) => {
     return event.returnValue = isAuth;
@@ -348,9 +371,6 @@ ipcMain.on('add-task', (event, data) => {
                 timer: task.timer,
                 mode: task.start_mode
             }
-
-            console.log("task", task);
-            console.log("obj", obj);
 
             db.tasks.insert(obj, function (err, doc) {
                 if(err) {

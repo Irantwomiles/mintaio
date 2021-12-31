@@ -67,6 +67,9 @@ function Header() {
                 <div className={current === "mint-watch" ? "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 selected-header" : "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 default-header"}>
                     <span className="ms-2"><Link to="/mint" onClick={() => setCurrent("mint-watch")}><i className="far fa-eye me-2"></i>Mint Watch</Link></span>
                 </div>
+                <div className={current === "settings" ? "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 selected-header" : "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 default-header"}>
+                    <span className="ms-2"><Link to="/settings" onClick={() => setCurrent("settings")}><i className="fas fa-cog me-2"></i>Settings</Link></span>
+                </div>
             </div>
 
             <div className="d-flex align-items-center p-3">
