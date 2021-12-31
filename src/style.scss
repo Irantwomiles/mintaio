@@ -93,6 +93,24 @@ body, #root {
         }
     }
 
+    .copy-wallet {
+        transition: color 300ms ease-in;
+
+        &:hover {
+            color: var(--color-positive);
+            cursor: pointer;
+        }
+    }
+
+    .external-link {
+        transition: color 300ms ease-in;
+
+        &:hover {
+            color: var(--color-warning);
+            cursor: pointer;
+        }
+    }
+
     .delete-wallet {
         transition: color 300ms ease-in;
 

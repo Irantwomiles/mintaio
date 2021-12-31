@@ -202,13 +202,15 @@ function Wallet() {
                             </div>
                             <div className="col-2 wallet-action">
                                 <span className="ms-1 me-1 copy-wallet" onClick={() => {copyAddress(w.encrypted.address)}}><i className="fas fa-copy"></i></span>
-                                <span className="ms-1 me-1 toggle-wallet" onClick={() => {openExternal(w.encrypted.address)}}><i className="fas fa-external-link-square-alt"></i></span>
+                                <span className="ms-1 me-1 external-link" onClick={() => {openExternal(w.encrypted.address)}}><i className="fas fa-external-link-square-alt"></i></span>
                                 <span className="ms-1 me-1 delete-wallet" onClick={() => {deleteWallet(w.id)}}><i className="fas fa-trash-alt"></i></span>
                             </div>
                         </div>
                     ))
                         :
-                        ''
+                        <div className="d-flex justify-content-center align-items-center w-100 h-100">
+                            <h1 style={{color: "rgba(70, 171, 97, 0.4)"}}>Mint</h1><h1 style={{color: "rgba(48,122,69,0.4)"}}>AIO</h1>
+                        </div>
                 }
             </div>
 

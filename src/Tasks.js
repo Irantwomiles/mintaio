@@ -509,7 +509,9 @@ function Tasks() {
                             </div>
                         ))
                         :
-                        ''
+                        <div className="d-flex justify-content-center align-items-center w-100 h-100">
+                            <h1 style={{color: "rgba(70, 171, 97, 0.4)"}}>Mint</h1><h1 style={{color: "rgba(48,122,69,0.4)"}}>AIO</h1>
+                        </div>
                 }
 
             </div>
