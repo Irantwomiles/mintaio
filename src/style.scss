@@ -195,11 +195,20 @@ body, #root {
         }
     }
 
-    .load-abi-btn {
+    .stop-btn {
         transition: color 300ms ease-in;
 
         &:hover {
             color: var(--color-warning);
+            cursor: pointer;
+        }
+    }
+
+    .load-abi-btn {
+        transition: color 300ms ease-in;
+
+        &:hover {
+            color: var(--border-color);
             cursor: pointer;
         }
     }

@@ -296,6 +296,10 @@ class Task {
         getWindow().webContents.send(channel, data);
     }
 
+    is_on_timer() {
+        return (typeof this.timer_timeout !== 'undefined' || typeof this.automatic_interval !== 'undefined');
+    }
+
 }
 
 module.exports = {

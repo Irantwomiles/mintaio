@@ -124,6 +124,14 @@ function Wallet() {
         setBalance(output.balance);
     }
 
+    const copyAddress = (address) => {
+        navigator.clipboard.writeText("0x" + address);
+    }
+
+    const openExternal = (address) => {
+        electron.shell.openExternal(`https://etherscan.io/address/0x${address}`);
+    }
+
     useEffect(() => {
 
         const modal = new Modal(modalRef.current, {keyboard: false});
@@ -193,8 +201,8 @@ function Wallet() {
                                 <span>~{Number.parseFloat(w.balance).toFixed(5)} <span style={{color: '#8a78e9'}}>Ξ</span></span>
                             </div>
                             <div className="col-2 wallet-action">
-                                <span className="ms-1 me-1 copy-wallet"><i className="fas fa-copy"></i></span>
-                                <span className="ms-1 me-1 toggle-wallet"><i className="fas fa-eye"></i></span>
+                                <span className="ms-1 me-1 copy-wallet" onClick={() => {copyAddress(w.encrypted.address)}}><i className="fas fa-copy"></i></span>
+                                <span className="ms-1 me-1 toggle-wallet" onClick={() => {openExternal(w.encrypted.address)}}><i className="fas fa-external-link-square-alt"></i></span>
                                 <span className="ms-1 me-1 delete-wallet" onClick={() => {deleteWallet(w.id)}}><i className="fas fa-trash-alt"></i></span>
                             </div>
                         </div>

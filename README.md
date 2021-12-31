@@ -2,9 +2,12 @@ TODO:
 * Wallets:
     * Enable/Disable preview
     * Delete all button
+    * change await fetching to .then to avoid program lockup.
 * Tasks:
   * Force gas price on active tasks
-  * Start task on a specific time
+  * edit tasks
+  * stop tasks (not pending tx)
+  * look into better live contract detection.
 * Mintwatch
   * Enable/Disable viewing of all mints happening at the moment.
   * Setup notifications based on parameters.

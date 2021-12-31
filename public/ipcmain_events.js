@@ -496,6 +496,61 @@ ipcMain.on('start-task', (event, id) => {
     }
 })
 
+ipcMain.on('stop-task', (event, id) => {
+
+    /*
+    errors:
+    1 - invalid task
+    2 - wallet not loaded
+    3 - task already running
+    4 - can't stop pending tx
+    5 - task is not running
+     */
+
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
+    const task = getTask(id);
+
+    if(task === null) {
+        const index = getTaskIndex(id);
+        tasks.splice(index, 1);
+
+        return event.returnValue = {
+            error: 1,
+            tasks: getRendererTasks()
+        }
+    }
+
+    if(!task.wallet_loaded) {
+        return event.returnValue = {
+            error: 2,
+            tasks: getRendererTasks()
+        }
+    }
+
+    if(task.active) return event.returnValue = {
+        error: 4,
+        tasks: getRendererTasks()
+    }
+
+    if(!task.is_on_timer()) return event.returnValue = {
+        error: 5,
+        tasks: getRendererTasks()
+    }
+
+    task.cancel_timer();
+    task.stop_automatic();
+
+    return event.returnValue = {
+        error: 0,
+        tasks: getRendererTasks()
+    }
+})
+
 ipcMain.on('load-tasks', (event, data) => {
     return event.returnValue = getRendererTasks();
 })
