@@ -557,10 +557,10 @@ ipcMain.on('stop-task', (event, id) => {
         tasks: getRendererTasks()
     }
 
-    if(!task.is_on_timer()) return event.returnValue = {
-        error: 5,
-        tasks: getRendererTasks()
-    }
+    // if(!task.is_on_timer()) return event.returnValue = {
+    //     error: 5,
+    //     tasks: getRendererTasks()
+    // }
 
     task.cancel_timer();
     task.stop_automatic();
@@ -618,6 +618,7 @@ ipcMain.on('stop-all-tasks', (event) => {
 
     for(const task of tasks) {
         if(task.active) continue;
+
         task.cancel_timer();
         task.stop_automatic();
     }

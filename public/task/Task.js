@@ -168,12 +168,19 @@ class Task {
 
         this.delay = later.getTime() - Date.now();
 
-        console.log("Delay:", this.delay);
-
         if(this.delay <= 0) {
             this.start();
             return;
         }
+
+        this.status = {
+            error: 5,
+            result: {
+                message: `Waiting...`
+            }
+        };
+
+        this.sendMessage('task-status-update');
 
         this.timer_timeout = setTimeout(() => {
             this.start();
@@ -181,9 +188,23 @@ class Task {
     }
 
     cancel_timer() {
+
+        console.log("called cancel timer");
+
         if(typeof this.timer_timeout === 'undefined') return;
 
         clearTimeout(this.timer_timeout);
+
+        console.log("cancel timer");
+
+        this.status = {
+            error: -1,
+            result: {
+                message: `Inactive`
+            }
+        };
+
+        this.sendMessage('task-status-update');
     }
 
     async start_when_ready() {
@@ -269,22 +290,22 @@ class Task {
 
     stop_automatic() {
 
-        if(this.automatic_interval) {
-
-            if(this.status.error === 3) return;
-
-            clearInterval(this.automatic_interval);
-
-            this.status = {
-                error: -1,
-                result: {
-                    message: `Inactive`
-                }
-            };
-
-            this.sendMessage('task-status-update');
-
+        if(typeof this.automatic_interval === "undefined") {
+            return;
         }
+
+        if(this.status.error === 3) return;
+
+        clearInterval(this.automatic_interval);
+
+        this.status = {
+            error: -1,
+            result: {
+                message: `Inactive`
+            }
+        };
+
+        this.sendMessage('task-status-update');
 
     }
 

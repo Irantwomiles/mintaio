@@ -226,6 +226,46 @@ function Tasks() {
         toast.show();
     }
 
+    const handleStop = (e, id) => {
+        const output = ipcRenderer.sendSync('stop-task', id);
+
+        if(output.error === 1) {
+            setToastValue({
+                message: "Could not find this task.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "You must unlock your wallet first.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 3) {
+            setToastValue({
+                message: "This task is already active.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        setTasks(output.tasks);
+
+        setToastValue({
+            message: "Started task successfully.",
+            color: "#73d9b0"
+        });
+
+        toast.show();
+    }
+
     const handleInput = (e, index) => {
         let values = [...inputs];
         values[index].value = e.target.value;
@@ -338,6 +378,12 @@ function Tasks() {
         setTasks(output);
     }
 
+    const handleStopAll = () => {
+        let output = ipcRenderer.sendSync('stop-all-tasks');
+
+        setTasks(output);
+    }
+
     const handleDeleteAll = () => {
 
         if(tasks.length === 0) {
@@ -435,7 +481,7 @@ function Tasks() {
                         <span><i className="fas fa-play-circle"></i></span>
                         <span className="ms-2">Start All</span>
                     </div>
-                    <div className="new-task m-1 me-4" onClick={() => {handleStartAll()}}>
+                    <div className="new-task m-1 me-4" onClick={() => {handleStopAll()}}>
                         <span><i className="fas fa-stop-circle"></i></span>
                         <span className="ms-2">Stop All</span>
                     </div>
@@ -495,7 +541,7 @@ function Tasks() {
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
                                     <span className="ms-1 me-1 start-btn" onClick={(e) => {handleStart(e, task.id)}}><i className="fas fa-play-circle"></i></span>
-                                    <span className="ms-1 me-1 stop-btn"><i className="fas fa-stop-circle"></i></span>
+                                    <span className="ms-1 me-1 stop-btn" onClick={(e) => {handleStop(e, task.id)}}><i className="fas fa-stop-circle"></i></span>
 
                                     {
                                         task.abi === null ?
