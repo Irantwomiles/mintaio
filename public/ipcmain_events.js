@@ -5,10 +5,17 @@ const fs = require('fs');
 
 const db = getStorage();
 
-const { web3, web3_logger, getMintMethods, getBalance, validToken, getContractABI } = require('./web3_utils.js');
+const { web3,
+    web3_logger,
+    //getMintMethods,
+    //getBalance,
+    validToken,
+    //getContractABI,
+    modules } = require('./web3_utils.js');
 const crypto = require('crypto');
 const { Task } = require('./task/Task');
 const axios = require('axios');
+const is_dev = require('electron-is-dev');
 
 const erc721_abi = require("./ERC721-ABI.json");
 const {getWindow} = require("./window_utils");
@@ -19,6 +26,7 @@ let wallets = [];
 let mint_logs = [];
 
 let isAuth = false;
+let imported_functions = null;
 
 loadWallets();
 loadTasks();
@@ -49,6 +57,10 @@ ipcMain.on('is-auth', (event, data) => {
 
 ipcMain.on('auth-user', async (event, data) => {
     const output = await axios.get(`https://mintaio-auth.herokuapp.com/api/${data}`);
+
+    if(imported_functions === null) {
+        imported_functions = await modules;
+    }
 
     if(output.data.length > 0) isAuth = true;
 
@@ -195,6 +207,10 @@ ipcMain.on('refresh-balance', async (event, data) => {
         }
     }
 
+    if(imported_functions === null) {
+        imported_functions = await modules;
+    }
+
     if(data.length === 0) {
         return event.returnValue = {
             error: 0,
@@ -205,7 +221,7 @@ ipcMain.on('refresh-balance', async (event, data) => {
     let balance = 0;
 
     for(const w of data) {
-        const out = await getBalance(w.encrypted.address);
+        const out = await imported_functions.getBalance(web3, w.encrypted.address);
         balance += Number.parseFloat(out);
     }
 
@@ -281,7 +297,13 @@ ipcMain.on('contract-info', async (event, data) => {
         }
     }
 
-    const methods = await getMintMethods(data);
+    if(imported_functions === null) {
+        imported_functions = await modules;
+    }
+
+    const methods = await imported_functions.getMintMethods(web3, axios, is_dev, data);
+
+    console.log(methods);
 
     if(methods === null) {
         return event.returnValue = {
@@ -591,7 +613,11 @@ ipcMain.on('load-task-abi', async (event, id) => {
         }
     }
 
-    const abi = await getContractABI(task.contract_address);
+    if(imported_functions === null) {
+        imported_functions = await modules;
+    }
+
+    const abi = await imported_functions.getContractABI(axios, is_dev, task.contract_address);
 
     task.abi = abi;
 
@@ -660,6 +686,7 @@ ipcMain.on('mint-logs', async (event) => {
 })
 
 function loadWallets() {
+
     db.wallets.find({}, async function(err, docs) {
 
         if(err) {
@@ -667,11 +694,15 @@ function loadWallets() {
             return;
         }
 
+        if(imported_functions === null) {
+            imported_functions = await modules;
+        }
+
         if(docs.length > 0) {
             for(const doc of docs) {
                 wallets.push({
                     ...doc,
-                    balance: await getBalance(doc.encrypted.address)
+                    balance: await imported_functions.getBalance(web3, doc.encrypted.address)
                 });
             }
         }

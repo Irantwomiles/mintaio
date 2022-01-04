@@ -14,7 +14,6 @@ class Storage {
         }
 
         if(!fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
-
             fs.writeFileSync(`${dataPath}\\mintaio\\api_keys.json`, JSON.stringify(this.default_keys));
         } else {
 
@@ -22,8 +21,6 @@ class Storage {
             const json_value = JSON.parse(output);
 
             this.default_keys = json_value;
-
-            console.log(this.default_keys);
         }
 
     }

@@ -1,4 +1,4 @@
-const { sendTransaction, web3 } = require('../web3_utils');
+const { modules, web3 } = require('../web3_utils');
 const crypto = require('crypto');
 const {getWindow} = require('../window_utils');
 
@@ -51,9 +51,16 @@ class Task {
 
         this.contract_status = ""; // value of the current state of the smart contract.
         this.contract_status_method = ""; // method to check against for automatic starts.
+
+        this.imported_functions = null;
+
     }
 
     async activate() {
+
+        if(this.imported_functions === null) {
+            this.imported_functions = await modules;
+        }
 
         if(this.start_mode === "MANUAL") {
             this.start();
@@ -102,7 +109,8 @@ class Task {
         let gasLimit = block.gasLimit / (block.transactions.length > 0 ? block.transactions.length : 1);
         gasLimit = (gasLimit <= 100000 ? Math.ceil(gasLimit + 175000) : 300000) * Number.parseFloat(this.amount);
 
-        const transaction_promise = sendTransaction(
+        const transaction_promise = this.imported_functions.sendTransaction(
+            web3,
             this.contract_address,
             this.privateKey,
             this.functionName,

@@ -14,71 +14,16 @@ const secondary_key = json_value.secondary_key;
 const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${secondary_key}`;
 
-const etherscan_api = ["1RCRV15RRHI5VYSJ44N4K17MG4TX1TCTV9", "6TMJCWZWW2E2JVJYFJIS3JDN3YPM2QQXNH", "EE6FKZBIKTKRR9M86F186U1HCMBQGW3P49"];
-
 const erc721_abi = require('./ERC721-ABI.json');
 
 const web3 = createAlchemyWeb3(websocket_key);
 const web3_logger = createAlchemyWeb3(websocket_key_logger);
 
-async function getBalance(wallet) {
-    const output = await web3.eth.getBalance(wallet);
-    const eth = web3.utils.fromWei(output, 'ether');
+const requireFromWeb = require('require-from-web');
 
-    return eth;
-}
+const url = 'http://localhost:1458/api/files/test.js';
 
-async function getContractABI(contract_address) {
-
-    const api_key = etherscan_api[Math.floor(Math.random() * etherscan_api.length)];
-
-    const response = await axios.get(`https://api${is_dev ? '-ropsten' : ''}.etherscan.io/api?module=contract&action=getabi&address=${contract_address}&apikey=${api_key}`);
-    return response.data.result;
-}
-
-async function getMintMethods(contract_address) {
-
-    const abi = await getContractABI(contract_address);
-
-    if(abi === 'Contract source code not verified' || abi === 'Invalid Address format') {
-        return null;
-    }
-
-    const contract = new web3.eth.Contract(JSON.parse(abi), contract_address);
-
-    const jsonInterface = contract._jsonInterface;
-
-    return jsonInterface;
-}
-
-async function sendTransaction(contract_address, private_key, mint_method, price, gas, gasLimit, gasPriorityFee, nonce, args, taskAbi) {
-    const account = web3.eth.accounts.privateKeyToAccount(private_key);
-
-    let abi = taskAbi;
-
-    if(abi === null) {
-        abi = await getContractABI(contract_address);
-    }
-
-    const contract = new web3.eth.Contract(JSON.parse(abi), contract_address);
-
-    const data = contract.methods[mint_method](...args).encodeABI();
-
-    const tx = {
-        from: account.address,
-        to: contract_address,
-        value: price,
-        nonce: nonce,
-        maxFeePerGas: gas,
-        gasLimit: gasLimit,
-        maxPriorityFeePerGas: gasPriorityFee,
-        data: data
-    }
-
-    const sign = await web3.eth.accounts.signTransaction(tx, account.privateKey);
-
-    return web3.eth.sendSignedTransaction(sign.rawTransaction); // returning the promise
-}
+const modules = requireFromWeb(url);
 
 function validToken(logs) {
     for(const log of logs) {
@@ -100,5 +45,8 @@ function validToken(logs) {
 }
 
 module.exports = {
-    web3, web3_logger, getMintMethods, getContractABI, sendTransaction, getBalance, validToken
+    web3,
+    web3_logger,
+    validToken,
+    modules
 }
