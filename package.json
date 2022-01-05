@@ -11,7 +11,7 @@
     },
     "mac": {
       "target": "dmg",
-      "icon":  "build/ic.png"
+      "icon":  "build/ic-mac.png"
     }
   },
   "homepage": ".",
