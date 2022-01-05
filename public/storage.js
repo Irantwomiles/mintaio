@@ -13,14 +13,17 @@ class Storage {
             secondary_key: "22SFODSbXp_n6Zedhj_4w1o5M4FmS-C_"
         }
 
-        if(!fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
-            fs.writeFileSync(`${dataPath}\\mintaio\\api_keys.json`, JSON.stringify(this.default_keys));
-        } else {
+        if(fs.existsSync(`${dataPath}\\mintaio`)) {
 
-            const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
-            const json_value = JSON.parse(output);
+            if(!fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
+                fs.writeFileSync(`${dataPath}\\mintaio\\api_keys.json`, JSON.stringify(this.default_keys));
+            } else {
 
-            this.default_keys = json_value;
+                const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
+                const json_value = JSON.parse(output);
+
+                this.default_keys = json_value;
+            }
         }
 
     }

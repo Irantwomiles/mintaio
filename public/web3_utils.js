@@ -5,8 +5,15 @@ const fs = require('fs');
 
 const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
 
-const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
-const json_value = JSON.parse(output);
+let json_value = {
+    primary_key: "dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4",
+    secondary_key: "22SFODSbXp_n6Zedhj_4w1o5M4FmS-C_"
+}
+
+if(fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
+    const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
+    json_value = JSON.parse(output);
+}
 
 const primary_key = json_value.primary_key;
 const secondary_key = json_value.secondary_key;
@@ -20,8 +27,11 @@ const web3 = createAlchemyWeb3(websocket_key);
 const web3_logger = createAlchemyWeb3(websocket_key_logger);
 
 const requireFromWeb = require('require-from-web');
+const id = require('node-machine-id');
 
-const url = 'http://localhost:1458/api/files/test.js';
+const machine_id = id.machineIdSync();
+
+const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
 
 const modules = requireFromWeb(url);
 
@@ -48,5 +58,6 @@ module.exports = {
     web3,
     web3_logger,
     validToken,
-    modules
+    modules,
+    machine_id
 }

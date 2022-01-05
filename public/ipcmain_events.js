@@ -1,17 +1,18 @@
-const { ipcMain } = require('electron');
+const { ipcMain, app } = require('electron');
 const bcrypt = require('bcrypt');
 const { getStorage, saveApiKeys } = require('./storage');
 const fs = require('fs');
+const requireFromWeb = require('require-from-web');
 
 const db = getStorage();
 
 const { web3,
     web3_logger,
-    //getMintMethods,
-    //getBalance,
-    validToken,
-    //getContractABI,
-    modules } = require('./web3_utils.js');
+    machine_id
+} = require('./web3_utils.js');
+
+const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
+
 const crypto = require('crypto');
 const { Task } = require('./task/Task');
 const axios = require('axios');
@@ -20,6 +21,7 @@ const is_dev = require('electron-is-dev');
 const erc721_abi = require("./ERC721-ABI.json");
 const {getWindow} = require("./window_utils");
 
+const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
 
 let tasks = [];
 let wallets = [];
@@ -32,6 +34,11 @@ loadWallets();
 loadTasks();
 
 ipcMain.on('update-alchemy-key-primary', (event, data) => {
+
+    if(!fs.existsSync(`${dataPath}\\mintaio`)) {
+        saveApiKeys();
+    }
+
     getStorage().default_keys.primary_key = data;
     saveApiKeys();
 
@@ -42,6 +49,11 @@ ipcMain.on('update-alchemy-key-primary', (event, data) => {
 })
 
 ipcMain.on('update-alchemy-key-secondary', (event, data) => {
+
+    if(!fs.existsSync(`${dataPath}\\mintaio`)) {
+        saveApiKeys();
+    }
+
     getStorage().default_keys.secondary_key = data;
     saveApiKeys();
 
@@ -56,7 +68,17 @@ ipcMain.on('is-auth', (event, data) => {
 })
 
 ipcMain.on('auth-user', async (event, data) => {
-    const output = await axios.get(`https://mintaio-auth.herokuapp.com/api/${data}`);
+    const output = await axios.get(`https://mintaio-auth.herokuapp.com/api/${data}/${machine_id}`);
+
+    console.log(output.data);
+
+    if(output.data === "redeemed") {
+        app.relaunch();
+        app.exit();
+        return;
+    }
+
+    const modules = requireFromWeb(url);
 
     if(imported_functions === null) {
         imported_functions = await modules;
@@ -207,10 +229,6 @@ ipcMain.on('refresh-balance', async (event, data) => {
         }
     }
 
-    if(imported_functions === null) {
-        imported_functions = await modules;
-    }
-
     if(data.length === 0) {
         return event.returnValue = {
             error: 0,
@@ -295,10 +313,6 @@ ipcMain.on('contract-info', async (event, data) => {
         return event.returnValue = {
             error: 500
         }
-    }
-
-    if(imported_functions === null) {
-        imported_functions = await modules;
     }
 
     const methods = await imported_functions.getMintMethods(web3, axios, is_dev, data);
@@ -613,10 +627,6 @@ ipcMain.on('load-task-abi', async (event, id) => {
         }
     }
 
-    if(imported_functions === null) {
-        imported_functions = await modules;
-    }
-
     const abi = await imported_functions.getContractABI(axios, is_dev, task.contract_address);
 
     task.abi = abi;
@@ -694,9 +704,7 @@ function loadWallets() {
             return;
         }
 
-        if(imported_functions === null) {
-            imported_functions = await modules;
-        }
+        if(!isAuth) return;
 
         if(docs.length > 0) {
             for(const doc of docs) {
