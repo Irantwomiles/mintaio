@@ -704,13 +704,13 @@ function loadWallets() {
             return;
         }
 
-        if(!isAuth) return;
+        console.log("docs:", docs);
 
         if(docs.length > 0) {
             for(const doc of docs) {
                 wallets.push({
                     ...doc,
-                    balance: await imported_functions.getBalance(web3, doc.encrypted.address)
+                    balance: 0
                 });
             }
         }
