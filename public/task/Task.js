@@ -64,13 +64,10 @@ class Task {
 
         if(this.start_mode === "MANUAL") {
             this.start();
-            console.log("manual_mode");
         } else if(this.start_mode === "TIMER") {
             this.start_timer();
-            console.log("timer_mode");
         } else if(this.start_mode === "AUTOMATIC") {
             this.start_when_ready();
-            console.log("start_when_ready");
         }
 
     }
@@ -152,6 +149,10 @@ class Task {
 
     async start_timer() {
 
+        if(typeof this.timer_timeout !== 'undefined') {
+            return;
+        }
+
         let time = this.timer.split(":");
 
         if(time.length !== 3)  {
@@ -197,13 +198,9 @@ class Task {
 
     cancel_timer() {
 
-        console.log("called cancel timer");
-
         if(typeof this.timer_timeout === 'undefined') return;
 
         clearTimeout(this.timer_timeout);
-
-        console.log("cancel timer");
 
         this.status = {
             error: -1,
@@ -216,6 +213,10 @@ class Task {
     }
 
     async start_when_ready() {
+
+        if(typeof this.automatic_interval !== 'undefined') {
+            return;
+        }
 
         if(this.contract_status_method.length === 0) {
             this.status = {

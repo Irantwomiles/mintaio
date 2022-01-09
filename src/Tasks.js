@@ -259,7 +259,7 @@ function Tasks() {
         setTasks(output.tasks);
 
         setToastValue({
-            message: "Started task successfully.",
+            message: "Stopped task successfully.",
             color: "#73d9b0"
         });
 

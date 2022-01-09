@@ -27,19 +27,28 @@ function Header() {
 
         if(api.length === 0) return;
 
+        localStorage.setItem("api_key", api);
+
         const output = ipcRenderer.sendSync('auth-user', api);
 
-        authModal.hide();
+        if(output) {
+            authModal.hide();
+        }
+
     }
 
     useEffect(() => {
 
+        if(localStorage.getItem("api_key") !== null) {
+            setApi(localStorage.getItem("api_key"));
+        }
+
         const auth_modal = new Modal(authRef.current, {keyboard: false});
         setAuthModal(auth_modal);
 
-        const isAuth = ipcRenderer.sendSync('is-auth');
+        const output = ipcRenderer.sendSync('is-auth');
 
-        if(!isAuth) {
+        if(!output.isAuth) {
             auth_modal.show();
         }
 
