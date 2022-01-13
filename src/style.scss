@@ -4,6 +4,7 @@
     --color-warning: #FAC762;
     --color-positive: #8a78e9;
     --color-negative: #F47960;
+    --color-neutral: #6c98ef;
     --color-separator: #29405B;
     --border-color: #45d39d;
 }
@@ -227,6 +228,15 @@ body, #root {
 
         &:hover {
             color: var(--border-color);
+            cursor: pointer;
+        }
+    }
+
+    .edit-btn {
+        transition: color 300ms ease-in;
+
+        &:hover {
+            color: var(--color-neutral);
             cursor: pointer;
         }
     }

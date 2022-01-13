@@ -70,8 +70,6 @@ ipcMain.on('is-auth', (event, data) => {
 ipcMain.on('auth-user', async (event, data) => {
     const output = await axios.get(`https://mintaio-auth.herokuapp.com/api/${data}/${machine_id}`);
 
-    console.log(output.data);
-
     if(output.data === "redeemed") {
         app.relaunch();
         app.exit();
@@ -317,8 +315,6 @@ ipcMain.on('contract-info', async (event, data) => {
 
     const methods = await imported_functions.getMintMethods(web3, axios, is_dev, data);
 
-    console.log(methods);
-
     if(methods === null) {
         return event.returnValue = {
             error: 1
@@ -433,12 +429,130 @@ ipcMain.on('add-task', (event, data) => {
 
 })
 
+ipcMain.on('update-task', (event, data) => {
+
+    /*
+    errors:
+    1: invalid wallet id
+    2: invalid wallet password
+    3: insert error
+    4: Tasks are active
+     */
+
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
+    const wallet = getWallet(data.walletId);
+
+    if(wallet === null) {
+        return event.returnValue = {
+            error: 1
+        }
+    }
+
+    const task = getTask(data.taskId);
+
+    if(task === null) {
+        const index = getTaskIndex(data.taskId);
+        tasks.splice(index, 1);
+
+        return event.returnValue = {
+            error: 1,
+            tasks: getRendererTasks()
+        }
+    }
+
+    if(task.is_on_timer()) {
+        return event.returnValue = {
+            error: 4
+        }
+    }
+
+    if(task.active) {
+        return event.returnValue = {
+            error: 4
+        }
+    }
+
+    bcrypt.compare(data.walletPassword, wallet.password, function(err, result) {
+
+        if(err) {
+            return event.returnValue = {
+                error: 2
+            }
+        }
+
+        if(result) {
+
+            const account = web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
+
+            task.contract_address = data.contractAddress;
+            task.privateKey = account.privateKey;
+            task.publicKey = account.address;
+            task.walletId = wallet.id;
+            task.price = data.price;
+            task.amount = data.amount;
+            task.gas = data.gas;
+            task.gasPriorityFee = data.gasPriorityFee;
+            task.functionName = data.functionName;
+            task.args = data.args;
+            task.start_mode = data.mode;
+            task.timer = data.timer;
+            task.contract_status = data.readCurrentValue;
+            task.contract_status_method = data.readFunction;
+
+            const obj = {
+                id: task.id,
+                contract_address: task.contract_address,
+                publicKey: task.publicKey,
+                walletId: task.walletId,
+                price: task.price,
+                amount: task.amount,
+                gas: task.gas,
+                gasPriorityFee: task.gasPriorityFee,
+                args: task.args,
+                functionName: task.functionName,
+                readFunction: task.contract_status_method,
+                readCurrentValue: task.contract_status,
+                timer: task.timer,
+                mode: task.start_mode
+            }
+
+            db.tasks.update({id: task.id}, obj, function (err, doc) {
+                if(err) {
+                    return event.returnValue = {
+                        error: 3
+                    }
+                }
+
+                console.log("Updated Doc:", doc);
+
+                return event.returnValue = {
+                    error: 0,
+                    tasks: getRendererTasks()
+                }
+            });
+        } else {
+            return event.returnValue = {
+                error: 2
+            }
+        }
+
+
+    })
+
+})
+
 ipcMain.on('delete-task', (event, id) => {
 
     /*
     errors:
     1: task not found
     3: error while removing
+    4: Task is active
      */
 
     if(!isAuth) {
@@ -455,6 +569,20 @@ ipcMain.on('delete-task', (event, id) => {
 
         return event.returnValue = {
             error: 1,
+            tasks: getRendererTasks()
+        }
+    }
+
+    if(task.active) {
+        return event.returnValue = {
+            error: 4,
+            tasks: getRendererTasks()
+        }
+    }
+
+    if(task.is_on_timer()) {
+        return event.returnValue = {
+            error: 4,
             tasks: getRendererTasks()
         }
     }

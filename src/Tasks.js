@@ -19,10 +19,11 @@ function Tasks() {
     const toastRef = useRef();
     const methodsDropdownRef = useRef();
     const readMethodsDropdownRef = useRef();
+    const updateRef = useRef();
 
     const [toast, setToast] = useState([]);
     const [modal, setModal] = useState([]);
-    const [timerModal, setTimerModal] = useState([]);
+    const [updateModal, setUpdateModal] = useState([]);
     const [taskModal, setTaskModal] = useState([]);
     const [unlockModal, setUnlockModal] = useState([]);
     const [walletDropdown, setWalletDropdown] = useState([]);
@@ -100,6 +101,28 @@ function Tasks() {
             }
         }
 
+        if(mode === 'AUTOMATIC') {
+
+            if(readValue.length === 0 || selectedReadMethod.length === 0) {
+                setToastValue({
+                    message: "You must fill out all of the input fields.",
+                    color: "#d97873"
+                });
+                toast.show();
+                return;
+            }
+
+        } else if(mode === 'TIMER') {
+            if(timer.length === 0) {
+                setToastValue({
+                    message: "You must fill out all of the input fields.",
+                    color: "#d97873"
+                });
+                toast.show();
+                return;
+            }
+        }
+
         const output = ipcRenderer.sendSync('add-task', {
             contractAddress: contract,
             price: price,
@@ -134,6 +157,24 @@ function Tasks() {
             return;
         }
 
+        if(output.error === 3) {
+            setToastValue({
+                message: "Error while creating task.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 4) {
+            setToastValue({
+                message: "Tasks are active.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
         setTasks(output.tasks);
         modal.hide();
 
@@ -147,6 +188,11 @@ function Tasks() {
         setInputs([]);
         setSelectedMethod(null);
         setMethods([]);
+        setAmount("");
+        setTimer("");
+        setReadMethods([]);
+        setSelectedReadMethod("");
+        setReadValue("");
 
         setToastValue({
             message: "New task created successfully.",
@@ -417,6 +463,143 @@ function Tasks() {
         setTasks(output.tasks);
     }
 
+    const handleEdit = (task) => {
+
+        setSelectedTask(task);
+
+        console.log(task);
+
+        setContract(task.contract_address);
+        setPrice(task.price);
+        setAmount(task.amount);
+        setGas(task.gas);
+        setGasPriorityFee(task.gasPriorityFee);
+        setMode(task.start_mode);
+
+        updateModal.show();
+    }
+
+    const handleUpdate = (e) => {
+
+        if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
+            setToastValue({
+                message: "You must fill out all of the input fields.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        let args = [];
+
+        for(const i of inputs) {
+            args.push(i.value);
+            if(i.value.length === 0) {
+                setToastValue({
+                    message: "You must fill out all of the input fields.",
+                    color: "#d97873"
+                });
+                toast.show();
+                return;
+            }
+        }
+
+        if(mode === 'AUTOMATIC') {
+
+            if(readValue.length === 0 || selectedReadMethod.length === 0) {
+                setToastValue({
+                    message: "You must fill out all of the input fields.",
+                    color: "#d97873"
+                });
+                toast.show();
+                return;
+            }
+
+        } else if(mode === 'TIMER') {
+            if(timer.length === 0) {
+                setToastValue({
+                    message: "You must fill out all of the input fields.",
+                    color: "#d97873"
+                });
+                toast.show();
+                return;
+            }
+        }
+
+        const output = ipcRenderer.sendSync('update-task', {
+            taskId: selectedTask.id,
+            contractAddress: contract,
+            price: price,
+            amount: amount,
+            gas: gas,
+            gasPriorityFee: gasPriorityFee,
+            walletPassword: walletPassword,
+            walletId: selectedWallet.id,
+            args: args,
+            functionName: functionName,
+            readFunction: readFunctionName,
+            readCurrentValue: readValue,
+            timer: timer,
+            mode: mode
+        });
+
+        if(output.error === 1) {
+            setToastValue({
+                message: "Invalid wallet ID.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "Incorrect wallet password.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 3) {
+            setToastValue({
+                message: "Error while updating task.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 4) {
+            setToastValue({
+                message: "Tasks are active.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        setTasks(output.tasks);
+        updateModal.hide();
+
+        setContract('');
+        setPrice('');
+        setGas('');
+        setGasPriorityFee('');
+        setWalletPassword('');
+        setSelectedWallet(null);
+        setFunctionName('');
+        setInputs([]);
+        setSelectedMethod(null);
+        setMethods([]);
+        setAmount("");
+        setTimer("");
+        setReadMethods([]);
+        setSelectedReadMethod("");
+        setReadValue("");
+
+    }
+
     useEffect(() => {
 
         const modal = new Modal(modalRef.current, {keyboard: false});
@@ -427,6 +610,9 @@ function Tasks() {
 
         const unlockModal = new Modal(unlockModalRef.current, {keyboard: false});
         setUnlockModal(unlockModal);
+
+        const update_modal = new Modal(updateRef.current, {keyboard: false});
+        setUpdateModal(update_modal);
 
         const walletDropdown = new Dropdown(walletDropdownRef.current, {});
         setWalletDropdown(walletDropdown);
@@ -549,7 +735,7 @@ function Tasks() {
                                             :
                                             ''
                                     }
-
+                                    <span className="ms-1 me-1 edit-btn" onClick={(e) =>{handleEdit(task)}}><i className="fas fa-pencil-alt"></i></span>
                                     <span className="ms-1 me-1 delete-btn" onClick={(e) =>{handleDelete(e, task.id)}}><i className="fas fa-trash-alt"></i></span>
                                 </div>
                             </div>
@@ -823,6 +1009,201 @@ function Tasks() {
                 </div>
                 <div className="toast-body">
                     {toastValue.message}
+                </div>
+            </div>
+
+            <div className="modal" ref={updateRef} tabIndex="-1">
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Update Task</h5>
+                            <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
+                        </div>
+                        <div className="modal-body">
+                            <div className="d-flex">
+                                <input type="text" className="form-control w-75 m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={contract}/>
+                                <button type="text" className="form-control btn-add w-25 m-1" onClick={handleCheck}>Check</button>
+                            </div>
+                            <div className="d-flex justify-content-evenly">
+                                <input type="number" className="form-control m-1" onChange={(e) => {setPrice(e.target.value)}} value={price || ''} placeholder="Price in ether"/>
+                                <input type="number" min="1" className="form-control m-1" onChange={(e) => {setAmount(e.target.value)}} value={amount || ''} placeholder="Total amount"/>
+                                <input type="text" className="form-control m-1" onChange={(e) => {setGas(e.target.value)}} value={gas || ''} placeholder="Max gas price"/>
+                                <input type="text" className="form-control m-1" onChange={(e) => {setGasPriorityFee(e.target.value)}} value={gasPriorityFee || ''} placeholder="Gas Priority Fee"/>
+                            </div>
+
+                            <div className="d-flex">
+                                <div className="dropdown w-25 m-1">
+                                    <button className="btn btn-primary dropdown-toggle w-100" type="button"
+                                            id="wallets-dropdown" data-bs-toggle="dropdown"
+                                            aria-expanded="false"
+                                            ref={walletDropdownRef}
+                                            onClick={() => {walletDropdown.toggle()}}>
+                                        {selectedWallet === null ? "Select a wallet" : selectedWallet.name}
+                                    </button>
+                                    <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                                        {
+                                            wallet.map((w) => (
+                                                <li key={w.id}><a className="dropdown-item" onClick={() => {setSelectedWallet(w)} }>{w.name.length > 0 ? w.name + " | " : ""}0x{w.encrypted.address}</a></li>
+                                            ))
+                                        }
+                                    </ul>
+                                </div>
+                                <input type="password" className="form-control w-75 m-1" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
+                            </div>
+
+                            <div className="m-1">
+
+                                <div>
+                                    <input
+                                        type="radio"
+                                        name="manual"
+                                        value="Manual"
+                                        checked={mode === "MANUAL"}
+                                        onChange={() => {
+                                            setMode("MANUAL")
+                                        }}
+                                    />
+                                    <span className="ms-2" style={{color: "white"}}>Manual Mode</span>
+                                </div>
+
+                                <div>
+                                    <input
+                                        type="radio"
+                                        name="automatic"
+                                        value="Automatic"
+                                        checked={mode === "AUTOMATIC"}
+                                        onChange={() => {
+                                            setMode("AUTOMATIC")
+                                        }}
+                                    />
+                                    <span className="ms-2" style={{color: "white"}}>Automatic Mode</span>
+                                </div>
+
+                                <div>
+                                    <input
+                                        type="radio"
+                                        name="timer"
+                                        value="Timer"
+                                        checked={mode === "TIMER"}
+                                        onChange={() => {
+                                            setMode("TIMER")
+                                        }}
+                                    />
+                                    <span className="ms-2" style={{color: "white"}}>Timed Mode</span>
+
+                                </div>
+
+                            </div>
+
+                            {
+                                methods.length > 0 ?
+                                    <div className="d-flex flex-column mint-forms mt-3 m-1">
+
+                                        <div className="d-flex w-100">
+                                            <div className="dropdown w-50 mt-3 me-3">
+                                                <button className="btn btn-primary dropdown-toggle w-100" type="button"
+                                                        id="methods-dropdown" data-bs-toggle="dropdown"
+                                                        aria-expanded="false"
+                                                        ref={methodsDropdownRef}
+                                                        onClick={() => {methodsDropdown.toggle()}}>
+                                                    {selectedMethod === null ? "Select Mint method" : selectedMethod.name}
+                                                </button>
+                                                <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                                                    {
+                                                        methods.map((m) => (
+                                                            <li key={Math.random()}><a className="dropdown-item" onClick={() => {handleMethodSelect(m)} }>{m.name}</a></li>
+                                                        ))
+                                                    }
+                                                </ul>
+                                            </div>
+
+                                            <div className="d-flex mt-3 w-100">
+                                                <input type="text" className="form-control w-100" onChange={(e) => {setFunctionName(e.target.value)}} placeholder="Function name" value={functionName}/>
+                                            </div>
+                                        </div>
+
+
+                                        {
+                                            inputs.length > 0 ?
+                                                <div>
+                                                    <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Arguments</label>
+                                                    <div className="d-flex flex-wrap">
+                                                        {
+                                                            inputs.map((input, index) => (
+                                                                <div key={index} className="m-1">
+                                                                    <input type="text" className="form-control" onChange={(e) => { handleInput(e, index) } } placeholder={input.name} value={input.value || ''}/>
+                                                                </div>
+                                                            ))
+                                                        }
+                                                    </div>
+
+                                                </div>
+                                                :
+                                                ''
+                                        }
+                                    </div>
+                                    :
+                                    ''
+                            }
+
+                            {
+                                readMethods.length > 0 ?
+                                    <div className="d-flex flex-column mint-forms mt-3 m-1">
+
+                                        <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Automatic Detection</label>
+
+                                        <div className="d-flex w-100">
+                                            <div className="dropdown w-25 mt-3 me-3">
+                                                <button className="btn btn-primary dropdown-toggle w-100" type="button"
+                                                        id="methods-dropdown" data-bs-toggle="dropdown"
+                                                        aria-expanded="false"
+                                                        ref={readMethodsDropdownRef}
+                                                        onClick={() => {readDropdown.toggle()}}>
+                                                    {selectedReadMethod === null ? "Select Read method" : selectedReadMethod.name}
+                                                </button>
+                                                <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                                                    {
+                                                        readMethods.map((m) => (
+                                                            <li key={Math.random()}><a className="dropdown-item" onClick={() => {handleReadMethodSelect(m)} }>{m.name}</a></li>
+                                                        ))
+                                                    }
+                                                </ul>
+                                            </div>
+
+                                            <div className="d-flex mt-3 w-75">
+                                                <input type="text" className="form-control w-100" onChange={(e) => {setReadFunctionName(e.target.value)}} placeholder="Read Function name" value={readFunctionName}/>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-3">
+                                            <input type="text" className="form-control w-25" onChange={(e) => {setReadValue(e.target.value)}} placeholder="Current value" value={readValue}/>
+                                        </div>
+
+                                    </div>
+                                    :
+                                    ''
+                            }
+
+                            {
+                                readMethods.length > 0 ?
+                                    <div className="d-flex flex-column mint-forms mt-3 m-1">
+
+                                        <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Timed Start</label>
+
+                                        <div className="mt-3">
+                                            <input type="text" className="form-control" onChange={(e) => {setTimer(e.target.value)}} placeholder="Set a time in HH:MM:SS" value={timer}/>
+                                        </div>
+                                    </div>
+                                    :
+                                    ''
+                            }
+
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" className="btn btn-add" onClick={(e) => {handleUpdate(e)}}>Update</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

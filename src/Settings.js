@@ -28,7 +28,9 @@ function Settings() {
         //send toast on success
 
     }
+    const openExternal = (address) => {
 
+    }
     return (
         <div className="settings-wrapper p-3 h-100">
 
@@ -53,6 +55,27 @@ function Settings() {
                         <button className="btn btn-update ms-2" onClick={() => {changeSecondary()}}>Update</button>
                     </div>
                 </div>
+
+
+                <div className="m-3 mt-5">
+                    <h3 style={{color: "#8a78e9"}}>What are these two options?</h3>
+                    <p>
+                        These two settings are for you to setup your own Alchemy API keys. This options helps users avoid rate limiting when many MintAIO users are running the program at the same time. If you would like to setup your own keys please watch the ending of the video linked below which explains how this can be done. If you have any other questions you can follow us on Twitter and join our Discord server.
+                    </p>
+                    <div className="d-flex align-items-center">
+                        <i style={{color: "#FF0000"}} className="fab fa-youtube fa-2x me-3"></i>
+                        <span onClick={() => {electron.shell.openExternal(`https://www.youtube.com/watch?v=hTukLhIjkbM`);}}>Click here to watch the video!</span>
+                    </div>
+                    <div className="d-flex align-items-center mt-3">
+                        <i style={{color: "#1D9BF0"}} className="fab fa-twitter fa-2x me-3"></i>
+                        <span onClick={() => {electron.shell.openExternal(`https://twitter.com/MintAIO_`);}}>Follow us on Twitter!</span>
+                    </div>
+                    <div className="d-flex align-items-center mt-3">
+                        <i style={{color: "#5865F2"}} className="fab fa-discord fa-2x me-3"></i>
+                        <span onClick={() => {electron.shell.openExternal(`https://discord.gg/xX3SQfhk4D`);}}>Join our Discord!</span>
+                    </div>
+                </div>
+
 
             </div>
 

@@ -102,6 +102,8 @@ class Task {
             gasGwei = this.gas;
         }
 
+
+
         const block = await web3.eth.getBlock("latest");
         let gasLimit = block.gasLimit / (block.transactions.length > 0 ? block.transactions.length : 1);
         gasLimit = (gasLimit <= 100000 ? Math.ceil(gasLimit + 175000) : 300000) * Number.parseFloat(this.amount);
@@ -276,7 +278,7 @@ class Task {
 
         this.automatic_interval = setInterval(() => {
 
-            for(let i = 0; i < 30; i++) {
+            for(let i = 0; i < 5; i++) {
 
                 contract.methods[this.contract_status_method]().call({defaultBlock: 'pending'}).then((result) => {
 
@@ -284,7 +286,6 @@ class Task {
                         clearInterval(this.automatic_interval);
 
                         if(found) {
-                            this.start();
                             return;
                         }
 
