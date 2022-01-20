@@ -3,7 +3,6 @@ TODO:
     * Delete all button
     * change await fetching to .then to avoid program lockup.
 * Tasks:
-  * Edit tasks
   * Force gas price on active tasks
   * look into better live contract detection.
 * Mintwatch

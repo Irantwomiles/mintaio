@@ -20,6 +20,10 @@ function Tasks() {
     const methodsDropdownRef = useRef();
     const readMethodsDropdownRef = useRef();
     const updateRef = useRef();
+    const updateWalletDropdownRef = useRef();
+    const updateMethodsDropdownRef = useRef();
+    const updateReadMethodsDropdownRef = useRef();
+
 
     const [toast, setToast] = useState([]);
     const [modal, setModal] = useState([]);
@@ -30,6 +34,9 @@ function Tasks() {
     const [toastValue, setToastValue] = useState({});
     const [methodsDropdown, setMethodsDropdown] = useState([]);
     const [readDropdown, setReadDropdown] = useState([]);
+    const [updateWalletDropdown, setUpdateWalletDropdown] = useState([]);
+    const [updateMethodsDropdown, setUpdateMethodsDropdown] = useState([]);
+    const [updateReadDropdown, setUpdateReadDropdown] = useState([]);
 
     const [contract, setContract] = useState("");
 
@@ -54,6 +61,7 @@ function Tasks() {
     const [unlockPassword, setUnlockPassword] = useState("");
     const [selectedTask, setSelectedTask] = useState(null);
     const [mode, setMode] = useState("MANUAL");
+    const [updateMode, setUpdateMode] = useState("MANUAL");
 
     const [timer, setTimer] = useState("");
 
@@ -467,14 +475,12 @@ function Tasks() {
 
         setSelectedTask(task);
 
-        console.log(task);
-
         setContract(task.contract_address);
         setPrice(task.price);
         setAmount(task.amount);
         setGas(task.gas);
         setGasPriorityFee(task.gasPriorityFee);
-        setMode(task.start_mode);
+        setUpdateMode(task.start_mode);
 
         updateModal.show();
     }
@@ -540,7 +546,7 @@ function Tasks() {
             readFunction: readFunctionName,
             readCurrentValue: readValue,
             timer: timer,
-            mode: mode
+            mode: updateMode
         });
 
         if(output.error === 1) {
@@ -598,6 +604,7 @@ function Tasks() {
         setSelectedReadMethod("");
         setReadValue("");
 
+        console.log(mode);
     }
 
     useEffect(() => {
@@ -617,6 +624,9 @@ function Tasks() {
         const walletDropdown = new Dropdown(walletDropdownRef.current, {});
         setWalletDropdown(walletDropdown);
 
+        const update_wallet_dropdown = new Dropdown(updateWalletDropdownRef.current, {});
+        setUpdateWalletDropdown(update_wallet_dropdown);
+
         const toast = new Toast(toastRef.current, {autohide: true});
         setToast(toast);
 
@@ -635,19 +645,34 @@ function Tasks() {
             ipcRenderer.removeListener('task-status-update', task_status_updater);
         }
 
+        console.log("mode:", mode);
+
     }, []);
+
+    useEffect(() => {
+
+        console.log("Changed:", mode);
+
+    }, [mode]);
 
     useEffect(() => {
         if(methods.length > 0) {
             const methodsDropdown = new Dropdown(methodsDropdownRef.current, {});
             setMethodsDropdown(methodsDropdown);
+
+            const update_methods_dropdown = new Dropdown(updateMethodsDropdownRef.current, {});
+            setUpdateMethodsDropdown(update_methods_dropdown);
+
         }
     }, [methods]);
 
     useEffect(() => {
-        if(methods.length > 0) {
+        if(readMethods.length > 0) {
             const readMethodDropdown = new Dropdown(readMethodsDropdownRef.current, {});
             setReadDropdown(readMethodDropdown);
+
+            const update_read_dropdown = new Dropdown(updateReadMethodsDropdownRef.current, {});
+            setUpdateReadDropdown(update_read_dropdown);
 
         }
     }, [readMethods]);
@@ -722,7 +747,7 @@ function Tasks() {
                                                         `Success` : task.status.error === 2 ?
                                                             `Error` : task.status.error === 3 ?
                                                                 `Pending` : task.status.error === 4 ?
-                                                                    `ABI not loaded` : task.status.result.message
+                                                                    `Click ` : task.status.result.message
                                         }</span>
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
@@ -882,62 +907,239 @@ function Tasks() {
                                     ''
                             }
 
-                            {
-                                readMethods.length > 0 ?
-                                    <div className="d-flex flex-column mint-forms mt-3 m-1">
+                            <div className={`d-flex flex-column mint-forms mt-3 m-1 ${readMethods.length > 0 ? mode === 'AUTOMATIC' ? '' : 'd-none' : 'd-none'}`}>
 
-                                        <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Automatic Detection</label>
+                                <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Automatic Detection</label>
 
-                                        <div className="d-flex w-100">
-                                            <div className="dropdown w-25 mt-3 me-3">
-                                                <button className="btn btn-primary dropdown-toggle w-100" type="button"
-                                                        id="methods-dropdown" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"
-                                                        ref={readMethodsDropdownRef}
-                                                        onClick={() => {readDropdown.toggle()}}>
-                                                    {selectedReadMethod === null ? "Select Read method" : selectedReadMethod.name}
-                                                </button>
-                                                <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
-                                                    {
-                                                        readMethods.map((m) => (
-                                                            <li key={Math.random()}><a className="dropdown-item" onClick={() => {handleReadMethodSelect(m)} }>{m.name}</a></li>
-                                                        ))
-                                                    }
-                                                </ul>
-                                            </div>
-
-                                            <div className="d-flex mt-3 w-75">
-                                                <input type="text" className="form-control w-100" onChange={(e) => {setReadFunctionName(e.target.value)}} placeholder="Read Function name" value={readFunctionName}/>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-3">
-                                            <input type="text" className="form-control w-25" onChange={(e) => {setReadValue(e.target.value)}} placeholder="Current value" value={readValue}/>
-                                        </div>
-
+                                <div className="d-flex w-100">
+                                    <div className="dropdown w-25 mt-3 me-3">
+                                        <button className="btn btn-primary dropdown-toggle w-100" type="button"
+                                                id="methods-dropdown" data-bs-toggle="dropdown"
+                                                aria-expanded="false"
+                                                ref={readMethodsDropdownRef}
+                                                onClick={() => {readDropdown.toggle()}}>
+                                            {selectedReadMethod === null ? "Select Read method" : selectedReadMethod.name}
+                                        </button>
+                                        <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                                            {
+                                                readMethods.map((m) => (
+                                                    <li key={Math.random()}><a className="dropdown-item" onClick={() => {handleReadMethodSelect(m)} }>{m.name}</a></li>
+                                                ))
+                                            }
+                                        </ul>
                                     </div>
-                                    :
-                                    ''
-                            }
 
-                            {
-                                readMethods.length > 0 ?
-                                    <div className="d-flex flex-column mint-forms mt-3 m-1">
-
-                                        <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Timed Start</label>
-
-                                        <div className="mt-3">
-                                            <input type="text" className="form-control" onChange={(e) => {setTimer(e.target.value)}} placeholder="Set a time in HH:MM:SS" value={timer}/>
-                                        </div>
+                                    <div className="d-flex mt-3 w-75">
+                                        <input type="text" className="form-control w-100" onChange={(e) => {setReadFunctionName(e.target.value)}} placeholder="Read Function name" value={readFunctionName}/>
                                     </div>
-                                    :
-                                    ''
-                            }
+                                </div>
+
+                                <div className="mt-3">
+                                    <input type="text" className="form-control w-25" onChange={(e) => {setReadValue(e.target.value)}} placeholder="Current value" value={readValue}/>
+                                </div>
+
+                            </div>
+
+                            <div className={`d-flex flex-column mint-forms mt-3 m-1 ${mode === 'TIMER' ? '' : 'd-none'}`}>
+
+                                <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Timed Start</label>
+
+                                <div className="mt-3">
+                                    <input type="text" className="form-control" onChange={(e) => {setTimer(e.target.value)}} placeholder="Set a time in HH:MM:SS" value={timer}/>
+                                </div>
+                            </div>
+                            :
+                            ''
 
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
                             <button type="button" className="btn btn-add" onClick={(e) => {handleAdd(e)}}>Add Task</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="modal" ref={updateRef} tabIndex="-1">
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Update Task</h5>
+                            <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
+                        </div>
+                        <div className="modal-body">
+                            <div className="d-flex">
+                                <input type="text" className="form-control w-75 m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={contract}/>
+                                <button type="text" className="form-control btn-add w-25 m-1" onClick={handleCheck}>Check</button>
+                            </div>
+                            <div className="d-flex justify-content-evenly">
+                                <input type="number" className="form-control m-1" onChange={(e) => {setPrice(e.target.value)}} value={price || ''} placeholder="Price in ether"/>
+                                <input type="number" min="1" className="form-control m-1" onChange={(e) => {setAmount(e.target.value)}} value={amount || ''} placeholder="Total amount"/>
+                                <input type="text" className="form-control m-1" onChange={(e) => {setGas(e.target.value)}} value={gas || ''} placeholder="Max gas price"/>
+                                <input type="text" className="form-control m-1" onChange={(e) => {setGasPriorityFee(e.target.value)}} value={gasPriorityFee || ''} placeholder="Gas Priority Fee"/>
+                            </div>
+
+                            <div className="d-flex">
+                                <div className="dropdown w-25 m-1">
+                                    <button className="btn btn-primary dropdown-toggle w-100" type="button"
+                                            id="wallets-dropdown" data-bs-toggle="dropdown"
+                                            aria-expanded="false"
+                                            ref={updateWalletDropdownRef}
+                                            onClick={() => {updateWalletDropdown.toggle()}}>
+                                        {selectedWallet === null ? "Select a wallet" : selectedWallet.name}
+                                    </button>
+                                    <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                                        {
+                                            wallet.map((w) => (
+                                                <li key={w.id}><a className="dropdown-item" onClick={() => {setSelectedWallet(w)} }>{w.name.length > 0 ? w.name + " | " : ""}0x{w.encrypted.address}</a></li>
+                                            ))
+                                        }
+                                    </ul>
+                                </div>
+                                <input type="password" className="form-control w-75 m-1" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
+                            </div>
+
+                            <div className="m-1">
+
+                                <div>
+                                    <input
+                                        type="radio"
+                                        name="manual"
+                                        value="Manual"
+                                        checked={updateMode === "MANUAL"}
+                                        onChange={() => {
+                                            setUpdateMode("MANUAL")
+                                        }}
+                                    />
+                                    <span className="ms-2" style={{color: "white"}}>Manual Mode</span>
+                                </div>
+
+                                <div>
+                                    <input
+                                        type="radio"
+                                        name="automatic"
+                                        value="Automatic"
+                                        checked={updateMode === "AUTOMATIC"}
+                                        onChange={() => {
+                                            setUpdateMode("AUTOMATIC")
+                                        }}
+                                    />
+                                    <span className="ms-2" style={{color: "white"}}>Automatic Mode</span>
+                                </div>
+
+                                <div>
+                                    <input
+                                        type="radio"
+                                        name="timer"
+                                        value="Timer"
+                                        checked={updateMode === "TIMER"}
+                                        onChange={() => {
+                                            setUpdateMode("TIMER")
+                                        }}
+                                    />
+                                    <span className="ms-2" style={{color: "white"}}>Timer Mode</span>
+
+                                </div>
+
+                            </div>
+
+                            {
+                                methods.length > 0 ?
+                                    <div className="d-flex flex-column mint-forms mt-3 m-1">
+
+                                        <div className="d-flex w-100">
+                                            <div className="dropdown w-50 mt-3 me-3">
+                                                <button className="btn btn-primary dropdown-toggle w-100" type="button"
+                                                        id="methods-dropdown" data-bs-toggle="dropdown"
+                                                        aria-expanded="false"
+                                                        ref={updateMethodsDropdownRef}
+                                                        onClick={() => {updateMethodsDropdown.toggle()}}>
+                                                    {selectedMethod === null ? "Select Mint method" : selectedMethod.name}
+                                                </button>
+                                                <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                                                    {
+                                                        methods.map((m) => (
+                                                            <li key={Math.random()}><a className="dropdown-item" onClick={() => {handleMethodSelect(m)} }>{m.name}</a></li>
+                                                        ))
+                                                    }
+                                                </ul>
+                                            </div>
+
+                                            <div className="d-flex mt-3 w-100">
+                                                <input type="text" className="form-control w-100" onChange={(e) => {setFunctionName(e.target.value)}} placeholder="Function name" value={functionName}/>
+                                            </div>
+                                        </div>
+
+
+                                        {
+                                            inputs.length > 0 ?
+                                                <div>
+                                                    <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Arguments</label>
+                                                    <div className="d-flex flex-wrap">
+                                                        {
+                                                            inputs.map((input, index) => (
+                                                                <div key={index} className="m-1">
+                                                                    <input type="text" className="form-control" onChange={(e) => { handleInput(e, index) } } placeholder={input.name} value={input.value || ''}/>
+                                                                </div>
+                                                            ))
+                                                        }
+                                                    </div>
+
+                                                </div>
+                                                :
+                                                ''
+                                        }
+                                    </div>
+                                    :
+                                    ''
+                            }
+
+                            <div className={`d-flex flex-column mint-forms mt-3 m-1 ${readMethods.length > 0 ? updateMode === 'AUTOMATIC' ? '' : 'd-none' : 'd-none'}`}>
+
+                                <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Automatic Detection</label>
+
+                                <div className="d-flex w-100">
+                                    <div className="dropdown w-25 mt-3 me-3">
+                                        <button className="btn btn-primary dropdown-toggle w-100" type="button"
+                                                id="methods-dropdown" data-bs-toggle="dropdown"
+                                                aria-expanded="false"
+                                                ref={updateReadMethodsDropdownRef}
+                                                onClick={() => {updateReadDropdown.toggle()}}>
+                                            {selectedReadMethod === null ? "Select Read method" : selectedReadMethod.name}
+                                        </button>
+                                        <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                                            {
+                                                readMethods.map((m) => (
+                                                    <li key={Math.random()}><a className="dropdown-item" onClick={() => {handleReadMethodSelect(m)} }>{m.name}</a></li>
+                                                ))
+                                            }
+                                        </ul>
+                                    </div>
+
+                                    <div className="d-flex mt-3 w-75">
+                                        <input type="text" className="form-control w-100" onChange={(e) => {setReadFunctionName(e.target.value)}} placeholder="Read Function name" value={readFunctionName}/>
+                                    </div>
+                                </div>
+
+                                <div className="mt-3">
+                                    <input type="text" className="form-control w-25" onChange={(e) => {setReadValue(e.target.value)}} placeholder="Current value" value={readValue}/>
+                                </div>
+
+                            </div>
+
+                            <div className={`d-flex flex-column mint-forms mt-3 m-1 ${updateMode === 'TIMER' ? '' : 'd-none'}`}>
+
+                                <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Timed Start</label>
+
+                                <div className="mt-3">
+                                    <input type="text" className="form-control" onChange={(e) => {setTimer(e.target.value)}} placeholder="Set a time in HH:MM:SS" value={timer}/>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" className="btn btn-add" onClick={(e) => {handleUpdate(e)}}>Update</button>
                         </div>
                     </div>
                 </div>
@@ -1009,201 +1211,6 @@ function Tasks() {
                 </div>
                 <div className="toast-body">
                     {toastValue.message}
-                </div>
-            </div>
-
-            <div className="modal" ref={updateRef} tabIndex="-1">
-                <div className="modal-dialog modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title">Update Task</h5>
-                            <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
-                        </div>
-                        <div className="modal-body">
-                            <div className="d-flex">
-                                <input type="text" className="form-control w-75 m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={contract}/>
-                                <button type="text" className="form-control btn-add w-25 m-1" onClick={handleCheck}>Check</button>
-                            </div>
-                            <div className="d-flex justify-content-evenly">
-                                <input type="number" className="form-control m-1" onChange={(e) => {setPrice(e.target.value)}} value={price || ''} placeholder="Price in ether"/>
-                                <input type="number" min="1" className="form-control m-1" onChange={(e) => {setAmount(e.target.value)}} value={amount || ''} placeholder="Total amount"/>
-                                <input type="text" className="form-control m-1" onChange={(e) => {setGas(e.target.value)}} value={gas || ''} placeholder="Max gas price"/>
-                                <input type="text" className="form-control m-1" onChange={(e) => {setGasPriorityFee(e.target.value)}} value={gasPriorityFee || ''} placeholder="Gas Priority Fee"/>
-                            </div>
-
-                            <div className="d-flex">
-                                <div className="dropdown w-25 m-1">
-                                    <button className="btn btn-primary dropdown-toggle w-100" type="button"
-                                            id="wallets-dropdown" data-bs-toggle="dropdown"
-                                            aria-expanded="false"
-                                            ref={walletDropdownRef}
-                                            onClick={() => {walletDropdown.toggle()}}>
-                                        {selectedWallet === null ? "Select a wallet" : selectedWallet.name}
-                                    </button>
-                                    <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
-                                        {
-                                            wallet.map((w) => (
-                                                <li key={w.id}><a className="dropdown-item" onClick={() => {setSelectedWallet(w)} }>{w.name.length > 0 ? w.name + " | " : ""}0x{w.encrypted.address}</a></li>
-                                            ))
-                                        }
-                                    </ul>
-                                </div>
-                                <input type="password" className="form-control w-75 m-1" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
-                            </div>
-
-                            <div className="m-1">
-
-                                <div>
-                                    <input
-                                        type="radio"
-                                        name="manual"
-                                        value="Manual"
-                                        checked={mode === "MANUAL"}
-                                        onChange={() => {
-                                            setMode("MANUAL")
-                                        }}
-                                    />
-                                    <span className="ms-2" style={{color: "white"}}>Manual Mode</span>
-                                </div>
-
-                                <div>
-                                    <input
-                                        type="radio"
-                                        name="automatic"
-                                        value="Automatic"
-                                        checked={mode === "AUTOMATIC"}
-                                        onChange={() => {
-                                            setMode("AUTOMATIC")
-                                        }}
-                                    />
-                                    <span className="ms-2" style={{color: "white"}}>Automatic Mode</span>
-                                </div>
-
-                                <div>
-                                    <input
-                                        type="radio"
-                                        name="timer"
-                                        value="Timer"
-                                        checked={mode === "TIMER"}
-                                        onChange={() => {
-                                            setMode("TIMER")
-                                        }}
-                                    />
-                                    <span className="ms-2" style={{color: "white"}}>Timed Mode</span>
-
-                                </div>
-
-                            </div>
-
-                            {
-                                methods.length > 0 ?
-                                    <div className="d-flex flex-column mint-forms mt-3 m-1">
-
-                                        <div className="d-flex w-100">
-                                            <div className="dropdown w-50 mt-3 me-3">
-                                                <button className="btn btn-primary dropdown-toggle w-100" type="button"
-                                                        id="methods-dropdown" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"
-                                                        ref={methodsDropdownRef}
-                                                        onClick={() => {methodsDropdown.toggle()}}>
-                                                    {selectedMethod === null ? "Select Mint method" : selectedMethod.name}
-                                                </button>
-                                                <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
-                                                    {
-                                                        methods.map((m) => (
-                                                            <li key={Math.random()}><a className="dropdown-item" onClick={() => {handleMethodSelect(m)} }>{m.name}</a></li>
-                                                        ))
-                                                    }
-                                                </ul>
-                                            </div>
-
-                                            <div className="d-flex mt-3 w-100">
-                                                <input type="text" className="form-control w-100" onChange={(e) => {setFunctionName(e.target.value)}} placeholder="Function name" value={functionName}/>
-                                            </div>
-                                        </div>
-
-
-                                        {
-                                            inputs.length > 0 ?
-                                                <div>
-                                                    <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Arguments</label>
-                                                    <div className="d-flex flex-wrap">
-                                                        {
-                                                            inputs.map((input, index) => (
-                                                                <div key={index} className="m-1">
-                                                                    <input type="text" className="form-control" onChange={(e) => { handleInput(e, index) } } placeholder={input.name} value={input.value || ''}/>
-                                                                </div>
-                                                            ))
-                                                        }
-                                                    </div>
-
-                                                </div>
-                                                :
-                                                ''
-                                        }
-                                    </div>
-                                    :
-                                    ''
-                            }
-
-                            {
-                                readMethods.length > 0 ?
-                                    <div className="d-flex flex-column mint-forms mt-3 m-1">
-
-                                        <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Automatic Detection</label>
-
-                                        <div className="d-flex w-100">
-                                            <div className="dropdown w-25 mt-3 me-3">
-                                                <button className="btn btn-primary dropdown-toggle w-100" type="button"
-                                                        id="methods-dropdown" data-bs-toggle="dropdown"
-                                                        aria-expanded="false"
-                                                        ref={readMethodsDropdownRef}
-                                                        onClick={() => {readDropdown.toggle()}}>
-                                                    {selectedReadMethod === null ? "Select Read method" : selectedReadMethod.name}
-                                                </button>
-                                                <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
-                                                    {
-                                                        readMethods.map((m) => (
-                                                            <li key={Math.random()}><a className="dropdown-item" onClick={() => {handleReadMethodSelect(m)} }>{m.name}</a></li>
-                                                        ))
-                                                    }
-                                                </ul>
-                                            </div>
-
-                                            <div className="d-flex mt-3 w-75">
-                                                <input type="text" className="form-control w-100" onChange={(e) => {setReadFunctionName(e.target.value)}} placeholder="Read Function name" value={readFunctionName}/>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-3">
-                                            <input type="text" className="form-control w-25" onChange={(e) => {setReadValue(e.target.value)}} placeholder="Current value" value={readValue}/>
-                                        </div>
-
-                                    </div>
-                                    :
-                                    ''
-                            }
-
-                            {
-                                readMethods.length > 0 ?
-                                    <div className="d-flex flex-column mint-forms mt-3 m-1">
-
-                                        <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Timed Start</label>
-
-                                        <div className="mt-3">
-                                            <input type="text" className="form-control" onChange={(e) => {setTimer(e.target.value)}} placeholder="Set a time in HH:MM:SS" value={timer}/>
-                                        </div>
-                                    </div>
-                                    :
-                                    ''
-                            }
-
-                        </div>
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" className="btn btn-add" onClick={(e) => {handleUpdate(e)}}>Update</button>
-                        </div>
-                    </div>
                 </div>
             </div>
 

@@ -1,4 +1,6 @@
 const { ipcMain, app } = require('electron');
+const axios = require('axios');
+
 const bcrypt = require('bcrypt');
 const { getStorage, saveApiKeys } = require('./storage');
 const fs = require('fs');
@@ -15,7 +17,6 @@ const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.
 
 const crypto = require('crypto');
 const { Task } = require('./task/Task');
-const axios = require('axios');
 const is_dev = require('electron-is-dev');
 
 const erc721_abi = require("./ERC721-ABI.json");
@@ -32,6 +33,12 @@ let imported_functions = null;
 
 loadWallets();
 loadTasks();
+
+ipcMain.on('get-alchemy-keys', (event, data) => {
+    return event.returnValue = {
+        keys: getStorage().default_keys
+    }
+})
 
 ipcMain.on('update-alchemy-key-primary', (event, data) => {
 
@@ -375,8 +382,6 @@ ipcMain.on('add-task', (event, data) => {
 
         if(result) {
 
-            console.log(result);
-
             const account = web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
 
             const task = new Task(data.contractAddress, account.privateKey, account.address, wallet.id, data.price, data.amount, data.gas, data.gasPriorityFee, data.functionName, data.args);
@@ -477,7 +482,7 @@ ipcMain.on('update-task', (event, data) => {
         }
     }
 
-    bcrypt.compare(data.walletPassword, wallet.password, function(err, result) {
+    bcrypt.compare(data.walletPassword, wallet.password, async function(err, result) {
 
         if(err) {
             return event.returnValue = {
@@ -488,6 +493,8 @@ ipcMain.on('update-task', (event, data) => {
         if(result) {
 
             const account = web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
+
+            const nonce = await web3.eth.getTransactionCount(account.address, "latest");
 
             task.contract_address = data.contractAddress;
             task.privateKey = account.privateKey;
@@ -503,6 +510,7 @@ ipcMain.on('update-task', (event, data) => {
             task.timer = data.timer;
             task.contract_status = data.readCurrentValue;
             task.contract_status_method = data.readFunction;
+            task.nonce = nonce;
 
             const obj = {
                 id: task.id,

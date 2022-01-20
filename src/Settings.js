@@ -28,9 +28,19 @@ function Settings() {
         //send toast on success
 
     }
-    const openExternal = (address) => {
 
-    }
+    useEffect(() => {
+
+        const update_keys = () => {
+            const output = ipcRenderer.sendSync('get-alchemy-keys');
+            setPrimary(output.keys.primary_key);
+            setSecondary(output.keys.secondary_key);
+        }
+
+        update_keys();
+
+    }, [])
+
     return (
         <div className="settings-wrapper p-3 h-100">
 
@@ -64,18 +74,25 @@ function Settings() {
                     </p>
                     <div className="d-flex align-items-center">
                         <i style={{color: "#FF0000"}} className="fab fa-youtube fa-2x me-3"></i>
-                        <span onClick={() => {electron.shell.openExternal(`https://www.youtube.com/watch?v=hTukLhIjkbM`);}}>Click here to watch the video!</span>
+                        <span className="settings-url" onClick={() => {electron.shell.openExternal(`https://www.youtube.com/watch?v=hTukLhIjkbM`);}}>Click here to watch the video!</span>
+                    </div>
+                    <div className="d-flex align-items-center mt-3">
+                        <i style={{color: "#a7a8a9"}} className="fab fa-wikipedia-w fa-2x me-3"></i>
+                        <span className="settings-url" onClick={() => {electron.shell.openExternal(`https://mintaio.gitbook.io/mintaio-wiki/`);}}>Read the Wiki!</span>
                     </div>
                     <div className="d-flex align-items-center mt-3">
                         <i style={{color: "#1D9BF0"}} className="fab fa-twitter fa-2x me-3"></i>
-                        <span onClick={() => {electron.shell.openExternal(`https://twitter.com/MintAIO_`);}}>Follow us on Twitter!</span>
+                        <span className="settings-url" onClick={() => {electron.shell.openExternal(`https://twitter.com/MintAIO_`);}}>Follow us on Twitter!</span>
                     </div>
                     <div className="d-flex align-items-center mt-3">
                         <i style={{color: "#5865F2"}} className="fab fa-discord fa-2x me-3"></i>
-                        <span onClick={() => {electron.shell.openExternal(`https://discord.gg/xX3SQfhk4D`);}}>Join our Discord!</span>
+                        <span className="settings-url" onClick={() => {electron.shell.openExternal(`https://discord.gg/xX3SQfhk4D`);}}>Join our Discord!</span>
                     </div>
                 </div>
 
+                <div className="version">
+                    <span>Version 1.0.1</span>
+                </div>
 
             </div>
 

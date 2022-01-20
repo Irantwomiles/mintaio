@@ -342,6 +342,17 @@ body, #root {
         }
 
     }
+
+    .settings-url {
+
+        transition: color 200ms ease-in;
+
+        &:hover {
+            color: var(--color-positive);
+            cursor: pointer;
+        }
+
+    }
 }
 
 .modal-content {
@@ -425,4 +436,11 @@ body, #root {
     .toast-close {
         color: var(--color-negative);
     }
+
+}
+
+.version {
+    margin-left: 1rem;
+    margin-top: 6rem !important;
+    color: #9b9b9b;
 }

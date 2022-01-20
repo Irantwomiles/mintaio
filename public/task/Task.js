@@ -195,6 +195,7 @@ class Task {
 
         this.timer_timeout = setTimeout(() => {
             this.start();
+            this.timer_timeout = undefined;
         }, this.delay);
     }
 
@@ -203,6 +204,7 @@ class Task {
         if(typeof this.timer_timeout === 'undefined') return;
 
         clearTimeout(this.timer_timeout);
+        this.timer_timeout = undefined;
 
         this.status = {
             error: -1,
@@ -284,6 +286,7 @@ class Task {
 
                     if(`${result}`.toLowerCase() !== `${this.contract_status}`.toLowerCase()) {
                         clearInterval(this.automatic_interval);
+                        this.automatic_interval = undefined;
 
                         if(found) {
                             return;
@@ -307,6 +310,7 @@ class Task {
         if(this.status.error === 3) return;
 
         clearInterval(this.automatic_interval);
+        this.automatic_interval = undefined;
 
         this.status = {
             error: -1,
