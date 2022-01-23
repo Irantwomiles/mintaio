@@ -1,5 +1,4 @@
-import {useState, useRef, useEffect, useContext} from 'react';
-import {Modal, Toast} from "bootstrap";
+import {useState, useEffect} from 'react';
 import './style.scss';
 
 const electron = window.require('electron');

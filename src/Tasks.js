@@ -720,7 +720,7 @@ function Tasks() {
                 {
                     tasks.length > 0 ?
 
-                        tasks.map((task, index) => (
+                        tasks.map((task) => (
                             <div key={Math.random()} className="row d-flex p-3">
                                 <div className="col-2" style={{textAlign: 'center'}}>
                                     {
@@ -948,8 +948,6 @@ function Tasks() {
                                     <input type="text" className="form-control" onChange={(e) => {setTimer(e.target.value)}} placeholder="Set a time in HH:MM:SS" value={timer}/>
                                 </div>
                             </div>
-                            :
-                            ''
 
                         </div>
                         <div className="modal-footer">

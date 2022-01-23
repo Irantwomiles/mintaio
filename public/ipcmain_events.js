@@ -17,6 +17,7 @@ const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.
 
 const crypto = require('crypto');
 const { Task } = require('./task/Task');
+const { OSMonitor } = require('./task/OSMontior');
 const is_dev = require('electron-is-dev');
 
 const erc721_abi = require("./ERC721-ABI.json");
@@ -26,6 +27,7 @@ const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.
 
 let tasks = [];
 let wallets = [];
+let os_monitor = [];
 let mint_logs = [];
 
 let isAuth = false;
@@ -33,6 +35,93 @@ let imported_functions = null;
 
 loadWallets();
 loadTasks();
+loadMonitors();
+
+ipcMain.on('add-os-monitor', (event, data) => {
+
+    /*
+    Error:
+    500: not authorized
+    1: invalid wallet
+    2: incorrect wallet password
+    3: error occurred while checking password
+    4: error occurred while inserting monitor
+     */
+
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
+    const wallet = getWallet(data.walletId);
+
+    if(wallet === null) {
+        return event.returnValue = {
+            error: 1
+        }
+    }
+
+    bcrypt.compare(data.walletPassword, wallet.password, function(err, result) {
+
+        if(err) {
+            return event.returnValue = {
+                error: 3
+            }
+        }
+
+        if(result) {
+
+            const account = web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
+
+            const monitor = new OSMonitor(
+                data.contract,
+                data.price,
+                data.maxGas,
+                data.priority,
+                account.privateKey,
+                account.address,
+                data.walletId,
+                "",
+                data.webhook
+            )
+
+            const obj = {
+                contract_address: data.contract,
+                desired_price: data.price,
+                maxGas: data.maxGas,
+                priorityFee: data.priority,
+                public_key: account.address,
+                wallet_id: data.walletId,
+                proxy: "",
+                webhook: data.webhook,
+                id: monitor.id
+            }
+
+            db.osmonitor.insert(obj, function (err, doc) {
+                if(err) {
+                    return event.returnValue = {
+                        error: 3
+                    }
+                }
+
+                os_monitor.push(monitor);
+
+                return event.returnValue = {
+                    error: 0,
+                    monitors: getRendererMonitors()
+                }
+            });
+        } else {
+            return event.returnValue = {
+                error: 2
+            }
+        }
+
+
+    })
+
+})
 
 ipcMain.on('get-alchemy-keys', (event, data) => {
     return event.returnValue = {
@@ -53,6 +142,10 @@ ipcMain.on('update-alchemy-key-primary', (event, data) => {
         error: 0,
         output: data
     }
+})
+
+ipcMain.on('load-os-monitors', (event, data) => {
+    return event.returnValue = getRendererMonitors();
 })
 
 ipcMain.on('update-alchemy-key-secondary', (event, data) => {
@@ -896,6 +989,26 @@ function loadTasks() {
     })
 }
 
+function loadMonitors() {
+    db.osmonitor.find({}, function(err, docs) {
+
+        if(err) {
+            console.log('error while loading monitors');
+            return;
+        }
+
+        if(docs.length > 0) {
+            for(const doc of docs) {
+                const monitor = new OSMonitor(doc.contract_address, doc.desired_price, doc.maxGas, doc.priorityFee, null, doc.public_key, doc.wallet_id, doc.proxy, doc.webhook);
+                monitor.id = doc.id;
+
+                os_monitor.push(monitor);
+            }
+        }
+
+    })
+}
+
 const getTask = (id) => {
     for(const t of tasks) {
         if(t.id === id) return t;
@@ -938,6 +1051,30 @@ const getRendererTasks = () => {
             delay: task.delay,
             timer: task.timer,
             start_mode: task.start_mode
+        });
+
+    }
+
+    return arr;
+}
+
+const getRendererMonitors = () => {
+    let arr = [];
+
+    for(const monitor of os_monitor) {
+
+        arr.push({
+            contract_address: monitor.contract_address,
+            desired_price: monitor.desired_price,
+            maxGas: monitor.maxGas,
+            priorityFee: monitor.priorityFee,
+            public_key: monitor.public_key,
+            walletId: monitor.wallet_id,
+            proxy: monitor.proxy,
+            webhook: monitor.webhook,
+            status: monitor.status,
+            locked: monitor.private_key === null,
+            id: monitor.id
         });
 
     }
