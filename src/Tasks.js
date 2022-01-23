@@ -645,15 +645,7 @@ function Tasks() {
             ipcRenderer.removeListener('task-status-update', task_status_updater);
         }
 
-        console.log("mode:", mode);
-
     }, []);
-
-    useEffect(() => {
-
-        console.log("Changed:", mode);
-
-    }, [mode]);
 
     useEffect(() => {
         if(methods.length > 0) {

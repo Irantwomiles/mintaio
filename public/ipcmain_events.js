@@ -37,6 +37,27 @@ loadWallets();
 loadTasks();
 loadMonitors();
 
+ipcMain.on('get-alchemy-keys', (event, data) => {
+    return event.returnValue = {
+        keys: getStorage().default_keys
+    }
+})
+
+ipcMain.on('update-alchemy-key-primary', (event, data) => {
+
+    if(!fs.existsSync(`${dataPath}\\mintaio`)) {
+        saveApiKeys();
+    }
+
+    getStorage().default_keys.primary_key = data;
+    saveApiKeys();
+
+    return event.returnValue = {
+        error: 0,
+        output: data
+    }
+})
+
 ipcMain.on('add-os-monitor', (event, data) => {
 
     /*
@@ -81,6 +102,7 @@ ipcMain.on('add-os-monitor', (event, data) => {
                 data.priority,
                 account.privateKey,
                 account.address,
+                data.delay,
                 data.walletId,
                 "",
                 data.webhook
@@ -92,6 +114,7 @@ ipcMain.on('add-os-monitor', (event, data) => {
                 maxGas: data.maxGas,
                 priorityFee: data.priority,
                 public_key: account.address,
+                timer_delay: data.delay,
                 wallet_id: data.walletId,
                 proxy: "",
                 webhook: data.webhook,
@@ -123,25 +146,39 @@ ipcMain.on('add-os-monitor', (event, data) => {
 
 })
 
-ipcMain.on('get-alchemy-keys', (event, data) => {
-    return event.returnValue = {
-        keys: getStorage().default_keys
+ipcMain.on('start-os-monitor', (event, data) => {
+
+    /*
+    1: monitor is null
+    2: already active
+     */
+
+    const monitor = getMonitor(data);
+
+    if(monitor === null) {
+        return event.returnValue = {
+            error: 1,
+            monitors: getRendererMonitors()
+        }
     }
-})
 
-ipcMain.on('update-alchemy-key-primary', (event, data) => {
+    console.log("Here 1");
 
-    if(!fs.existsSync(`${dataPath}\\mintaio`)) {
-        saveApiKeys();
+    if(monitor.active) {
+        return event.returnValue = {
+            error: 2,
+            monitors: getRendererMonitors()
+        }
     }
 
-    getStorage().default_keys.primary_key = data;
-    saveApiKeys();
+    console.log("Here 2");
+
+    monitor.start();
 
     return event.returnValue = {
         error: 0,
-        output: data
-    }
+        monitors: getRendererMonitors()
+    };
 })
 
 ipcMain.on('load-os-monitors', (event, data) => {
@@ -629,8 +666,6 @@ ipcMain.on('update-task', (event, data) => {
                     }
                 }
 
-                console.log("Updated Doc:", doc);
-
                 return event.returnValue = {
                     error: 0,
                     tasks: getRendererTasks()
@@ -933,8 +968,6 @@ function loadWallets() {
             return;
         }
 
-        console.log("docs:", docs);
-
         if(docs.length > 0) {
             for(const doc of docs) {
                 wallets.push({
@@ -1026,6 +1059,25 @@ const getTaskIndex = (id) => {
     return null;
 }
 
+const getMonitorIndex = (id) => {
+    for(let i = 0; i < os_monitor.length; i++) {
+        const m = os_monitor[i];
+        if(m.id === id) return i;
+    }
+
+    return null;
+}
+
+const getMonitor = (id) => {
+    for(let i = 0; i < os_monitor.length; i++) {
+        const m = os_monitor[i];
+
+        if(m.id === id) return m;
+    }
+
+    return null;
+}
+
 const getRendererTasks = () => {
     let arr = [];
 
@@ -1069,6 +1121,7 @@ const getRendererMonitors = () => {
             maxGas: monitor.maxGas,
             priorityFee: monitor.priorityFee,
             public_key: monitor.public_key,
+            timer_delay: monitor.timer_delay,
             walletId: monitor.wallet_id,
             proxy: monitor.proxy,
             webhook: monitor.webhook,

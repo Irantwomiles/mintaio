@@ -41,6 +41,17 @@ function OpenSea() {
 
         console.log(output);
 
+        const monitor_status_updater = (event, data) => {
+            const output = ipcRenderer.sendSync('load-os-monitors');
+            setMonitors(output);
+        }
+
+        ipcRenderer.on('monitor-status-update', monitor_status_updater)
+
+        return () => {
+            ipcRenderer.removeListener('monitor-status-update', monitor_status_updater);
+        }
+
     }, [])
 
     const handleAdd = () => {
@@ -77,6 +88,14 @@ function OpenSea() {
         }
 
         return output;
+    }
+
+    const handleStart = (id) => {
+        const output = ipcRenderer.sendSync("start-os-monitor", id);
+
+        console.log(output);
+
+        // setMonitors(output.monitors);
     }
 
     return (
@@ -127,10 +146,10 @@ function OpenSea() {
                                     <span style={{color: 'white'}}>{m.desired_price}</span>
                                 </div>
                                 <div className="col-2" style={{textAlign: 'center'}}>
-                                    <span style={{color: 'white'}}>{m.status}</span>
+                                    <span style={{color: 'white'}}>{m.status.result.message}</span>
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
-                                    <span className="ms-1 me-1 start-btn"><i className="fas fa-play-circle"></i></span>
+                                    <span className="ms-1 me-1 start-btn" onClick={() => handleStart(m.id)}><i className="fas fa-play-circle"></i></span>
                                     <span className="ms-1 me-1 stop-btn"><i className="fas fa-stop-circle"></i></span>
                                     <span className="ms-1 me-1 delete-btn"><i className="fas fa-trash-alt"></i></span>
                                 </div>
