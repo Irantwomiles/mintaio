@@ -162,16 +162,12 @@ ipcMain.on('start-os-monitor', (event, data) => {
         }
     }
 
-    console.log("Here 1");
-
     if(monitor.active) {
         return event.returnValue = {
             error: 2,
             monitors: getRendererMonitors()
         }
     }
-
-    console.log("Here 2");
 
     monitor.start();
 
@@ -180,6 +176,94 @@ ipcMain.on('start-os-monitor', (event, data) => {
         monitors: getRendererMonitors()
     };
 })
+
+ipcMain.on('stop-os-monitor', (event, data) => {
+
+    /*
+    1: monitor is null
+    2: already active
+     */
+
+    const monitor = getMonitor(data);
+
+    if(monitor === null) {
+        return event.returnValue = {
+            error: 1,
+            monitors: getRendererMonitors()
+        }
+    }
+
+    monitor.stop();
+
+    return event.returnValue = {
+        error: 0,
+        monitors: getRendererMonitors()
+    };
+})
+
+ipcMain.on('delete-os-monitor', (event, id) => {
+
+    /*
+    errors:
+    - 0: no errors
+    - 1: Wallet with that address does not exist
+    - 3: unknown error
+     */
+
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
+    const monitor = getMonitor(id);
+
+    if(monitor === null) {
+        return event.returnValue = {
+            error: 1,
+            monitors: getRendererMonitors()
+        }
+    }
+
+    db.osmonitor.find({id: monitor.id}, function (err, docs) {
+
+        if(err) {
+
+            const index = os_monitor.indexOf(monitor);
+            os_monitor.splice(index, 1);
+
+            return event.returnValue = {
+                error: 1,
+                monitors: getRendererMonitors()
+            }
+        }
+
+        if(docs.length > 0) {
+
+            db.osmonitor.remove({id: monitor.id}, function(err, number) {
+                if(err) {
+                    return event.returnValue = {
+                        error: 3,
+                        monitors: getRendererMonitors()
+                    }
+                }
+
+                const index = os_monitor.indexOf(monitor);
+                os_monitor.splice(index, 1);
+
+                return event.returnValue = {
+                    error: 0,
+                    wallets: getRendererMonitors()
+                }
+
+            })
+
+        }
+
+    })
+
+})
+
 
 ipcMain.on('load-os-monitors', (event, data) => {
     return event.returnValue = getRendererMonitors();
@@ -1032,7 +1116,7 @@ function loadMonitors() {
 
         if(docs.length > 0) {
             for(const doc of docs) {
-                const monitor = new OSMonitor(doc.contract_address, doc.desired_price, doc.maxGas, doc.priorityFee, null, doc.public_key, doc.wallet_id, doc.proxy, doc.webhook);
+                const monitor = new OSMonitor(doc.contract_address, doc.desired_price, doc.maxGas, doc.priorityFee, null, doc.public_key, doc.timer_delay, doc.wallet_id, doc.proxy, doc.webhook);
                 monitor.id = doc.id;
 
                 os_monitor.push(monitor);

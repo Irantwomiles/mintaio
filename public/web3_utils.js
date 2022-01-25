@@ -20,6 +20,7 @@ const secondary_key = json_value.secondary_key;
 
 const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${secondary_key}`;
+const http_endpoint = `https://eth-mainnet.alchemyapi.io/v2/${primary_key}`;
 
 const erc721_abi = require('./ERC721-ABI.json');
 
@@ -59,5 +60,6 @@ module.exports = {
     web3_logger,
     validToken,
     modules,
-    machine_id
+    machine_id,
+    http_endpoint
 }

@@ -1,4 +1,7 @@
-const { web3 } = require('../web3_utils');
+const { web3, http_endpoint } = require('../web3_utils');
+const {OpenSeaPort, Network, EventType} = require('opensea-js');
+const {OrderSide} = require("opensea-js/lib/types");
+const WalletProvider = require('@truffle/hdwallet-provider');
 const axios = require('axios');
 const crypto = require("crypto");
 const {getWindow} = require("../window_utils");
@@ -28,6 +31,25 @@ class OSMonitor {
         };
         this.active = false;
         this.buying = false;
+
+        this.wallet = null;
+
+        this.keys = [];
+        if(this.private_key !== null) {
+            this.keys.push(this.private_key);
+            this.wallet = new WalletProvider(this.keys, http_endpoint, 0, this.keys.length);
+        }
+
+        this.seaport = null;
+
+        if(this.wallet !== null) {
+            this.seaport = new OpenSeaPort(this.wallet, {
+                networkName: Network.Mainnet,
+                apiKey: this.api_key
+            })
+        }
+
+
     }
 
     async start() {
@@ -66,6 +88,35 @@ class OSMonitor {
         }, delay < 1000 ? 1000 : delay);
     }
 
+    stop() {
+        if(typeof this.interval === 'undefined') {
+            this.active = false;
+            this.status = {
+                error: 0,
+                result: {
+                    message: `Inactive`
+                }
+            };
+
+            this.sendMessage('monitor-status-update');
+            return;
+        }
+
+        clearInterval(this.interval);
+
+        this.interval = undefined;
+        this.active = false;
+
+        this.status = {
+            error: 0,
+            result: {
+                message: `Inactive`
+            }
+        };
+
+        this.sendMessage('monitor-status-update');
+    }
+
     async check_erc721(contract_address, desired_price, network, api_key, proxy) {
 
         console.log("Checking");
@@ -101,6 +152,7 @@ class OSMonitor {
 
                     const price = Number.parseFloat(web3.utils.fromWei(`${out.starting_price}`, 'ether'));
                     const payment_token = out.payment_token.id;
+                    const token_id = out.asset.token_id;
 
                     console.log(payment_token, price);
 
@@ -112,6 +164,7 @@ class OSMonitor {
                                 message: "Buying"
                             }
                         };
+                        this.sendMessage('monitor-status-update');
                         console.log("--------------------------------------------------")
                     }
                 }
@@ -126,6 +179,47 @@ class OSMonitor {
             };
             this.sendMessage('monitor-status-update');
         }
+    }
+
+    async fill_order(contract_address, token_id) {
+
+        if(this.private_key === null) {
+            this.status = {
+                error: 3,
+                result: {
+                    message: "Unlock Wallet"
+                }
+            };
+            this.sendMessage('monitor-status-update');
+            return;
+        }
+
+        if(this.wallet === null) {
+            this.keys.clear();
+            this.keys.push(this.private_key);
+            this.wallet = new WalletProvider(this.keys, http_endpoint, 0, this.keys.length);
+        }
+
+        if(this.seaport === null) {
+            this.seaport = new OpenSeaPort(this.wallet, {
+                networkName: Network.Mainnet,
+                apiKey: this.api_key
+            })
+        }
+
+        const order = await this.seaport.api.getOrder({side: OrderSide.Sell, asset_contract_address: contract_address, token_id: token_id})
+
+        const weiMax = web3.utils.toWei(this.maxGas, 'gwei');
+        const weiPrio = web3.utils.toWei(this.priorityFee, 'gwei');
+
+        const maxFeePerGas = web3.utils.toHex(weiMax);
+        const maxPriorityFeePerGas = web3.utils.toHex(weiPrio);
+
+        console.log(order);
+
+        // const transaction = await this.seaport.fulfillOrder({order, accountAddress: '0x917062180e5950Dc22b9D5e4E14B61dc2ff0173a', maxFeePerGas, maxPriorityFeePerGas});
+        // console.log(transaction);
+        // console.log(transaction);
     }
 
     sendMessage(channel, data) {

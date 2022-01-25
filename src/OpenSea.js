@@ -91,11 +91,16 @@ function OpenSea() {
     }
 
     const handleStart = (id) => {
-        const output = ipcRenderer.sendSync("start-os-monitor", id);
+        ipcRenderer.sendSync("start-os-monitor", id);
+    }
 
-        console.log(output);
+    const handleStop = (id) => {
+        ipcRenderer.sendSync("stop-os-monitor", id);
+    }
 
-        // setMonitors(output.monitors);
+    const handleDelete = (id) => {
+        const output = ipcRenderer.sendSync("delete-os-monitor", id);
+        setMonitors(output.monitors);
     }
 
     return (
@@ -114,7 +119,7 @@ function OpenSea() {
 
             <div className="tasks-list mt-3">
                 {
-                    monitors.length > 0 ?
+                    (typeof monitors !== 'undefined' && monitors.length > 0) ?
                         <div className="row d-flex p-3">
                             <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Wallet</span></div>
                             <div className="col-4 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Project</span></div>
@@ -127,7 +132,7 @@ function OpenSea() {
                 }
 
                 {
-                    monitors.length > 0 ?
+                    (typeof monitors !== 'undefined' && monitors.length > 0) ?
 
                         monitors.map((m) => (
                             <div key={Math.random()} className="row d-flex p-3">
@@ -150,8 +155,8 @@ function OpenSea() {
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
                                     <span className="ms-1 me-1 start-btn" onClick={() => handleStart(m.id)}><i className="fas fa-play-circle"></i></span>
-                                    <span className="ms-1 me-1 stop-btn"><i className="fas fa-stop-circle"></i></span>
-                                    <span className="ms-1 me-1 delete-btn"><i className="fas fa-trash-alt"></i></span>
+                                    <span className="ms-1 me-1 stop-btn" onClick={() => handleStop(m.id)}><i className="fas fa-stop-circle"></i></span>
+                                    <span className="ms-1 me-1 delete-btn" onClick={() => handleDelete(m.id)}><i className="fas fa-trash-alt"></i></span>
                                 </div>
                             </div>
                         ))
