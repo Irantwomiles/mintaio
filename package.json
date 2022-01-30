@@ -1,6 +1,6 @@
 {
   "name": "mintaio",
-  "version": "1.0.6",
+  "version": "1.0.62",
   "private": true,
   "main": "public/electron.js",
   "build": {

@@ -1,7 +1,7 @@
 const { web3, http_endpoint } = require('../web3_utils');
 const {OpenSeaPort, Network, EventType} = require('opensea-js');
 const {OrderSide} = require("opensea-js/lib/types");
-const HDWalletProvider = require('../@truffle/hdwallet-provider/dist/index.js');
+// const HDWalletProvider = require('../@truffle/hdwallet-provider/dist/index.js');
 const axios = require('axios');
 const crypto = require("crypto");
 const {getWindow} = require("../window_utils");
@@ -38,19 +38,19 @@ class OSMonitor {
         this.wallet = null;
 
         this.keys = [];
-        if(this.private_key !== null) {
-            this.keys.push(this.private_key);
-            this.wallet = new HDWalletProvider(this.keys, http_endpoint, 0, this.keys.length);
-        }
+        // if(this.private_key !== null) {
+        //     this.keys.push(this.private_key);
+        //     this.wallet = new HDWalletProvider(this.keys, http_endpoint, 0, this.keys.length);
+        // }
 
         this.seaport = null;
 
-        if(this.wallet !== null) {
-            this.seaport = new OpenSeaPort(this.wallet, {
-                networkName: Network.Mainnet,
-                apiKey: is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : this.api_key
-            })
-        }
+        // if(this.wallet !== null) {
+        //     this.seaport = new OpenSeaPort(this.wallet, {
+        //         networkName: Network.Mainnet,
+        //         apiKey: is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : this.api_key
+        //     })
+        // }
 
         log.info(`Creating OSMonitor instance ${this.id}`);
 
@@ -213,20 +213,20 @@ class OSMonitor {
 
         console.log("Private Key is not null");
 
-        if(this.wallet === null) {
-            this.keys.clear();
-            this.keys.push(this.private_key);
-            this.wallet = new HDWalletProvider(this.keys, http_endpoint, 0, this.keys.length);
-        }
+        // if(this.wallet === null) {
+        //     this.keys.clear();
+        //     this.keys.push(this.private_key);
+        //     this.wallet = new HDWalletProvider(this.keys, http_endpoint, 0, this.keys.length);
+        // }
 
         console.log("Wallet is not null");
 
-        if(this.seaport === null) {
-            this.seaport = new OpenSeaPort(this.wallet, {
-                networkName: Network.Mainnet,
-                apiKey: is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : this.api_key
-            })
-        }
+        // if(this.seaport === null) {
+        //     this.seaport = new OpenSeaPort(this.wallet, {
+        //         networkName: Network.Mainnet,
+        //         apiKey: is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : this.api_key
+        //     })
+        // }
 
         console.log("Seaport is not null");
 
