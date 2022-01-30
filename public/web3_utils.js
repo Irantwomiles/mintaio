@@ -20,11 +20,11 @@ const secondary_key = json_value.secondary_key;
 
 const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${secondary_key}`;
-const http_endpoint = `https://eth-mainnet.alchemyapi.io/v2/${primary_key}`;
+const http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 
 const erc721_abi = require('./ERC721-ABI.json');
 
-const web3 = createAlchemyWeb3(websocket_key);
+const web3 = createAlchemyWeb3(http_endpoint);
 const web3_logger = createAlchemyWeb3(websocket_key_logger);
 
 const requireFromWeb = require('require-from-web');
@@ -55,11 +55,37 @@ function validToken(logs) {
     return true;
 }
 
+async function sendWebhookMessage(input) {
+
+    try {
+        const message = {
+            "embeds": [
+                {
+                    "title": input.title,
+                    "description": input.description,
+                    "color": input.color
+                }
+            ]
+        }
+
+        await axios.post('https://discord.com/api/webhooks/935664893137395722/hjjlfw6Z46l8szcIY09NGq2n0fZ5d7hY2CKDr2QBwMe0HTbVMAFGLCsyfokwbBCdCrDZ', JSON.stringify(message), {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+    } catch {
+
+    }
+
+
+}
+
 module.exports = {
     web3,
     web3_logger,
     validToken,
     modules,
     machine_id,
-    http_endpoint
+    http_endpoint,
+    sendWebhookMessage
 }

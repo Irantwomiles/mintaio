@@ -1,10 +1,12 @@
 const { web3, http_endpoint } = require('../web3_utils');
 const {OpenSeaPort, Network, EventType} = require('opensea-js');
 const {OrderSide} = require("opensea-js/lib/types");
-const WalletProvider = require('@truffle/hdwallet-provider');
+const HDWalletProvider = require('../@truffle/hdwallet-provider/dist/index.js');
 const axios = require('axios');
 const crypto = require("crypto");
 const {getWindow} = require("../window_utils");
+const is_dev = require('electron-is-dev');
+const log = require('electron-log');
 
 class OSMonitor {
 
@@ -21,6 +23,7 @@ class OSMonitor {
         this.timer_delay = timer_delay;
         this.wallet_id = wallet_id;
         this.proxy = proxy;
+
         this.webhook = webhook;
 
         this.status = {
@@ -37,7 +40,7 @@ class OSMonitor {
         this.keys = [];
         if(this.private_key !== null) {
             this.keys.push(this.private_key);
-            this.wallet = new WalletProvider(this.keys, http_endpoint, 0, this.keys.length);
+            this.wallet = new HDWalletProvider(this.keys, http_endpoint, 0, this.keys.length);
         }
 
         this.seaport = null;
@@ -45,10 +48,11 @@ class OSMonitor {
         if(this.wallet !== null) {
             this.seaport = new OpenSeaPort(this.wallet, {
                 networkName: Network.Mainnet,
-                apiKey: this.api_key
+                apiKey: is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : this.api_key
             })
         }
 
+        log.info(`Creating OSMonitor instance ${this.id}`);
 
     }
 
@@ -83,7 +87,7 @@ class OSMonitor {
 
         this.interval = setInterval(() => {
 
-            this.check_erc721(this.contract_address, this.desired_price, "", this.api_key, "");
+            this.check_erc721(this.contract_address, this.desired_price, is_dev ? "rinkeby-" : "", is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : this.api_key, "");
 
         }, delay < 1000 ? 1000 : delay);
     }
@@ -105,6 +109,7 @@ class OSMonitor {
         clearInterval(this.interval);
 
         this.interval = undefined;
+        this.buying = false;
         this.active = false;
 
         this.status = {
@@ -120,8 +125,8 @@ class OSMonitor {
     async check_erc721(contract_address, desired_price, network, api_key, proxy) {
 
         console.log("Checking");
-
-        const delay = 1000 * 60 * 2;
+        // full day
+        const delay = 1000 * 60 * 60 * 24;
         const updated_value = Date.now() - delay;
         const date = new Date(updated_value);
 
@@ -134,6 +139,8 @@ class OSMonitor {
         const seconds = date.getUTCSeconds();
 
         const url = `https://${network}api.opensea.io/api/v1/events?event_type=created&asset_contract_address=${contract_address}&occurred_after=${year}-${month > 10 ? month : '0' + month}-${day}T${hour}:${minutes}:${seconds}`;
+
+        console.log(url);
 
         try {
             const results = await axios.get(url, {
@@ -156,14 +163,24 @@ class OSMonitor {
 
                     console.log(payment_token, price);
 
-                    if(payment_token === 1 && price <= desired_price) {
+                    if(payment_token === 2 && price <= desired_price) {
                         // check to see if this.buying === false
+
+                        if(this.buying) {
+                            console.log("Already attempting to buy something with this wallet, skipping");
+                            return;
+                        }
+                        this.buying = true;
+
+                        this.fill_order(contract_address, token_id);
+
                         this.status = {
                             error: 2,
                             result: {
                                 message: "Buying"
                             }
                         };
+
                         this.sendMessage('monitor-status-update');
                         console.log("--------------------------------------------------")
                     }
@@ -194,32 +211,49 @@ class OSMonitor {
             return;
         }
 
+        console.log("Private Key is not null");
+
         if(this.wallet === null) {
             this.keys.clear();
             this.keys.push(this.private_key);
-            this.wallet = new WalletProvider(this.keys, http_endpoint, 0, this.keys.length);
+            this.wallet = new HDWalletProvider(this.keys, http_endpoint, 0, this.keys.length);
         }
+
+        console.log("Wallet is not null");
 
         if(this.seaport === null) {
             this.seaport = new OpenSeaPort(this.wallet, {
                 networkName: Network.Mainnet,
-                apiKey: this.api_key
+                apiKey: is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : this.api_key
             })
         }
 
-        const order = await this.seaport.api.getOrder({side: OrderSide.Sell, asset_contract_address: contract_address, token_id: token_id})
+        console.log("Seaport is not null");
 
-        const weiMax = web3.utils.toWei(this.maxGas, 'gwei');
-        const weiPrio = web3.utils.toWei(this.priorityFee, 'gwei');
+        console.log("Attempting to buy ", contract_address, token_id);
 
-        const maxFeePerGas = web3.utils.toHex(weiMax);
-        const maxPriorityFeePerGas = web3.utils.toHex(weiPrio);
+        try {
+            const order = await this.seaport.api.getOrder({side: OrderSide.Sell, asset_contract_address: contract_address, token_id: token_id})
 
-        console.log(order);
+            console.log("Got Order");
 
-        // const transaction = await this.seaport.fulfillOrder({order, accountAddress: '0x917062180e5950Dc22b9D5e4E14B61dc2ff0173a', maxFeePerGas, maxPriorityFeePerGas});
-        // console.log(transaction);
-        // console.log(transaction);
+
+            const weiMax = web3.utils.toWei(this.maxGas, 'gwei');
+            const weiPrio = web3.utils.toWei(this.priorityFee, 'gwei');
+
+            const maxFeePerGas = web3.utils.toHex(weiMax);
+            const maxPriorityFeePerGas = web3.utils.toHex(weiPrio);
+
+
+            // const transaction = await this.seaport.fulfillOrder({order, accountAddress: '0x917062180e5950Dc22b9D5e4E14B61dc2ff0173a', maxFeePerGas, maxPriorityFeePerGas});
+
+            const transaction = await this.seaport.fulfillOrder({order, accountAddress: this.public_key});
+
+            console.log("TransactionHash:", transaction);
+
+        } catch(e) {
+            console.log("ERROR:", e);
+        }
     }
 
     sendMessage(channel, data) {

@@ -1,0 +1,119 @@
+{
+  "_from": "@truffle/hdwallet-provider",
+  "_id": "@truffle/hdwallet-provider@2.0.1",
+  "_inBundle": false,
+  "_integrity": "sha512-HTibaoO4/3AFEjWROil9uwAI+b9G3+TUmJWrbxTFTN8tO/0G2wl9UgVHvelnOUUvCy3eoR6L2JScXmpBmHfpuQ==",
+  "_location": "/@truffle/hdwallet-provider",
+  "_phantomChildren": {
+    "@babel/plugin-transform-runtime": "7.12.1",
+    "@babel/runtime": "7.12.1",
+    "@ethereumjs/tx": "3.4.0",
+    "@types/bn.js": "4.11.6",
+    "async": "2.6.3",
+    "async-limiter": "1.0.1",
+    "backoff": "2.5.0",
+    "clone": "2.1.2",
+    "create-hash": "1.2.0",
+    "cross-fetch": "2.2.5",
+    "elliptic": "6.5.4",
+    "eth-json-rpc-filters": "4.2.2",
+    "eth-json-rpc-infura": "5.1.0",
+    "eth-json-rpc-middleware": "6.0.0",
+    "eth-query": "2.1.2",
+    "eth-rpc-errors": "3.0.0",
+    "ethereum-cryptography": "0.1.3",
+    "ethereumjs-block": "1.7.1",
+    "ethereumjs-vm": "2.6.0",
+    "ethjs-util": "0.1.6",
+    "json-rpc-random-id": "1.0.1",
+    "json-stable-stringify": "1.0.1",
+    "promise-to-callback": "1.0.0",
+    "readable-stream": "2.3.7",
+    "request": "2.88.2",
+    "rlp": "2.2.7",
+    "safe-buffer": "5.1.2",
+    "safe-event-emitter": "1.0.1",
+    "semaphore": "1.1.0",
+    "tweetnacl-util": "0.15.1",
+    "xhr": "2.6.0",
+    "xtend": "4.0.2"
+  },
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "@truffle/hdwallet-provider",
+    "name": "@truffle/hdwallet-provider",
+    "escapedName": "@truffle%2fhdwallet-provider",
+    "scope": "@truffle",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@truffle/hdwallet-provider/-/hdwallet-provider-2.0.1.tgz",
+  "_shasum": "6af337690e5442d4c64c451953f3103e46c9799d",
+  "_spec": "@truffle/hdwallet-provider",
+  "_where": "C:\\Users\\irant\\OneDrive\\Desktop\\WebDev\\mintaio",
+  "author": {
+    "name": "Tim Coulter",
+    "email": "tim@trufflesuite.com"
+  },
+  "bugs": {
+    "url": "https://github.com/trufflesuite/truffle/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "@ethereumjs/common": "^2.4.0",
+    "@ethereumjs/tx": "^3.3.0",
+    "eth-sig-util": "^3.0.1",
+    "ethereum-cryptography": "^0.1.3",
+    "ethereum-protocol": "^1.0.1",
+    "ethereumjs-util": "^6.1.0",
+    "ethereumjs-wallet": "^1.0.1",
+    "web3-provider-engine": "16.0.3"
+  },
+  "deprecated": false,
+  "description": "HD Wallet-enabled Web3 provider",
+  "devDependencies": {
+    "@types/bip39": "^2.4.2",
+    "@types/ethereum-protocol": "^1.0.0",
+    "@types/ethereumjs-util": "^5.2.0",
+    "@types/mocha": "^5.2.7",
+    "@types/web3-provider-engine": "^14.0.0",
+    "ganache": "7.0.0",
+    "mocha": "8.1.2",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.1.4",
+    "web3": "1.5.3"
+  },
+  "gitHead": "f3831fe5b159db57f59b9f11c4a41b56282b8884",
+  "homepage": "https://github.com/trufflesuite/truffle/tree/master/packages/hdwallet-provider#readme",
+  "keywords": [
+    "etheruem",
+    "hd",
+    "mnemonic",
+    "provider",
+    "wallet"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "name": "@truffle/hdwallet-provider",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trufflesuite/truffle.git",
+    "directory": "packages/hdwallet-provider"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepare": "yarn build",
+    "test": "yarn build && mocha --exit -r ts-node/register test/**/*.test.ts"
+  },
+  "types": "dist/index.d.ts",
+  "version": "2.0.1"
+}

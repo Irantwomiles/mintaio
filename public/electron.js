@@ -2,13 +2,19 @@ const { app, BrowserWindow, Menu } = require('electron')
 const path = require('path')
 const is_dev = require('electron-is-dev');
 const { setWindow } = require('./window_utils');
-
+const log = require('electron-log');
 require('./ipcmain_events.js');
+
+log.info("Inside electron.js");
 
 let mainWindow = null;
 
 const createWindow = () => {
     // Create the browser window.
+
+    log.info("Inside createWindow");
+
+
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
@@ -20,10 +26,14 @@ const createWindow = () => {
         show: false
     })
 
+    log.info("After window init");
+
+
     Menu.setApplicationMenu(null);
 
     mainWindow.on('ready-to-show', () => {
         mainWindow.show();
+        log.info("Showing window");
     })
 
     // and load the index.html of the app.

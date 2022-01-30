@@ -1,27 +1,29 @@
+const is_dev = require('electron-is-dev');
+const fs = require('fs');
+const crypto = require('crypto');
+const log = require('electron-log');
+
 const { ipcMain, app } = require('electron');
 const axios = require('axios');
 
+const { Task } = require('./task/Task');
+const { OSMonitor } = require('./task/OSMontior');
+
 const bcrypt = require('bcrypt');
 const { getStorage, saveApiKeys } = require('./storage');
-const fs = require('fs');
 const requireFromWeb = require('require-from-web');
 
 const db = getStorage();
 
-const { web3,
+const {
+    web3,
     web3_logger,
     machine_id
 } = require('./web3_utils.js');
 
 const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
 
-const crypto = require('crypto');
-const { Task } = require('./task/Task');
-const { OSMonitor } = require('./task/OSMontior');
-const is_dev = require('electron-is-dev');
-
 const erc721_abi = require("./ERC721-ABI.json");
-const {getWindow} = require("./window_utils");
 
 const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
 
@@ -1122,6 +1124,8 @@ function loadMonitors() {
                 os_monitor.push(monitor);
             }
         }
+
+        log.info(`Loaded ${os_monitor.length} monitors.`);
 
     })
 }

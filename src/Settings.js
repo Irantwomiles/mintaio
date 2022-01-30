@@ -90,7 +90,7 @@ function Settings() {
                 </div>
 
                 <div className="version">
-                    <span>Version 1.0.1</span>
+                    <span>Version 1.0.6</span>
                 </div>
 
             </div>
