@@ -20,7 +20,8 @@ const secondary_key = json_value.secondary_key;
 
 const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${secondary_key}`;
-const http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
+// const http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
+const http_endpoint = `https://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 
 const erc721_abi = require('./ERC721-ABI.json');
 
@@ -77,8 +78,81 @@ async function sendWebhookMessage(input) {
 
     }
 
-
 }
+
+async function mintSuccessMessage(contract_address, tx_hash, price, max_gas, priority_fee, webhook) {
+
+    try {
+        const message = {
+            "embeds": [
+                {
+                    "title": "Successfully Minted!",
+                    "description": `Project: [View on etherscan](https://etherscan.io/address/${contract_address})  Transaction: [View on etherscan](https://etherscan.io/tx/${tx_hash})\n\n**Price**: ${price} ETH\n**Max Gas:** ${max_gas} | **Priority Fee:** ${priority_fee}`,
+                    "color": 3135616,
+                    "author": {
+                        "name": "MintAIO",
+                        "url": "https://twitter.com/MintAIO_"
+                    }
+                }
+            ]
+        }
+
+        await axios.post(webhook, JSON.stringify(message), {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+    } catch {
+
+    }
+}
+
+async function waitingMessage(contract_address, sender, price, amount, max_gas, priority_fee, status, color, webhook) {
+
+    try {
+        const message = {
+            "embeds": [
+                {
+                    "title": "MintAIO",
+                    "description": `**Status:** ${status} | **Mode:** Automatic\n**Project**: [View on etherscan](https://etherscan.io/address/${contract_address}) | **Sender:** [View on etherscan](https://etherscan.io/address/${sender})\n\n**Price:** ${price} ETH | **Quantity:** ${amount} | **Max Gas:** ${max_gas} | **Priority Fee:** ${priority_fee}`,
+                    "color": color
+                }
+            ]
+        }
+
+        await axios.post(webhook, JSON.stringify(message), {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+    } catch {
+
+    }
+}
+
+async function mintErrorMessage(contract_address, sender, price, amount, max_gas, priority_fee, status, error, webhook) {
+
+    try {
+        const message = {
+            "embeds": [
+                {
+                    "title": "MintAIO",
+                    "description": `**Status:** ${status} | **Mode:** Automatic\n**Project**: [View on etherscan](https://etherscan.io/address/${contract_address}) | **Sender:** [View on etherscan](https://etherscan.io/address/${sender})\n\n**Price:** ${price} ETH | **Quantity:** ${amount} | **Max Gas:** ${max_gas} | **Priority Fee:** ${priority_fee}\n\n**Error:** ${error}`,
+                    "color": 13963794
+                }
+            ]
+        }
+
+        await axios.post(webhook, JSON.stringify(message), {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+    } catch {
+
+    }
+}
+
 
 module.exports = {
     web3,
@@ -87,5 +161,8 @@ module.exports = {
     modules,
     machine_id,
     http_endpoint,
-    sendWebhookMessage
+    sendWebhookMessage,
+    mintSuccessMessage,
+    waitingMessage,
+    mintErrorMessage
 }

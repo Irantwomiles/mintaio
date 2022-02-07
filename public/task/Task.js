@@ -1,6 +1,9 @@
-const { modules, web3, sendWebhookMessage } = require('../web3_utils');
+const { modules, web3, sendWebhookMessage, mintSuccessMessage, waitingMessage, mintErrorMessage} = require('../web3_utils');
+const is_dev = require('electron-is-dev');
 const crypto = require('crypto');
 const {getWindow} = require('../window_utils');
+const mintaio_webhook = 'https://discord.com/api/webhooks/935664893137395722/hjjlfw6Z46l8szcIY09NGq2n0fZ5d7hY2CKDr2QBwMe0HTbVMAFGLCsyfokwbBCdCrDZ';
+const mintaio_webhook_dev = 'https://discord.com/api/webhooks/940036419890597949/XjjgpAyMvxPPoCXHo71xuye2jeyaaro7xqtBayo9lO01FGx_U8ThE3GPQXcKN97fbcWP';
 
 class Task {
 
@@ -54,6 +57,8 @@ class Task {
 
         this.imported_functions = null;
 
+        this.webhook = "";
+
     }
 
     async activate() {
@@ -82,19 +87,7 @@ class Task {
 
         this.nonce = await web3.eth.getTransactionCount(this.publicKey, "latest");
 
-        sendWebhookMessage({
-            title: 'MintAIO - Status Log',
-            description:
-                `Status: Creating Transaction\n
-                 Contract Address: [${this.contract_address}](https://etherscan.io/address/${this.contract_address})\n 
-                 Max Gas: ${this.gas}\n
-                 Priority: ${this.gasPriorityFee}\n
-                 Amount: ${this.amount}\n
-                 Price: ${this.price}\n
-                 Nonce: ${this.nonce}\n
-                 Public Key: ${this.publicKey}\n`,
-            color: '16705372'
-        })
+        waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Creating transaction', 13999634, is_dev ? mintaio_webhook_dev : mintaio_webhook);
 
         this.status = {
             error: 0,
@@ -116,8 +109,6 @@ class Task {
         let gasLimit = block.gasLimit / (block.transactions.length > 0 ? block.transactions.length : 1);
         gasLimit = (gasLimit <= 100000 ? Math.ceil(gasLimit + 175000) : 300000) * Number.parseFloat(this.amount);
 
-
-
         const transaction_promise = this.imported_functions.sendTransaction(
             web3,
             this.contract_address,
@@ -137,21 +128,9 @@ class Task {
 
         this.sendMessage('task-status-update');
 
-        sendWebhookMessage({
-            title: 'MintAIO - Status Log',
-            description:
-                `Status: Sent Transaction\n
-                 Contract Address: [${this.contract_address}](https://etherscan.io/address/${this.contract_address})\n 
-                 Max Gas: ${this.gas}\n
-                 Priority: ${this.gasPriorityFee}\n
-                 Amount: ${this.amount}\n
-                 Price: ${this.price}\n
-                 Nonce: ${this.nonce}\n
-                 Public Key: ${this.publicKey}\n`,
-            color: '16705372'
-        })
+        waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Sent transaction', 13999634, is_dev ? mintaio_webhook_dev : mintaio_webhook);
 
-        transaction_promise.then((result) => {
+        transaction_promise.then( async (result) => {
 
             this.status = {
                 error: 1,
@@ -160,15 +139,16 @@ class Task {
 
             this.sendMessage('task-status-update', result);
 
-            sendWebhookMessage({
-                title: 'MintAIO - Status Log',
-                description:
-                    `Status: Successfully Minted!\n
-                 Contract Address: [${this.contract_address}](https://etherscan.io/address/${this.contract_address})\n 
-                 Result: [View Transaction](https://etherscan.io/tx/${result.transactionHash})\n
-                 Public Key: ${this.publicKey}\n`,
-                color: '5763719'
-            })
+            const tx = await web3.eth.getTransaction(result.transactionHash);
+            const _price = web3.utils.fromWei(tx.value, 'ether');
+            const _maxGas = web3.utils.fromWei(tx.maxFeePerGas, 'gwei');
+            const _priority = web3.utils.fromWei(tx.maxPriorityFeePerGas, 'gwei');
+
+            mintSuccessMessage(this.contract_address, result.transactionHash, _price, _maxGas, _priority, is_dev ? mintaio_webhook_dev : mintaio_webhook);
+
+            if(this.webhook.length > 0) {
+                mintSuccessMessage(this.contract_address, result.transactionHash, _price, _maxGas, _priority, this.webhook);
+            }
 
             this.active = false;
         }).catch((error) => {
@@ -179,15 +159,7 @@ class Task {
 
             this.sendMessage('task-status-update', error);
 
-            sendWebhookMessage({
-                title: 'MintAIO - Status Log',
-                description:
-                    `Status: Error!\n
-                 Contract Address: [${this.contract_address}](https://etherscan.io/address/${this.contract_address})\n 
-                 Error: ${error.message}\n
-                 Public Key: ${this.publicKey}\n`,
-                color: '15548997'
-            })
+            mintErrorMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Sent transaction', error.message, is_dev ? mintaio_webhook_dev : mintaio_webhook);
 
             this.active = false;
         })
@@ -322,19 +294,7 @@ class Task {
 
         this.sendMessage('task-status-update');
 
-        sendWebhookMessage({
-            title: 'MintAIO - Status Log',
-            description:
-                `Status: Waiting\n
-                 Contract Address: [${this.contract_address}](https://etherscan.io/address/${this.contract_address})\n 
-                 Start Mode: ${this.start_mode}\n 
-                 Max Gas: ${this.gas}\n
-                 Priority: ${this.gasPriorityFee}\n
-                 Amount: ${this.amount}\n
-                 Price: ${this.price}\n
-                 Public Key: ${this.publicKey}\n`,
-            color: '3447003'
-        })
+        waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Waiting', 4951747, is_dev ? mintaio_webhook_dev : mintaio_webhook);
 
         this.automatic_interval = setInterval(() => {
 
@@ -350,19 +310,7 @@ class Task {
                             return;
                         }
 
-                        sendWebhookMessage({
-                            title: 'MintAIO - Status Log',
-                            description:
-                                `Status: Found\n
-                                 Contract Address: [${this.contract_address}](https://etherscan.io/address/${this.contract_address})\n 
-                                 Start Mode: ${this.start_mode}\n 
-                                 Max Gas: ${this.gas}\n
-                                 Priority: ${this.gasPriorityFee}\n
-                                 Amount: ${this.amount}\n
-                                 Price: ${this.price}\n
-                                 Public Key: ${this.publicKey}\n`,
-                                            color: '10181046'
-                                        })
+                        waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Project is live', 12591347, is_dev ? mintaio_webhook_dev : mintaio_webhook);
 
                         found = true;
                         this.start();

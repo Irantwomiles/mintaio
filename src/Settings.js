@@ -8,6 +8,7 @@ function Settings() {
 
     const [primary, setPrimary] = useState("");
     const [secondary, setSecondary] = useState("");
+    const [webhook, setWebhook] = useState("");
 
     const changePrimary = () => {
 
@@ -47,7 +48,7 @@ function Settings() {
 
                 <div className="d-flex align-items-end m-3">
                     <div className="w-75">
-                        <p className="mb-2">Primary Key</p>
+                        <p className="mb-2">Alchemy Primary Key</p>
                         <input type="text" className="form-control" onChange={(e) => {setPrimary(e.target.value)}} placeholder="Primary API Key" value={primary} />
                     </div>
                     <div>
@@ -57,8 +58,18 @@ function Settings() {
 
                 <div className="d-flex align-items-end m-3">
                     <div className="w-75">
-                        <p className="mb-2">Secondary Key</p>
+                        <p className="mb-2">Alchemy Secondary Key</p>
                         <input type="text" className="form-control" onChange={(e) => {setSecondary(e.target.value)}} placeholder="Secondary API Key" value={secondary} />
+                    </div>
+                    <div>
+                        <button className="btn btn-update ms-2" onClick={() => {changeSecondary()}}>Update</button>
+                    </div>
+                </div>
+
+                <div className="d-flex align-items-end m-3">
+                    <div className="w-75">
+                        <p className="mb-2">Discord Webhook</p>
+                        <input type="text" className="form-control" onChange={(e) => {setWebhook(e.target.value)}} placeholder="Discord Webhook" value={webhook} />
                     </div>
                     <div>
                         <button className="btn btn-update ms-2" onClick={() => {changeSecondary()}}>Update</button>

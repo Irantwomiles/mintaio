@@ -58,7 +58,7 @@ function Wallet() {
         }
 
         const value = ipcRenderer.sendSync('add-wallet', {
-            private_key: privateKey,
+            private_key: privateKey.startsWith('0x') ? privateKey : '0x' + privateKey,
             password: password,
             name: name
         })

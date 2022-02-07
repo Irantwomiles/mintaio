@@ -34,10 +34,65 @@ let mint_logs = [];
 
 let isAuth = false;
 let imported_functions = null;
+let webhook = "";
 
+loadWebhooks();
 loadWallets();
 loadTasks();
 loadMonitors();
+
+ipcMain.on('set-task-webhook', (event, data) => {
+    db.webhooks.find({type: "task"}, function (err, docs){
+
+        if(err) {
+            return event.returnValue = {
+                error: 1
+            }
+        }
+
+        if(docs.length === 0) {
+
+            const obj = {
+                type: "task",
+                webhook: data
+            }
+
+            db.webhooks.insert(obj, function(err, doc) {
+                if(err) {
+                    return event.returnValue = {
+                        error: 1
+                    }
+                }
+                return event.returnValue = {
+                    error: 0,
+                    webhook: data
+                }
+            });
+
+        } else {
+
+            const obj = {
+                type: "task",
+                webhook: data
+            }
+
+            db.webhooks.update({type: "task"}, obj, function (err, doc) {
+                if(err) {
+                    return event.returnValue = {
+                        error: 1
+                    }
+                }
+
+                return event.returnValue = {
+                    error: 0,
+                    webhook: data
+                }
+            });
+
+        }
+
+    })
+})
 
 ipcMain.on('get-alchemy-keys', (event, data) => {
     return event.returnValue = {
@@ -622,7 +677,8 @@ ipcMain.on('add-task', (event, data) => {
                 readFunction: task.contract_status_method,
                 readCurrentValue: task.contract_status,
                 timer: task.timer,
-                mode: task.start_mode
+                mode: task.start_mode,
+                webhook: webhook
             }
 
             db.tasks.insert(obj, function (err, doc) {
@@ -727,6 +783,7 @@ ipcMain.on('update-task', (event, data) => {
             task.contract_status = data.readCurrentValue;
             task.contract_status_method = data.readFunction;
             task.nonce = nonce;
+            task.webhook = webhook;
 
             const obj = {
                 id: task.id,
@@ -1101,6 +1158,8 @@ function loadTasks() {
                 task.timer = doc.timer;
                 task.start_mode = doc.mode;
 
+                task.webhook = webhook;
+
                 tasks.push(task);
             }
         }
@@ -1123,6 +1182,23 @@ function loadMonitors() {
 
                 os_monitor.push(monitor);
             }
+        }
+
+        log.info(`Loaded ${os_monitor.length} monitors.`);
+
+    })
+}
+
+function loadWebhooks() {
+    db.webhooks.find({}, function(err, docs) {
+
+        if(err) {
+            console.log('error while loading webhooks');
+            return;
+        }
+
+        if(docs.length > 0) {
+            webhook = docs[0];
         }
 
         log.info(`Loaded ${os_monitor.length} monitors.`);
