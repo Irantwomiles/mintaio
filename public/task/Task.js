@@ -1,4 +1,4 @@
-const { modules, web3, sendWebhookMessage, mintSuccessMessage, waitingMessage, mintErrorMessage} = require('../web3_utils');
+const { modules, web3, mintSuccessMessage, waitingMessage, mintErrorMessage} = require('../web3_utils');
 const is_dev = require('electron-is-dev');
 const crypto = require('crypto');
 const {getWindow} = require('../window_utils');
@@ -58,10 +58,11 @@ class Task {
         this.imported_functions = null;
 
         this.webhook = "";
-
     }
 
     async activate() {
+
+        console.log("Webhook", this.webhook);
 
         if(this.imported_functions === null) {
             this.imported_functions = await modules;
@@ -88,6 +89,10 @@ class Task {
         this.nonce = await web3.eth.getTransactionCount(this.publicKey, "latest");
 
         waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Creating transaction', 13999634, is_dev ? mintaio_webhook_dev : mintaio_webhook);
+
+        if(this.webhook.length > 0) {
+            waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Creating transaction', 13999634, this.webhook);
+        }
 
         this.status = {
             error: 0,
@@ -130,6 +135,10 @@ class Task {
 
         waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Sent transaction', 13999634, is_dev ? mintaio_webhook_dev : mintaio_webhook);
 
+        if(this.webhook.length > 0) {
+            waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Sent transaction', 13999634, this.webhook);
+        }
+
         transaction_promise.then( async (result) => {
 
             this.status = {
@@ -160,6 +169,10 @@ class Task {
             this.sendMessage('task-status-update', error);
 
             mintErrorMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Sent transaction', error.message, is_dev ? mintaio_webhook_dev : mintaio_webhook);
+
+            if(this.webhook.length > 0) {
+                mintErrorMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Sent transaction', error.message, this.webhook);
+            }
 
             this.active = false;
         })
@@ -296,6 +309,10 @@ class Task {
 
         waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Waiting', 4951747, is_dev ? mintaio_webhook_dev : mintaio_webhook);
 
+        if(this.webhook.length > 0) {
+            waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Waiting', 4951747, this.webhook);
+        }
+
         this.automatic_interval = setInterval(() => {
 
             for(let i = 0; i < 5; i++) {
@@ -311,6 +328,10 @@ class Task {
                         }
 
                         waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Project is live', 12591347, is_dev ? mintaio_webhook_dev : mintaio_webhook);
+
+                        if(this.webhook.length > 0) {
+                            waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Project is live', 12591347, this.webhook);
+                        }
 
                         found = true;
                         this.start();

@@ -29,6 +29,16 @@ function Settings() {
 
     }
 
+    const changeWebhook = () => {
+
+        if(webhook.length === 0) return;
+
+        ipcRenderer.sendSync("set-task-webhook", webhook);
+
+        //send toast on success
+
+    }
+
     useEffect(() => {
 
         const update_keys = () => {
@@ -37,7 +47,13 @@ function Settings() {
             setSecondary(output.keys.secondary_key);
         }
 
+        const update_webhook = () => {
+            const output = ipcRenderer.sendSync('get-webhook');
+            setPrimary(output);
+        }
+
         update_keys();
+        update_webhook();
 
     }, [])
 
@@ -72,7 +88,7 @@ function Settings() {
                         <input type="text" className="form-control" onChange={(e) => {setWebhook(e.target.value)}} placeholder="Discord Webhook" value={webhook} />
                     </div>
                     <div>
-                        <button className="btn btn-update ms-2" onClick={() => {changeSecondary()}}>Update</button>
+                        <button className="btn btn-update ms-2" onClick={() => {changeWebhook()}}>Update</button>
                     </div>
                 </div>
 

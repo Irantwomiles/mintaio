@@ -153,6 +153,31 @@ async function mintErrorMessage(contract_address, sender, price, amount, max_gas
     }
 }
 
+async function webhookSet(webhook) {
+
+    try {
+        const message = {
+            "embeds": [
+                {
+                    "title": "MintAIO",
+                    "description": "Discord Webhook has been updated!\n\n**Twitter:** [MintAIO](https://twitter.com/MintAIO_)\n\n**Disclaimer:** Please re-create your tasks to use the updated\nwebhook.",
+                    "color": 767109
+                }
+            ]
+        }
+
+        await axios.post(webhook, JSON.stringify(message), {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+    } catch {
+
+    }
+}
+
+
+
 
 module.exports = {
     web3,
@@ -164,5 +189,6 @@ module.exports = {
     sendWebhookMessage,
     mintSuccessMessage,
     waitingMessage,
-    mintErrorMessage
+    mintErrorMessage,
+    webhookSet
 }

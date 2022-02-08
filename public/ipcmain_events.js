@@ -18,7 +18,8 @@ const db = getStorage();
 const {
     web3,
     web3_logger,
-    machine_id
+    machine_id,
+    webhookSet
 } = require('./web3_utils.js');
 
 const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
@@ -42,7 +43,7 @@ loadTasks();
 loadMonitors();
 
 ipcMain.on('set-task-webhook', (event, data) => {
-    db.webhooks.find({type: "task"}, function (err, docs){
+    db.webhooks.find({type: "task"}, function (err, docs) {
 
         if(err) {
             return event.returnValue = {
@@ -63,6 +64,9 @@ ipcMain.on('set-task-webhook', (event, data) => {
                         error: 1
                     }
                 }
+                webhook = obj.data;
+                webhookSet(webhook);
+
                 return event.returnValue = {
                     error: 0,
                     webhook: data
@@ -83,6 +87,9 @@ ipcMain.on('set-task-webhook', (event, data) => {
                     }
                 }
 
+                webhook = obj.data;
+                webhookSet(webhook);
+
                 return event.returnValue = {
                     error: 0,
                     webhook: data
@@ -98,6 +105,10 @@ ipcMain.on('get-alchemy-keys', (event, data) => {
     return event.returnValue = {
         keys: getStorage().default_keys
     }
+})
+
+ipcMain.on('get-webhook', (event, data) => {
+    return event.returnValue = webhook;
 })
 
 ipcMain.on('update-alchemy-key-primary', (event, data) => {
@@ -320,7 +331,6 @@ ipcMain.on('delete-os-monitor', (event, id) => {
     })
 
 })
-
 
 ipcMain.on('load-os-monitors', (event, data) => {
     return event.returnValue = getRendererMonitors();
@@ -643,7 +653,7 @@ ipcMain.on('add-task', (event, data) => {
         }
     }
 
-    bcrypt.compare(data.walletPassword, wallet.password, function(err, result) {
+    bcrypt.compare(data.walletPassword, wallet.password, async function(err, result) {
 
         if(err) {
             return event.returnValue = {
@@ -662,6 +672,10 @@ ipcMain.on('add-task', (event, data) => {
 
             task.contract_status = data.readCurrentValue;
             task.contract_status_method = data.readFunction;
+            task.webhook = webhook;
+
+            const abi = await imported_functions.getContractABI(axios, is_dev, task.contract_address);
+            task.abi = abi;
 
             const obj = {
                 id: task.id,
@@ -680,6 +694,8 @@ ipcMain.on('add-task', (event, data) => {
                 mode: task.start_mode,
                 webhook: webhook
             }
+
+            console.log("ObjWebhook", obj.webhook);
 
             db.tasks.insert(obj, function (err, doc) {
                 if(err) {
@@ -1198,7 +1214,7 @@ function loadWebhooks() {
         }
 
         if(docs.length > 0) {
-            webhook = docs[0];
+            webhook = docs[0].webhook;
         }
 
         log.info(`Loaded ${os_monitor.length} monitors.`);
