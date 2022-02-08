@@ -49,7 +49,7 @@ function Settings() {
 
         const update_webhook = () => {
             const output = ipcRenderer.sendSync('get-webhook');
-            setPrimary(output);
+            setWebhook(output);
         }
 
         update_keys();
@@ -93,10 +93,10 @@ function Settings() {
                 </div>
 
 
-                <div className="m-3 mt-5">
-                    <h3 style={{color: "#8a78e9"}}>What are these two options?</h3>
+                <div className="m-3 mt-4">
+                    <h3 style={{color: "#8a78e9"}}>What are these three options?</h3>
                     <p>
-                        These two settings are for you to setup your own Alchemy API keys. This options helps users avoid rate limiting when many MintAIO users are running the program at the same time. If you would like to setup your own keys please watch the ending of the video linked below which explains how this can be done. If you have any other questions you can follow us on Twitter and join our Discord server.
+                        The first two settings are for you to setup your own Alchemy API keys. This options helps users avoid rate limiting when many MintAIO users are running the program at the same time. If you would like to setup your own keys please watch the ending of the video linked below which explains how this can be done. If you have any other questions you can follow us on Twitter and join our Discord server. The last one setting allows you to set your own Discord Webhook to send messages directly to your server.
                     </p>
                     <div className="d-flex align-items-center">
                         <i style={{color: "#FF0000"}} className="fab fa-youtube fa-2x me-3"></i>
@@ -117,7 +117,7 @@ function Settings() {
                 </div>
 
                 <div className="version">
-                    <span>Version 1.0.6</span>
+                    <span>Version 1.1.0</span>
                 </div>
 
             </div>
