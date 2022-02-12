@@ -460,3 +460,25 @@ body, #root {
     margin-top: -0.2rem !important;
     color: #9b9b9b;
 }
+
+.individual-balance {
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.os-check {
+    border: 2px solid var(--color-neutral);
+    border-radius: 5px;
+    color: white;
+    text-align: center;
+
+    .os-header {
+        img {
+            height: 4rem;
+            width: 4rem;
+            border: 2px solid white;
+            border-radius: 180px;
+        }
+    }
+}

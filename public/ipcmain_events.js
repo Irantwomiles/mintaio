@@ -19,7 +19,8 @@ const {
     web3,
     web3_logger,
     machine_id,
-    webhookSet
+    webhookSet,
+    getCollection
 } = require('./web3_utils.js');
 
 const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
@@ -126,6 +127,23 @@ ipcMain.on('update-alchemy-key-primary', (event, data) => {
     }
 })
 
+ipcMain.on('monitor-check-project', async (event, data) => {
+
+    const output = await getCollection(data, '', '');
+
+    if(output.hasOwnProperty('message')) {
+        return event.returnValue = {
+            error: 1
+        }
+    }
+
+    return event.returnValue = {
+        error: 0,
+        ...output
+    }
+
+})
+
 ipcMain.on('add-os-monitor', (event, data) => {
 
     /*
@@ -164,7 +182,7 @@ ipcMain.on('add-os-monitor', (event, data) => {
             const account = web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
 
             const monitor = new OSMonitor(
-                data.contract,
+                data.slug,
                 data.price,
                 data.maxGas,
                 data.priority,
@@ -177,7 +195,7 @@ ipcMain.on('add-os-monitor', (event, data) => {
             )
 
             const obj = {
-                contract_address: data.contract,
+                slug: data.slug,
                 desired_price: data.price,
                 maxGas: data.maxGas,
                 priorityFee: data.priority,
@@ -375,6 +393,14 @@ ipcMain.on('auth-user', async (event, data) => {
     return event.returnValue = isAuth;
 })
 
+ipcMain.on('check-balance', async (event, data) => {
+
+    const balance = await imported_functions.getBalance(web3, data);
+
+    return event.returnValue = balance;
+
+})
+
 ipcMain.on('add-wallet', (event, data) => {
 
     /*
@@ -431,7 +457,7 @@ ipcMain.on('add-wallet', (event, data) => {
                 wallets.push(doc);
 
                 return event.returnValue = {
-                    wallet: doc,
+                    wallet: {...doc, balance: 0},
                     error: 0
                 }
             })
@@ -613,7 +639,7 @@ ipcMain.on('contract-info', async (event, data) => {
     let view_methods = [];
 
     for(const m of methods) {
-        if(m.stateMutability === 'payable') {
+        if(m.stateMutability === 'payable' || m.stateMutability === 'nonpayable') {
             payable_methods.push(m);
         } else if(m.stateMutability === 'view') {
             view_methods.push(m);
@@ -1180,6 +1206,8 @@ function loadTasks() {
             }
         }
 
+        log.info(`Loaded ${tasks.length} tasks.`);
+
     })
 }
 
@@ -1193,7 +1221,7 @@ function loadMonitors() {
 
         if(docs.length > 0) {
             for(const doc of docs) {
-                const monitor = new OSMonitor(doc.contract_address, doc.desired_price, doc.maxGas, doc.priorityFee, null, doc.public_key, doc.timer_delay, doc.wallet_id, doc.proxy, doc.webhook);
+                const monitor = new OSMonitor(doc.slug, doc.desired_price, doc.maxGas, doc.priorityFee, null, doc.public_key, doc.timer_delay, doc.wallet_id, doc.proxy, doc.webhook);
                 monitor.id = doc.id;
 
                 os_monitor.push(monitor);
@@ -1296,7 +1324,7 @@ const getRendererMonitors = () => {
     for(const monitor of os_monitor) {
 
         arr.push({
-            contract_address: monitor.contract_address,
+            slug: monitor.slug,
             desired_price: monitor.desired_price,
             maxGas: monitor.maxGas,
             priorityFee: monitor.priorityFee,

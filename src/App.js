@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 
 import { WalletContext } from "./state/WalletContext";
 import { TaskContext } from "./state/TaskContext";

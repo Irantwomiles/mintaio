@@ -4,7 +4,7 @@ TODO:
     * change await fetching to .then to avoid program lockup.
 * Tasks:
   * Force gas price on active tasks
-  * look into better live contract detection.
+  * look into better live slug detection.
 * Mintwatch
   * Enable/Disable viewing of all mints happening at the moment.
   * Setup notifications based on parameters.
@@ -17,3 +17,5 @@ TODO:
   * Unlock wallet
 * Preview NFT's in your wallets
 * Prevent program lockup on unauthorized users.
+
+Using Node version 12.22.10

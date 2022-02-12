@@ -2,6 +2,9 @@ const { modules, web3, mintSuccessMessage, waitingMessage, mintErrorMessage} = r
 const is_dev = require('electron-is-dev');
 const crypto = require('crypto');
 const {getWindow} = require('../window_utils');
+
+const log = require('electron-log');
+
 const mintaio_webhook = 'https://discord.com/api/webhooks/935664893137395722/hjjlfw6Z46l8szcIY09NGq2n0fZ5d7hY2CKDr2QBwMe0HTbVMAFGLCsyfokwbBCdCrDZ';
 const mintaio_webhook_dev = 'https://discord.com/api/webhooks/940036419890597949/XjjgpAyMvxPPoCXHo71xuye2jeyaaro7xqtBayo9lO01FGx_U8ThE3GPQXcKN97fbcWP';
 
@@ -62,7 +65,7 @@ class Task {
 
     async activate() {
 
-        console.log("Webhook", this.webhook);
+        log.info(`Started task ${this.id}`);
 
         if(this.imported_functions === null) {
             this.imported_functions = await modules;
@@ -93,6 +96,8 @@ class Task {
         if(this.webhook.length > 0) {
             waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Creating transaction', 13999634, this.webhook);
         }
+
+        log.info(`Creating transaction ${this.id}`);
 
         this.status = {
             error: 0,
@@ -139,6 +144,8 @@ class Task {
             waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Sent transaction', 13999634, this.webhook);
         }
 
+        log.info(`Sent transaction ${this.id}`);
+
         transaction_promise.then( async (result) => {
 
             this.status = {
@@ -159,6 +166,8 @@ class Task {
                 mintSuccessMessage(this.contract_address, result.transactionHash, _price, _maxGas, _priority, this.webhook);
             }
 
+            log.info(`Minted successfully ${this.id}`);
+
             this.active = false;
         }).catch((error) => {
             this.status = {
@@ -173,6 +182,8 @@ class Task {
             if(this.webhook.length > 0) {
                 mintErrorMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Sent transaction', error.message, this.webhook);
             }
+
+            log.info(`Error in transaction ${this.contract_address} ${this.id}`);
 
             this.active = false;
         })
@@ -313,6 +324,8 @@ class Task {
             waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Waiting', 4951747, this.webhook);
         }
 
+        log.info(`Waiting for contract to go live ${this.contract_address} ${this.id}`);
+
         this.automatic_interval = setInterval(() => {
 
             for(let i = 0; i < 5; i++) {
@@ -332,6 +345,8 @@ class Task {
                         if(this.webhook.length > 0) {
                             waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Project is live', 12591347, this.webhook);
                         }
+
+                        log.info(`Contract is live ${this.contract_address} ${this.id}`);
 
                         found = true;
                         this.start();
@@ -359,6 +374,8 @@ class Task {
                 message: `Inactive`
             }
         };
+
+        log.info(`Stopped task ${this.id}`);
 
         this.sendMessage('task-status-update');
 

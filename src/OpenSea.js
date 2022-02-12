@@ -10,20 +10,25 @@ function OpenSea() {
 
     const modalRef = useRef();
     const walletDropdownRef = useRef();
+    const proxiesDropdownRef = useRef();
 
     const [wallet, setWallet] = useContext(WalletContext);
 
     const [modal, setModal] = useState([]);
     const [walletDropdown, setWalletDropdown] = useState([]);
+    const [proxiesDropdown, setProxiesDropdown] = useState([]);
 
     const [walletPassword, setWalletPassword] = useState("");
     const [selectedWallet, setSelectedWallet] = useState(null);
-    const [contract, setContract] = useState("");
+    const [slug, setSlug] = useState("");
+    const [checkSlug, setCheckSlug] = useState("");
+    const [checkProject, setCheckProject] = useState(null);
     const [delay, setDelay] = useState("");
     const [price, setPrice] = useState("");
     const [maxGas, setMaxGas] = useState("");
     const [priority, setPriority] = useState("");
-    const [webhook, setWebhook] = useState("");
+    const [proxies, setProxies] = useState([]);
+    const [selectedProxy, setSelectedProxy] = useState("")
 
     const [monitors, setMonitors] = useState([]);
 
@@ -34,6 +39,9 @@ function OpenSea() {
 
         const walletDropdown = new Dropdown(walletDropdownRef.current, {});
         setWalletDropdown(walletDropdown);
+
+        const proxiesDropdown = new Dropdown(proxiesDropdownRef.current, {});
+        setProxiesDropdown(proxiesDropdown);
 
         const output = ipcRenderer.sendSync('load-os-monitors');
 
@@ -54,25 +62,39 @@ function OpenSea() {
 
     }, [])
 
+    const handleCheck = () => {
+        if(checkSlug.length === 0) return;
+
+        const output = ipcRenderer.sendSync('monitor-check-project', checkSlug);
+
+        if(output.error === 1) {
+            console.log("Could not find project");
+            return;
+        }
+
+        setCheckProject(output);
+    }
+
     const handleAdd = () => {
 
-        if(contract.length === 0 || delay.length === 0 || price.length === 0 || maxGas.length === 0 || priority.length === 0 || walletPassword.length === 0 || selectedWallet === null) {
+        if(slug.length === 0 || delay.length === 0 || price.length === 0 || maxGas.length === 0 || priority.length === 0 || walletPassword.length === 0 || selectedWallet === null) {
             console.log("Must fill out all of the input fields.");
             return;
         }
 
         const obj = {
-            contract,
+            slug: slug,
             delay,
             price,
             maxGas,
             priority,
             walletId: selectedWallet.id,
-            walletPassword,
-            webhook
+            walletPassword
         }
 
         const output = ipcRenderer.sendSync('add-os-monitor', obj);
+
+        console.log("Add:", obj);
 
         setMonitors(output.monitors);
 
@@ -101,6 +123,10 @@ function OpenSea() {
     const handleDelete = (id) => {
         const output = ipcRenderer.sendSync("delete-os-monitor", id);
         setMonitors(output.monitors);
+    }
+
+    function kFormatter(num) {
+        return Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'k' : Math.sign(num)*Math.abs(num)
     }
 
     return (
@@ -145,10 +171,10 @@ function OpenSea() {
                                     <span style={{color: 'white'}}>{getWalletName(m.public_key)}</span>
                                 </div>
                                 <div className="col-4" style={{textAlign: 'center'}}>
-                                    <span style={{color: 'white'}}>{m.contract_address}</span>
+                                    <span style={{color: 'white'}}>{m.slug}</span>
                                 </div>
                                 <div className="col-2" style={{textAlign: 'center'}}>
-                                    <span style={{color: 'white'}}>{m.desired_price}</span>
+                                    <span style={{color: 'white'}}>{m.desired_price} <span style={{color: "#8a78e9"}}>Ξ</span></span>
                                 </div>
                                 <div className="col-2" style={{textAlign: 'center'}}>
                                     <span style={{color: 'white'}}>{m.status.result.message}</span>
@@ -175,11 +201,60 @@ function OpenSea() {
                         </div>
                         <div className="modal-body">
 
+                            <div className={"d-flex align-items-center mb-3"}>
+                                <div className={"w-75"}>
+                                    <label htmlFor="slug-address" className="form-label" style={{color: "white"}}>Check Slug</label>
+                                    <div className="input-group">
+                                        <input type="text" className="form-control" id="slug-address" placeholder="Project Slug" onChange={(e) => {setCheckSlug(e.target.value)}} value={checkSlug} />
+                                    </div>
+                                </div>
+
+                                <div className={"ms-2 mt-auto w-25"}>
+                                    <button type="text" className="form-control btn-add" onClick={handleCheck}>Check</button>
+                                </div>
+                            </div>
+
+                            {
+                                checkProject === null ?
+                                    ''
+                                    :
+                                    <div className={"os-check mb-2"}>
+
+                                        <div className={"os-header mt-3"}>
+                                            <img src={checkProject.image_url} />
+                                            <div>
+                                                {checkProject.name}
+                                            </div>
+                                        </div>
+
+                                        <div className={"d-flex justify-content-between p-2"}>
+                                            <div className={"d-flex flex-column justify-content-center"}>
+                                                <span>{kFormatter(checkProject.item_count)}</span>
+                                                <span>items</span>
+                                            </div>
+                                            <div className={"d-flex flex-column justify-content-center"}>
+                                                <span>{kFormatter(checkProject.owners)}</span>
+                                                <span>owners</span>
+                                            </div>
+                                            <div className={"d-flex flex-column justify-content-center"}>
+                                                <span><i className="fab fa-ethereum me-2" style={{color: '#8a78e9'}}></i>{checkProject.floor_price}</span>
+                                                <span>floor price</span>
+                                            </div>
+                                            <div className={"d-flex flex-column justify-content-center"}>
+                                                <span><i className="fab fa-ethereum me-2" style={{color: '#8a78e9'}}></i>{kFormatter(Number.parseFloat(checkProject.volume).toFixed(2))}</span>
+                                                <span>volume traded</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                            }
+
+
                             <div className={"row"}>
                                 <div className={"col-8"}>
-                                    <label htmlFor="contract-address" className="form-label" style={{color: "white"}}>Contract Address</label>
+                                    <label htmlFor="slug-address" className="form-label" style={{color: "white"}}>Project Slug</label>
                                     <div className="input-group mb-3">
-                                        <input type="text" className="form-control" id="contract-address" placeholder="Contract Address" onChange={(e) => {setContract(e.target.value)}} value={contract} />
+                                        <input type="text" className="form-control" id="slug-address" placeholder="Project Slug" onChange={(e) => {setSlug(e.target.value)}} value={slug} />
                                     </div>
                                 </div>
                                 <div className={"col-4"}>
@@ -215,8 +290,27 @@ function OpenSea() {
 
                             </div>
 
+                            <div className="d-flex mb-2">
+                                <div className="dropdown w-25">
+                                    <button className="btn btn-primary dropdown-toggle w-100" type="button"
+                                            id="wallets-dropdown" data-bs-toggle="dropdown"
+                                            aria-expanded="false"
+                                            ref={proxiesDropdownRef}
+                                            onClick={() => {proxiesDropdown.toggle()}}>
+                                        {selectedProxy.length === 0 ? "Select a proxy" : selectedProxy}
+                                    </button>
+                                    <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                                        {
+                                            proxies.map((p) => (
+                                                <li key={Math.random()}><a className="dropdown-item" onClick={() => {setSelectedProxy(p)} }>{p}</a></li>
+                                            ))
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+
                             <div className="d-flex">
-                                <div className="dropdown w-25 m-1">
+                                <div className="dropdown w-25">
                                     <button className="btn btn-primary dropdown-toggle w-100" type="button"
                                             id="wallets-dropdown" data-bs-toggle="dropdown"
                                             aria-expanded="false"
@@ -232,12 +326,7 @@ function OpenSea() {
                                         }
                                     </ul>
                                 </div>
-                                <input type="password" className="form-control w-75 m-1" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
-                            </div>
-
-                            <label htmlFor="webhook-url" className="form-label mt-3" style={{color: "white"}}>Webhook URL</label>
-                            <div className="input-group">
-                                <input type="text" className="form-control" id="webhook-url" placeholder="Discord Webhook URL" onChange={(e) => {setWebhook(e.target.value)}} value={webhook} />
+                                <input type="password" className="form-control w-75 ms-2" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
                             </div>
 
                         </div>

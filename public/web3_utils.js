@@ -176,7 +176,45 @@ async function webhookSet(webhook) {
     }
 }
 
+async function getCollection(slug, api, network) {
 
+    const url = `https://${network}api.opensea.io/api/v1/collection/${slug}`
+
+    try {
+        const results = await axios.get(url, {
+            headers: {
+                "Accept": "application/json",
+                "X-API-KEY": api
+            }
+        });
+
+        const data = results.data;
+
+        const item_count = data.collection.stats.total_supply;
+        const owners = data.collection.stats.num_owners;
+        const floor_price = data.collection.stats.floor_price;
+        const volume = data.collection.stats.total_volume;
+
+        const name = data.collection.primary_asset_contracts[0].name;
+        const image_url = data.collection.primary_asset_contracts[0].image_url;
+        const seller_fee = data.collection.primary_asset_contracts[0].seller_fee_basis_points;
+
+        return {
+            item_count,
+            owners,
+            floor_price,
+            volume,
+            name,
+            image_url,
+            seller_fee
+        }
+    } catch(e) {
+        return {
+            message: e.message
+        }
+    }
+
+}
 
 
 module.exports = {
@@ -190,5 +228,6 @@ module.exports = {
     mintSuccessMessage,
     waitingMessage,
     mintErrorMessage,
-    webhookSet
+    webhookSet,
+    getCollection
 }

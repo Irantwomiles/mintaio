@@ -118,12 +118,28 @@ function Wallet() {
         return;
     }
 
-    const checkBalance = (id) => {
-        const output = ipcRenderer.sendSync('check-balance', id);
+    const checkBalance = (address, id) => {
+        const output = ipcRenderer.sendSync('check-balance', address);
 
+        let copy = [...wallet];
 
+        for(let i = 0; i < copy.length; i++) {
 
-        return;
+            const wal = copy[i];
+
+            if(wal.id === id) {
+                let obj = {...wal};
+
+                obj.balance = Number.parseFloat(output).toFixed(5);
+
+                console.log(obj.balance);
+
+                copy[i] = obj;
+                break;
+            }
+        }
+        setWallet(copy);
+        // return output;
     }
 
     const handleBalanceRefresh = () => {
@@ -206,7 +222,10 @@ function Wallet() {
                                 <span>0x{w.encrypted.address}</span>
                             </div>
                             <div className="col-2 wallet-single-balance">
-                                <span>{Number.parseFloat(w.balance).toFixed(5)} <span style={{color: '#8a78e9'}}>Ξ</span></span>
+                                <span className={"individual-balance"} onClick={() => {checkBalance(w.encrypted.address, w.id)}}>
+                                    {`${w.balance}` === '0' ?
+                                        'Check Balance' : <span style={{color: '#8a78e9'}}><span style={{color: "white"}}>{w.balance}</span> Ξ</span>
+                                    }</span>
                             </div>
                             <div className="col-2 wallet-action">
                                 <span className="ms-1 me-1 copy-wallet" onClick={() => {copyAddress(w.encrypted.address)}}><i className="fas fa-copy"></i></span>

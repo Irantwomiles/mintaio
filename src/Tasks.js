@@ -38,7 +38,7 @@ function Tasks() {
     const [updateMethodsDropdown, setUpdateMethodsDropdown] = useState([]);
     const [updateReadDropdown, setUpdateReadDropdown] = useState([]);
 
-    const [contract, setContract] = useState("");
+    const [slug, setContract] = useState("");
 
     const [inputs, setInputs] = useState([]);
     const [functionName, setFunctionName] = useState("");
@@ -69,9 +69,9 @@ function Tasks() {
 
     const handleCheck = (e) => {
 
-        if(contract.length === 0) return; //send toast
+        if(slug.length === 0) return; //send toast
 
-        let output = ipcRenderer.sendSync('contract-info', contract);
+        let output = ipcRenderer.sendSync('slug-info', slug);
 
         if(output.error === 1) {
             setMethods([]);
@@ -86,7 +86,7 @@ function Tasks() {
 
     const handleAdd = (e) => {
 
-        if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
+        if(slug.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
             setToastValue({
                 message: "You must fill out all of the input fields.",
                 color: "#d97873"
@@ -132,7 +132,7 @@ function Tasks() {
         }
 
         const output = ipcRenderer.sendSync('add-task', {
-            contractAddress: contract,
+            contractAddress: slug,
             price: price,
             amount: amount,
             gas: gas,
@@ -487,7 +487,7 @@ function Tasks() {
 
     const handleUpdate = (e) => {
 
-        if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
+        if(slug.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
             setToastValue({
                 message: "You must fill out all of the input fields.",
                 color: "#d97873"
@@ -534,7 +534,7 @@ function Tasks() {
 
         const output = ipcRenderer.sendSync('update-task', {
             taskId: selectedTask.id,
-            contractAddress: contract,
+            contractAddress: slug,
             price: price,
             amount: amount,
             gas: gas,
@@ -774,7 +774,7 @@ function Tasks() {
                         </div>
                         <div className="modal-body">
                             <div className="d-flex">
-                                <input type="text" className="form-control w-75 m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={contract}/>
+                                <input type="text" className="form-control w-75 m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={slug}/>
                                 <button type="text" className="form-control btn-add w-25 m-1" onClick={handleCheck}>Check</button>
                             </div>
                             <div className="d-flex justify-content-evenly">
@@ -959,7 +959,7 @@ function Tasks() {
                         </div>
                         <div className="modal-body">
                             <div className="d-flex">
-                                <input type="text" className="form-control w-75 m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={contract}/>
+                                <input type="text" className="form-control w-75 m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={slug}/>
                                 <button type="text" className="form-control btn-add w-25 m-1" onClick={handleCheck}>Check</button>
                             </div>
                             <div className="d-flex justify-content-evenly">
