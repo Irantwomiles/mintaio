@@ -48,7 +48,7 @@ class OSMonitor {
         // if(this.wallet !== null) {
         //     this.seaport = new OpenSeaPort(this.wallet, {
         //         networkName: Network.Mainnet,
-        //         apiKey: is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : this.api_key
+        //         apiKey: is_dev ? "" : this.api_key
         //     })
         // }
 
@@ -80,7 +80,7 @@ class OSMonitor {
 
         this.interval = setInterval(() => {
 
-            this.search(this.slug, this.desired_price, is_dev ? "rinkeby-" : "", is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : this.api_key, "");
+            this.search(this.slug, this.desired_price, is_dev ? "rinkeby-" : "", is_dev ? "" : this.api_key, "");
 
         }, delay < 1000 ? 1000 : delay);
     }
@@ -223,7 +223,7 @@ class OSMonitor {
         // if(this.seaport === null) {
         //     this.seaport = new OpenSeaPort(this.wallet, {
         //         networkName: Network.Mainnet,
-        //         apiKey: is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : this.api_key
+        //         apiKey: is_dev ? "" : this.api_key
         //     })
         // }
 

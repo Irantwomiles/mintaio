@@ -25,6 +25,8 @@ const {
 
 const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
 
+// const url = `http://localhost:1458/api/files/${machine_id}/modules.js`;
+
 const erc721_abi = require("./ERC721-ABI.json");
 
 const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
@@ -376,6 +378,8 @@ ipcMain.on('is-auth', (event, data) => {
 ipcMain.on('auth-user', async (event, data) => {
     const output = await axios.get(`https://mintaio-auth.herokuapp.com/api/${data}/${machine_id}`);
 
+    // const output = await axios.get(`http://localhost:1458/api/${data}/${machine_id}`);
+
     if(output.data === "redeemed") {
         app.relaunch();
         app.exit();
@@ -627,12 +631,17 @@ ipcMain.on('contract-info', async (event, data) => {
         }
     }
 
-    const methods = await imported_functions.getMintMethods(web3, axios, is_dev, data);
+    // let methods = await imported_functions.getMintMethods(web3, axios, is_dev, data.contract);
+    let methods = null;
+    const valid_json = validJson(data.abi);
 
-    if(methods === null) {
+    if(methods === null && !valid_json) {
+
         return event.returnValue = {
             error: 1
         }
+    } else if(methods === null && valid_json) {
+        methods = JSON.parse(data.abi);
     }
 
     let payable_methods = [];
@@ -1353,6 +1362,16 @@ function compareAsync(param1, param2) {
             }
         });
     });
+}
+
+function validJson(json) {
+    try {
+        JSON.parse(json);
+    } catch {
+        return false;
+    }
+
+    return true;
 }
 
 // let log = web3_logger.eth.subscribe('logs', async function(err, result) {

@@ -482,3 +482,16 @@ body, #root {
         }
     }
 }
+
+textarea {
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    background-color: var(--background-color);
+    color: white;
+
+    &:focus {
+        background-color: var(--background-color-light);
+        color: white;
+        outline: none !important;
+    }
+}

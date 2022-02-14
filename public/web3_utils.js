@@ -34,6 +34,7 @@ const id = require('node-machine-id');
 const machine_id = id.machineIdSync();
 
 const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
+// const url = `http://localhost:1458/api/files/${machine_id}/modules.js`;
 
 const modules = requireFromWeb(url);
 

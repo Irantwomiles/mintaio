@@ -24,7 +24,6 @@ function Tasks() {
     const updateMethodsDropdownRef = useRef();
     const updateReadMethodsDropdownRef = useRef();
 
-
     const [toast, setToast] = useState([]);
     const [modal, setModal] = useState([]);
     const [updateModal, setUpdateModal] = useState([]);
@@ -37,8 +36,9 @@ function Tasks() {
     const [updateWalletDropdown, setUpdateWalletDropdown] = useState([]);
     const [updateMethodsDropdown, setUpdateMethodsDropdown] = useState([]);
     const [updateReadDropdown, setUpdateReadDropdown] = useState([]);
+    const [abi, setAbi] = useState("");
 
-    const [slug, setContract] = useState("");
+    const [contract, setContract] = useState("");
 
     const [inputs, setInputs] = useState([]);
     const [functionName, setFunctionName] = useState("");
@@ -66,16 +66,25 @@ function Tasks() {
     const [timer, setTimer] = useState("");
 
     // 0x63e0Cd76d11da01aef600E56175523aD39e35b01
+    // 0x5238Cb24ebe339A1D0C82A39356Fd3f9101604F1
 
     const handleCheck = (e) => {
 
-        if(slug.length === 0) return; //send toast
+        if(contract.length === 0 && abi.length === 0) return; //send toast
 
-        let output = ipcRenderer.sendSync('slug-info', slug);
+        let output = ipcRenderer.sendSync('contract-info', {contract, abi});
+
+        console.log("output:", output);
 
         if(output.error === 1) {
             setMethods([]);
             setReadMethods([]);
+
+            setToastValue({
+                message: "Could not get contract ABI.",
+                color: "#d97873"
+            });
+            toast.show();
             return;
         } //send toast
 
@@ -86,7 +95,7 @@ function Tasks() {
 
     const handleAdd = (e) => {
 
-        if(slug.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
+        if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
             setToastValue({
                 message: "You must fill out all of the input fields.",
                 color: "#d97873"
@@ -132,7 +141,7 @@ function Tasks() {
         }
 
         const output = ipcRenderer.sendSync('add-task', {
-            contractAddress: slug,
+            contractAddress: contract,
             price: price,
             amount: amount,
             gas: gas,
@@ -487,7 +496,7 @@ function Tasks() {
 
     const handleUpdate = (e) => {
 
-        if(slug.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
+        if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
             setToastValue({
                 message: "You must fill out all of the input fields.",
                 color: "#d97873"
@@ -534,7 +543,7 @@ function Tasks() {
 
         const output = ipcRenderer.sendSync('update-task', {
             taskId: selectedTask.id,
-            contractAddress: slug,
+            contractAddress: contract,
             price: price,
             amount: amount,
             gas: gas,
@@ -774,14 +783,37 @@ function Tasks() {
                         </div>
                         <div className="modal-body">
                             <div className="d-flex">
-                                <input type="text" className="form-control w-75 m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={slug}/>
-                                <button type="text" className="form-control btn-add w-25 m-1" onClick={handleCheck}>Check</button>
+                                <div className={"w-75"}>
+                                    <label className={"mb-1"} style={{color: "white"}}>Contract Address</label>
+                                    <input type="text" className="form-control m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={contract}/>
+                                </div>
+
+                                <button type="text" className="form-control btn-add w-25 mt-auto ms-3 m-1" onClick={handleCheck}>Check</button>
                             </div>
+
+                            <div className={"m-1"}>
+                                <label className={"mb-1"} style={{color: "white"}}>ABI Manual Entry</label>
+                                <textarea className={"w-100"} onChange={(e) => {setAbi(e.target.value)}} value={abi} />
+                            </div>
+
                             <div className="d-flex justify-content-evenly">
-                                <input type="number" className="form-control m-1" onChange={(e) => {setPrice(e.target.value)}} value={price || ''} placeholder="Price in ether"/>
-                                <input type="number" min="1" className="form-control m-1" onChange={(e) => {setAmount(e.target.value)}} value={amount || ''} placeholder="Total amount"/>
-                                <input type="text" className="form-control m-1" onChange={(e) => {setGas(e.target.value)}} value={gas || ''} placeholder="Max gas price"/>
-                                <input type="text" className="form-control m-1" onChange={(e) => {setGasPriorityFee(e.target.value)}} value={gasPriorityFee || ''} placeholder="Gas Priority Fee"/>
+                                <div className={"m-1"}>
+                                    <label className={"mb-1"} style={{color: "white"}}>Price</label>
+                                    <input type="number" className="form-control" onChange={(e) => {setPrice(e.target.value)}} value={price || ''} placeholder="Price in ether"/>
+                                </div>
+                                <div className={"m-1"}>
+                                    <label className={"mb-1"} style={{color: "white"}}>Amount</label>
+                                    <input type="number" min="1" className="form-control" onChange={(e) => {setAmount(e.target.value)}} value={amount || ''} placeholder="Total amount"/>
+                                </div>
+                                <div className={"m-1"}>
+                                    <label className={"mb-1"} style={{color: "white"}}>Max Gas Price</label>
+                                    <input type="text" className="form-control" onChange={(e) => {setGas(e.target.value)}} value={gas || ''} placeholder="Max gas price"/>
+                                </div>
+                                <div className={"m-1"}>
+                                    <label className={"mb-1"} style={{color: "white"}}>Priority Gas Fee</label>
+                                    <input type="text" className="form-control" onChange={(e) => {setGasPriorityFee(e.target.value)}} value={gasPriorityFee || ''} placeholder="Gas Priority Fee"/>
+                                </div>
+
                             </div>
 
                             <div className="d-flex">
@@ -959,7 +991,7 @@ function Tasks() {
                         </div>
                         <div className="modal-body">
                             <div className="d-flex">
-                                <input type="text" className="form-control w-75 m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={slug}/>
+                                <input type="text" className="form-control w-75 m-1" aria-describedby="private-key" onChange={(e) => {setContract(e.target.value)}} placeholder="Contract Address" value={contract}/>
                                 <button type="text" className="form-control btn-add w-25 m-1" onClick={handleCheck}>Check</button>
                             </div>
                             <div className="d-flex justify-content-evenly">
