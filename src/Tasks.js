@@ -152,7 +152,7 @@ function Tasks() {
             functionName: functionName,
             readFunction: readFunctionName,
             readCurrentValue: readValue,
-            timer: timer,
+            timestamp: timer,
             mode: mode
         });
 
@@ -554,7 +554,7 @@ function Tasks() {
             functionName: functionName,
             readFunction: readFunctionName,
             readCurrentValue: readValue,
-            timer: timer,
+            timestamp: timer,
             mode: updateMode
         });
 
@@ -969,7 +969,7 @@ function Tasks() {
                                 <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Timed Start</label>
 
                                 <div className="mt-3">
-                                    <input type="text" className="form-control" onChange={(e) => {setTimer(e.target.value)}} placeholder="Set a time in HH:MM:SS" value={timer}/>
+                                    <input type="text" className="form-control" onChange={(e) => {setTimer(e.target.value)}} placeholder="Timestamp" value={timer}/>
                                 </div>
                             </div>
 
@@ -1154,7 +1154,7 @@ function Tasks() {
                                 <label className="mt-2 mb-1" style={{color: "#8a78e9"}}>Timed Start</label>
 
                                 <div className="mt-3">
-                                    <input type="text" className="form-control" onChange={(e) => {setTimer(e.target.value)}} placeholder="Set a time in HH:MM:SS" value={timer}/>
+                                    <input type="text" className="form-control" onChange={(e) => {setTimer(e.target.value)}} placeholder="Timestamp" value={timer}/>
                                 </div>
                             </div>
 

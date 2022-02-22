@@ -27,8 +27,6 @@ const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.
 
 // const url = `http://localhost:1458/api/files/${machine_id}/modules.js`;
 
-const erc721_abi = require("./ERC721-ABI.json");
-
 const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
 
 let tasks = [];
@@ -703,7 +701,7 @@ ipcMain.on('add-task', (event, data) => {
             const task = new Task(data.contractAddress, account.privateKey, account.address, wallet.id, data.price, data.amount, data.gas, data.gasPriorityFee, data.functionName, data.args);
 
             task.start_mode = data.mode;
-            task.timer = data.timer;
+            task.timestamp = data.timestamp;
 
             task.contract_status = data.readCurrentValue;
             task.contract_status_method = data.readFunction;
@@ -725,7 +723,7 @@ ipcMain.on('add-task', (event, data) => {
                 functionName: task.functionName,
                 readFunction: task.contract_status_method,
                 readCurrentValue: task.contract_status,
-                timer: task.timer,
+                timestamp: task.timestamp,
                 mode: task.start_mode,
                 webhook: webhook
             }
@@ -830,7 +828,7 @@ ipcMain.on('update-task', (event, data) => {
             task.functionName = data.functionName;
             task.args = data.args;
             task.start_mode = data.mode;
-            task.timer = data.timer;
+            task.timestamp = data.timestamp;
             task.contract_status = data.readCurrentValue;
             task.contract_status_method = data.readFunction;
             task.nonce = nonce;
@@ -849,7 +847,7 @@ ipcMain.on('update-task', (event, data) => {
                 functionName: task.functionName,
                 readFunction: task.contract_status_method,
                 readCurrentValue: task.contract_status,
-                timer: task.timer,
+                timestamp: task.timestamp,
                 mode: task.start_mode
             }
 
@@ -1206,7 +1204,7 @@ function loadTasks() {
                 task.id = doc.id;
                 task.contract_status = doc.readCurrentValue;
                 task.contract_status_method = doc.readFunction;
-                task.timer = doc.timer;
+                task.timestamp = doc.timestamp;
                 task.start_mode = doc.mode;
 
                 task.webhook = webhook;
@@ -1318,7 +1316,7 @@ const getRendererTasks = () => {
             status: task.status,
             active: task.active,
             delay: task.delay,
-            timer: task.timer,
+            timestamp: task.timestamp,
             start_mode: task.start_mode
         });
 
@@ -1373,64 +1371,3 @@ function validJson(json) {
 
     return true;
 }
-
-// let log = web3_logger.eth.subscribe('logs', async function(err, result) {
-//     if(!err) {
-//
-//         const transaction_receipt = await web3_logger.eth.getTransactionReceipt(result.transactionHash);
-//
-//         if(transaction_receipt === null) return;
-//
-//         if(!transaction_receipt.hasOwnProperty('logs')) return;
-//
-//         if(transaction_receipt.logs && transaction_receipt.logs.length >= 1) {
-//             const logs = transaction_receipt.logs[0];
-//
-//             if(!validToken(transaction_receipt.logs)) return;
-//
-//             if(logs.topics.length === 4) {
-//                 const topic1 = logs.topics[0]; // event
-//                 const topic2 = logs.topics[1]; // from address (0x00..000)
-//                 const topic3 = logs.topics[2]; // to address
-//                 const topic4 = logs.topics[3]; // amount
-//
-//                 if(topic1.toLowerCase() !== '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'.toLowerCase() || topic2.toLowerCase() !== '0x0000000000000000000000000000000000000000000000000000000000000000') return;
-//
-//                 // if the value is undefined or the tokenId > 12000 skip
-//                 if(typeof topic4 === 'undefined' || topic4 > 12000) return;
-//
-//                 const transaction = await web3.eth.getTransaction(result.transactionHash);
-//                 // console.log(result.transactionHash, transaction.to);
-//
-//                 const contract_address = transaction.to;
-//
-//                 const contract = new web3_logger.eth.Contract(erc721_abi, contract_address);
-//
-//                 let obj = {
-//                     contract_address: contract_address,
-//                     name: 'N/A',
-//                     value: transaction_receipt.logs.length > 0 ? Number.parseFloat(web3_logger.utils.fromWei(transaction.value, 'ether')) / transaction_receipt.logs.length : web3_logger.utils.fromWei(transaction.value, 'ether')
-//                 }
-//
-//                 if(contract !== null) {
-//                     try{
-//                         const name = await contract.methods.name().call();
-//                         obj.name = name;
-//                     } catch(e) {
-//                     }
-//                 }
-//
-//                 if(mint_logs.length >= 1000) {
-//                     mint_logs = [];
-//                 }
-//
-//                 mint_logs.unshift(obj);
-//
-//                 getWindow().webContents.send('mint-watch', mint_logs);
-//
-//             }
-//
-//         }
-//
-//     }
-// })

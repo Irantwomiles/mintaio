@@ -52,8 +52,7 @@ class Task {
 
         this.start_mode = 'MANUAL'; // MANUAL, AUTOMATIC, TIMER
 
-        this.timer = "";
-        this.delay = 0;
+        this.timestamp = "";
 
         this.contract_status = ""; // value of the current state of the smart contract.
         this.contract_status_method = ""; // method to check against for automatic starts.
@@ -75,6 +74,7 @@ class Task {
             this.start();
         } else if(this.start_mode === "TIMER") {
             this.start_timer();
+            console.log("Starting Timer Mode");
         } else if(this.start_mode === "AUTOMATIC") {
             this.start_when_ready();
         }
@@ -115,10 +115,6 @@ class Task {
             gasGwei = this.gas;
         }
 
-        const block = await web3.eth.getBlock("latest");
-        let gasLimit = block.gasLimit / (block.transactions.length > 0 ? block.transactions.length : 1);
-        gasLimit = (gasLimit <= 100000 ? Math.ceil(gasLimit + 175000) : 300000) * Number.parseFloat(this.amount);
-
         const transaction_promise = this.imported_functions.sendTransaction(
             web3,
             this.contract_address,
@@ -126,7 +122,7 @@ class Task {
             this.functionName,
             `${web3.utils.toWei(`${this.price}`, 'ether')}`,
             `${web3.utils.toWei(`${gasGwei}`, 'gwei')}`,
-            Math.ceil(gasLimit),
+            Math.ceil(50),
             `${web3.utils.toWei(`${this.gasPriorityFee}`, 'gwei')}`,
             this.nonce,
             this.args, this.abi);
@@ -191,60 +187,101 @@ class Task {
 
     async start_timer() {
 
-        if(typeof this.timer_timeout !== 'undefined') {
+        // task is already started
+        if(typeof this.block_timer !== 'undefined') {
             return;
         }
 
-        let time = this.timer.split(":");
+        // timestamp not set
+        if(this.timestamp.length === 0) {
 
-        if(time.length !== 3)  {
-            //invalid time set
+            this.status = {
+                error: 1,
+                result: {
+                    message: `No Timestamp`
+                }
+            };
+            this.sendMessage('task-status-update');
             return;
         }
 
-        if(isNaN(time[0]) || isNaN(time[1]) || isNaN(time[2])) {
-            // one of them is not a valid number
+        console.log("Here 1");
+
+        // timestamp must be a number
+        if(isNaN(this.timestamp)) {
+            this.status = {
+                error: 2,
+                result: {
+                    message: `Timestamp NaN`
+                }
+            };
+            this.sendMessage('task-status-update');
             return;
         }
 
-        const hour = Number.parseInt(time[0]);
-        const min = Number.parseInt(time[1]);
-        const sec = Number.parseInt(time[2]);
+        console.log("Here 2");
 
-        const later = new Date();
-
-        later.setHours(hour);
-        later.setMinutes(min);
-        later.setSeconds(sec);
-
-        this.delay = later.getTime() - Date.now();
-
-        if(this.delay <= 0) {
-            this.start();
-            return;
-        }
+        const _timestamp = Number.parseInt(this.timestamp);
+        let found = false;
 
         this.status = {
-            error: 5,
+            error: 3,
             result: {
                 message: `Waiting...`
             }
         };
-
         this.sendMessage('task-status-update');
 
-        this.timer_timeout = setTimeout(() => {
-            this.start();
-            this.timer_timeout = undefined;
-        }, this.delay);
+        this.block_timer = setInterval(() => {
+            for(let i = 0; i < 2; i++) {
+
+                web3.eth.getBlock('latest').then((data) => {
+
+                    console.log("Here 3", data.number);
+
+                    this.status = {
+                        error: 4,
+                        result: {
+                            message: `Block: ${data.number}`
+                        }
+                    };
+                    this.sendMessage('task-status-update');
+
+                    if(data.timestamp >= _timestamp) {
+
+                        clearInterval(this.block_timer);
+
+                        if(found) return;
+
+                        this.start();
+                        found = true;
+
+                        this.status = {
+                            error: 4,
+                            result: {
+                                message: `Found: ${data.number}`
+                            }
+                        };
+                        this.sendMessage('task-status-update');
+
+                    }
+                }).catch(error => {
+                    console.log("Error occured while fetching latest block.");
+                })
+
+            }
+        }, 1000 * 1);
+
+
+
     }
 
     cancel_timer() {
 
-        if(typeof this.timer_timeout === 'undefined') return;
+        if(typeof this.block_timer === 'undefined') return;
 
-        clearTimeout(this.timer_timeout);
-        this.timer_timeout = undefined;
+        clearInterval(this.block_timer);
+        this.block_timer = undefined;
 
         this.status = {
             error: -1,
@@ -351,7 +388,9 @@ class Task {
                         found = true;
                         this.start();
                     }
-                });
+                }).catch(error => {
+                    console.log("error occured while fetching latest contract data");
+                })
             }
 
         }, 1000 * 1);
@@ -390,7 +429,7 @@ class Task {
     }
 
     is_on_timer() {
-        return (typeof this.timer_timeout !== 'undefined' || typeof this.automatic_interval !== 'undefined');
+        return (typeof this.block_timer !== 'undefined' || typeof this.automatic_interval !== 'undefined');
     }
 
 }

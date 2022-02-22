@@ -3,6 +3,7 @@ const path = require('path')
 const is_dev = require('electron-is-dev');
 const { setWindow } = require('./window_utils');
 require('./ipcmain_events.js');
+require('./subscriptions.js');
 
 let mainWindow = null;
 

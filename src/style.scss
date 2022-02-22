@@ -276,12 +276,30 @@ body, #root {
 
     background-color: var(--background-color-light);
 
+    .start-watch {
+        color: white;
+        transition: color 300ms ease-in;
+        &:hover {
+            color: var(--color-positive);
+            cursor: pointer;
+        }
+    }
+
+    .stop-watch {
+        color: white;
+        transition: color 300ms ease-in;
+        &:hover {
+            color: var(--color-negative);
+            cursor: pointer;
+        }
+    }
+
     .mint-logs {
 
         overflow-y: auto;
         overflow-x: hidden;
 
-        height: 39rem;
+        height: 38.5rem;
 
         background-color: var(--background-color);
         border: 2px solid var(--border-color);
