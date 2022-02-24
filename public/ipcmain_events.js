@@ -23,9 +23,9 @@ const {
     getCollection
 } = require('./web3_utils.js');
 
-const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
+// const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
 
-// const url = `http://localhost:1458/api/files/${machine_id}/modules.js`;
+const url = `http://localhost:1458/api/files/${machine_id}/modules.js`;
 
 const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
 
@@ -660,7 +660,6 @@ ipcMain.on('contract-info', async (event, data) => {
             view_methods
         }
     }
-
 })
 
 ipcMain.on('add-task', (event, data) => {

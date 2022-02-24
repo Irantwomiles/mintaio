@@ -612,8 +612,40 @@ function Tasks() {
         setReadMethods([]);
         setSelectedReadMethod("");
         setReadValue("");
+    }
 
-        console.log(mode);
+    const getTaskStatus = (task) => {
+
+        switch(task.status.error) {
+            case -1:
+                return 'Inactive';
+            case 0:
+                return 'Starting'
+            case 1:
+                return 'Successful Mint'
+            case 2:
+                return 'Error'
+            case 3:
+                return 'Pending'
+            case 4:
+                return 'Missing ABI'
+            case 5:
+                return 'Waiting...'
+            case 6:
+                return 'Waiting...'
+            case 7:
+                return 'No Timestamp'
+            case 8:
+                return 'Timestamp NaN'
+            case 9:
+                return task.status.result.message
+            case 10:
+                return task.status.result.message
+            case 11:
+                return 'Missing Values'
+        }
+
+        return 'Unknown State';
     }
 
     useEffect(() => {
@@ -741,15 +773,8 @@ function Tasks() {
                                                     'status-success' : task.status.error === 2 ?
                                                         'status-error' : 'status-pending'
                                     }>
-                                        {
-                                            task.status.error === -1 ?
-                                                `Inactive` : task.status.error === 0 ?
-                                                    `Starting` : task.status.error === 1 ?
-                                                        `Success` : task.status.error === 2 ?
-                                                            `Error` : task.status.error === 3 ?
-                                                                `Pending` : task.status.error === 4 ?
-                                                                    `Click ` : task.status.result.message
-                                        }</span>
+                                        {getTaskStatus(task)}
+                                    </span>
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
                                     <span className="ms-1 me-1 start-btn" onClick={(e) => {handleStart(e, task.id)}}><i className="fas fa-play-circle"></i></span>

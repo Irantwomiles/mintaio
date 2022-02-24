@@ -33,15 +33,19 @@ class Task {
         /*
         Status:
         -1 : Inactive
-         0 : Starting
-         1 : Success
-         2 : Error
-         3 : pending
-         4 : ABI not set
-         5 : Checking Status
-         6 : Current value not set (contract_status)
-         7 : Read method not set (contract_status_method)
-         8 : Timer not set (timer)
+        0 : Starting
+        1 : Success
+        2 : Error
+        3 : pending
+        4 : ABI not set
+        5 : Checking Status
+        6 : Waiting (block)
+        7 : No Timestamp
+        8 : Timestamp NaN
+        9 : Checking Block (Use message)
+        10: Found Block (Use message)
+        11: Contract not set
+
          */
         this.status = {
             error: -1,
@@ -122,10 +126,10 @@ class Task {
             this.functionName,
             `${web3.utils.toWei(`${this.price}`, 'ether')}`,
             `${web3.utils.toWei(`${gasGwei}`, 'gwei')}`,
-            Math.ceil(50),
             `${web3.utils.toWei(`${this.gasPriorityFee}`, 'gwei')}`,
             this.nonce,
-            this.args, this.abi);
+            this.args,
+            this.abi);
 
         this.status = {
             error: 3,
@@ -196,21 +200,20 @@ class Task {
         if(this.timestamp.length === 0) {
 
             this.status = {
-                error: 1,
+                error: 7,
                 result: {
                     message: `No Timestamp`
                 }
             };
+
             this.sendMessage('task-status-update');
             return;
         }
 
-        console.log("Here 1");
-
         // timestamp must be a number
         if(isNaN(this.timestamp)) {
             this.status = {
-                error: 2,
+                error: 8,
                 result: {
                     message: `Timestamp NaN`
                 }
@@ -219,13 +222,11 @@ class Task {
             return;
         }
 
-        console.log("Here 2");
-
         const _timestamp = Number.parseInt(this.timestamp);
         let found = false;
 
         this.status = {
-            error: 3,
+            error: 6,
             result: {
                 message: `Waiting...`
             }
@@ -237,10 +238,8 @@ class Task {
 
                 web3.eth.getBlock('latest').then((data) => {
 
-                    console.log("Here 3", data.number);
-
                     this.status = {
-                        error: 4,
+                        error: 9,
                         result: {
                             message: `Block: ${data.number}`
                         }
@@ -257,7 +256,7 @@ class Task {
                         found = true;
 
                         this.status = {
-                            error: 4,
+                            error: 10,
                             result: {
                                 message: `Found: ${data.number}`
                             }
@@ -301,9 +300,9 @@ class Task {
 
         if(this.contract_status_method.length === 0) {
             this.status = {
-                error: 5,
+                error: 11,
                 result: {
-                    message: `Initial`
+                    message: `Missing Values`
                 }
             };
 
@@ -313,9 +312,9 @@ class Task {
 
         if(this.contract_status.length === 0) {
             this.status = {
-                error: 5,
+                error: 11,
                 result: {
-                    message: `Initial`
+                    message: `Missing Values`
                 }
             };
 
@@ -334,15 +333,6 @@ class Task {
         }
 
         const contract = new web3.eth.Contract(JSON.parse(this.abi), this.contract_address);
-
-        this.status = {
-            error: 5,
-            result: {
-                message: `Initial`
-            }
-        };
-
-        this.sendMessage('task-status-update');
 
         let found = false;
 
