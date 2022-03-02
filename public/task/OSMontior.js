@@ -1,4 +1,4 @@
-const { web3, os_http_endpoint, machine_id } = require('../web3_utils');
+const { web3, os_http_endpoint, machine_id, sendWebhookMessage } = require('../web3_utils');
 const {OpenSeaPort, Network, EventType} = require('opensea-js');
 const {OrderSide} = require("opensea-js/lib/types");
 const HDWalletProvider = require('@truffle/hdwallet-provider/dist/index.js');
@@ -189,7 +189,7 @@ class OSMonitor {
                     Payment type must be Ethereum, price must be <= desired price, and listing duration must be longer than 10 minutes.
                      */
 
-                    if(payment_token === 2 && price <= desired_price) {
+                    if(payment_token === (is_dev ? 2 : 1) && price <= desired_price) {
 
                         if(listing_duration !== null && listing_duration < 600) continue;
 
@@ -307,6 +307,12 @@ class OSMonitor {
             log.info(`[OSMonitor] clearedInterval, sending Tx using gas M:${maxFeePerGas} P:${maxPriorityFeePerGas} ${this.id}`);
 
             const transaction = await this.seaport.fulfillOrder({order, accountAddress: this.public_key, maxGas: maxFeePerGas, priorityFee: maxPriorityFeePerGas});
+
+            sendWebhookMessage({
+                title: 'OpenSea Sniper',
+                description: `Successfully Bought\n${transaction}`,
+                color: '3135616'
+            })
 
             this.interval = undefined;
             this.active = false;

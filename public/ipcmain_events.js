@@ -339,7 +339,7 @@ ipcMain.on('delete-os-monitor', (event, id) => {
 
                 return event.returnValue = {
                     error: 0,
-                    wallets: getRendererMonitors()
+                    monitors: getRendererMonitors()
                 }
 
             })
