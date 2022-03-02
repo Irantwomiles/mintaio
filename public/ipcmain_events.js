@@ -129,7 +129,7 @@ ipcMain.on('update-alchemy-key-primary', (event, data) => {
 
 ipcMain.on('monitor-check-project', async (event, data) => {
 
-    const output = await getCollection(data, '', '');
+    const output = await getCollection(data, is_dev ? 'rinkeby-' : '');
 
     if(output.hasOwnProperty('message')) {
         return event.returnValue = {
@@ -354,6 +354,53 @@ ipcMain.on('load-os-monitors', (event, data) => {
     return event.returnValue = getRendererMonitors();
 })
 
+ipcMain.on('os-unlock-wallet', async (event, data) => {
+
+    /*
+    error:
+    0: no error
+    1: invalid wallet
+    2: incorrect password
+     */
+
+    if(!isAuth) {
+        return event.returnValue = {
+            error: 500,
+            tasks: []
+        }
+    }
+
+    const wallet = getWallet(data.walletId);
+
+    if(wallet === null) return event.returnValue = {
+        error: 1,
+        monitors: getRendererMonitors()
+    }
+
+    const compare = await compareAsync(data.password, wallet.password);
+
+    if(compare) {
+        const account = web3.eth.accounts.decrypt(wallet.encrypted, data.password);
+        for(const t of os_monitor) {
+            if(t.wallet_id === data.walletId) {
+                t.private_key = account.privateKey;
+            }
+        }
+    } else {
+        return event.returnValue = {
+            error: 2,
+            monitors: getRendererMonitors()
+        }
+    }
+
+
+    return event.returnValue = {
+        error: 0,
+        monitors: getRendererMonitors()
+    }
+
+})
+
 ipcMain.on('update-alchemy-key-secondary', (event, data) => {
 
     if(!fs.existsSync(`${dataPath}\\mintaio`)) {
@@ -394,6 +441,30 @@ ipcMain.on('auth-user', async (event, data) => {
 
     return event.returnValue = isAuth;
 })
+
+// ipcMain.on('auth-user', async (event, data) => {
+//     // const output = await axios.get(`https://mintaio-auth.herokuapp.com/api/${data}/${machine_id}`);
+//
+//     try {
+//         const result = await axios.post(`http://localhost:1458/api/login/${data}/${machine_id}`);
+//
+//         console.log("Result:", result);
+//
+//         const modules = requireFromWeb(`http://localhost:1458/api/modules/${data}/${machine_id}`);
+//
+//         if(imported_functions === null) {
+//             imported_functions = await modules;
+//         }
+//
+//         isAuth = true;
+//     } catch(e) {
+//         console.log(e.message);
+//     }
+//
+//
+//     return event.returnValue = isAuth;
+//
+// })
 
 ipcMain.on('check-balance', async (event, data) => {
 
@@ -1336,7 +1407,7 @@ const getRendererMonitors = () => {
             priorityFee: monitor.priorityFee,
             public_key: monitor.public_key,
             timer_delay: monitor.timer_delay,
-            walletId: monitor.wallet_id,
+            wallet_id: monitor.wallet_id,
             proxy: monitor.proxy,
             webhook: monitor.webhook,
             status: monitor.status,

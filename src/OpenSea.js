@@ -11,12 +11,19 @@ function OpenSea() {
     const modalRef = useRef();
     const walletDropdownRef = useRef();
     const proxiesDropdownRef = useRef();
+    const unlockModalRef = useRef();
+    const toastRef = useRef();
 
     const [wallet, setWallet] = useContext(WalletContext);
 
     const [modal, setModal] = useState([]);
     const [walletDropdown, setWalletDropdown] = useState([]);
     const [proxiesDropdown, setProxiesDropdown] = useState([]);
+    const [unlockWalletId, setUnlockWalletId] = useState("");
+    const [unlockPassword, setUnlockPassword] = useState("");
+    const [unlockModal, setUnlockModal] = useState([]);
+    const [toastValue, setToastValue] = useState({});
+    const [toast, setToast] = useState([]);
 
     const [walletPassword, setWalletPassword] = useState("");
     const [selectedWallet, setSelectedWallet] = useState(null);
@@ -43,6 +50,12 @@ function OpenSea() {
         const proxiesDropdown = new Dropdown(proxiesDropdownRef.current, {});
         setProxiesDropdown(proxiesDropdown);
 
+        const unlockModal = new Modal(unlockModalRef.current, {keyboard: false});
+        setUnlockModal(unlockModal);
+
+        const toast = new Toast(toastRef.current, {autohide: true});
+        setToast(toast);
+
         const output = ipcRenderer.sendSync('load-os-monitors');
 
         setMonitors(output);
@@ -61,6 +74,48 @@ function OpenSea() {
         }
 
     }, [])
+
+    const handleUnlockWallet = (m) => {
+        console.log("m:", m);
+        setUnlockWalletId(m.wallet_id);
+        unlockModal.show();
+    }
+
+    const unlockWallet = () => {
+
+        unlockModal.hide();
+
+        const output = ipcRenderer.sendSync('os-unlock-wallet', {walletId: unlockWalletId, password: unlockPassword});
+
+        setUnlockPassword("");
+
+        if(output.error === 1) {
+            setToastValue({
+                message: "Could not find this wallet.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "Incorrect wallet password.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        setMonitors(output.monitors);
+
+        setToastValue({
+            message: "Wallet unlocked.",
+            color: "#73d9b0"
+        });
+
+        toast.show();
+    }
 
     const handleCheck = () => {
         if(checkSlug.length === 0) return;
@@ -94,10 +149,9 @@ function OpenSea() {
 
         const output = ipcRenderer.sendSync('add-os-monitor', obj);
 
-        console.log("Add:", obj);
+        modal.hide();
 
         setMonitors(output.monitors);
-
     }
 
     const getWalletName = (publicKey) => {
@@ -106,6 +160,18 @@ function OpenSea() {
         for(const w of wallet) {
             if(`${publicKey}`.toLowerCase() === `0x${w.encrypted.address}`.toLowerCase()) {
                 output = (w.name.length > 0 ? w.name : publicKey);
+            }
+        }
+
+        return output;
+    }
+
+    const getWalletNameById = (id) => {
+        let output = '';
+
+        for(const w of wallet) {
+            if(id === w.id) {
+                output = (w.name.length > 0 ? w.name : w.encrypted.address);
             }
         }
 
@@ -122,11 +188,52 @@ function OpenSea() {
 
     const handleDelete = (id) => {
         const output = ipcRenderer.sendSync("delete-os-monitor", id);
+
+        console.log("delete", output);
+
         setMonitors(output.monitors);
     }
 
     function kFormatter(num) {
         return Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'k' : Math.sign(num)*Math.abs(num)
+    }
+
+    function getStatus(status) {
+        switch(status.error) {
+            case -1:
+                return 'Inactive';
+            case 0:
+                return 'Found Order'
+            case 1:
+                return 'Sniped Successfully'
+            case 2:
+                return status.result.message
+            case 3:
+                return 'Searching...'
+            case 4:
+                return 'Unlock Wallet'
+            case 5:
+                return 'Started'
+        }
+    }
+
+    function getStatusClass(status) {
+        switch(status.error) {
+            case -1:
+                return 'task-inactive';
+            case 0:
+                return 'task-pending'
+            case 1:
+                return 'task-success'
+            case 2:
+                return 'task-error'
+            case 3:
+                return 'task-pending'
+            case 4:
+                return 'task-error'
+            case 5:
+                return 'task-warning'
+        }
     }
 
     return (
@@ -166,7 +273,7 @@ function OpenSea() {
                                 <div className="col-2" style={{textAlign: 'center'}}>
                                     {
                                         !m.locked ? <span style={{color: '#45d39d'}}><i className="fas fa-unlock me-2"></i></span> :
-                                            <span style={{color: '#8a78e9'}} ><i className="fas fa-lock me-2"></i></span>
+                                            <span style={{color: '#8a78e9'}} onClick={() => {handleUnlockWallet(m)} }><i className="fas fa-lock me-2"></i></span>
                                     }
                                     <span style={{color: 'white'}}>{getWalletName(m.public_key)}</span>
                                 </div>
@@ -176,8 +283,8 @@ function OpenSea() {
                                 <div className="col-2" style={{textAlign: 'center'}}>
                                     <span style={{color: 'white'}}>{m.desired_price} <span style={{color: "#8a78e9"}}>Ξ</span></span>
                                 </div>
-                                <div className="col-2" style={{textAlign: 'center'}}>
-                                    <span style={{color: 'white'}}>{m.status.result.message}</span>
+                                <div className={"col-2 " + getStatusClass(m.status)} style={{textAlign: 'center'}}>
+                                    <span>{getStatus(m.status)}</span>
                                 </div>
                                 <div className="col-2" style={{color: 'white', textAlign: 'center'}}>
                                     <span className="ms-1 me-1 start-btn" onClick={() => handleStart(m.id)}><i className="fas fa-play-circle"></i></span>
@@ -338,7 +445,36 @@ function OpenSea() {
                 </div>
             </div>
 
+            <div className="modal" ref={unlockModalRef} tabIndex="-1">
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Unlock Wallet</h5>
+                            <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
+                        </div>
+                        <div className="modal-body">
+                            <div className="d-flex justify-content-center">
+                                <span className="mb-1" style={{color: 'white'}}>{getWalletNameById(unlockWalletId)}</span>
+                            </div>
+                            <input type="password" className="form-control m-1" onChange={(e) => {setUnlockPassword(e.target.value)}} placeholder="Password" value={unlockPassword}/>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" className="btn btn-add" onClick={(e) => unlockWallet() }>Unlock</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <div className="toast position-fixed bottom-0 end-0 m-4" ref={toastRef} role="alert" aria-live="assertive" aria-atomic="true" style={{borderColor: `${toastValue.color}`}}>
+                <div className="toast-header">
+                    <strong className="me-auto" style={{color: toastValue.color}}>MintAIO</strong>
+                    <div className="toast-close" data-bs-dismiss="toast"><i className="far fa-times-circle"></i></div>
+                </div>
+                <div className="toast-body">
+                    {toastValue.message}
+                </div>
+            </div>
 
         </div>
     )

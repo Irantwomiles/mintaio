@@ -513,3 +513,23 @@ textarea {
         outline: none !important;
     }
 }
+
+.task-inactive {
+    color: white;
+}
+
+.task-pending {
+    color: var(--color-positive);
+}
+
+.task-success {
+    color: var(--border-color);
+}
+
+.task-warning {
+    color: var(--color-warning);
+}
+
+.task-error {
+    color: var(--color-negative);
+}

@@ -367,9 +367,10 @@ function Tasks() {
     const unlockWallet = () => {
 
         unlockModal.hide();
-        setUnlockPassword("");
 
         const output = ipcRenderer.sendSync('unlock-wallet', {walletId: unlockWalletId, password: unlockPassword});
+
+        setUnlockPassword("");
 
         if(output.error === 1) {
             setToastValue({

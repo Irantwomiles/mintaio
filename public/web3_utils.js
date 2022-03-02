@@ -23,6 +23,8 @@ const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alche
 // const http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 const http_endpoint = `https://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 
+const os_http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
+
 const erc721_abi = require('./ERC721-ABI.json');
 
 const web3 = createAlchemyWeb3(http_endpoint);
@@ -177,15 +179,22 @@ async function webhookSet(webhook) {
     }
 }
 
-async function getCollection(slug, api, network) {
+async function getCollection(slug, network) {
+
+    const api_key = (await axios.get(`https://mintaio-auth.herokuapp.com/os/keys/${machine_id}`)).data;
+
+    console.log("getCollection:", api_key);
+    console.log("getCollection:", is_dev ? '2f6f419a083c46de9d83ce3dbe7db601' : api_key.data);
 
     const url = `https://${network}api.opensea.io/api/v1/collection/${slug}`
+
+    console.log("getCollection:", url);
 
     try {
         const results = await axios.get(url, {
             headers: {
                 "Accept": "application/json",
-                "X-API-KEY": api
+                "X-API-KEY": is_dev ? '2f6f419a083c46de9d83ce3dbe7db601' : api_key
             }
         });
 
@@ -217,7 +226,6 @@ async function getCollection(slug, api, network) {
 
 }
 
-
 module.exports = {
     web3,
     web3_logger,
@@ -225,6 +233,7 @@ module.exports = {
     modules,
     machine_id,
     http_endpoint,
+    os_http_endpoint,
     sendWebhookMessage,
     mintSuccessMessage,
     waitingMessage,
