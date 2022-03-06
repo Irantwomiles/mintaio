@@ -2,6 +2,7 @@ const axios = require('axios');
 const is_dev = require('electron-is-dev');
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const fs = require('fs');
+const log = require('electron-log');
 
 const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
 
@@ -23,7 +24,8 @@ const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alche
 // const http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 const http_endpoint = `https://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 
-const os_http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
+// const os_http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
+const os_http_endpoint = `https://eth-mainnet.alchemyapi.io/v2/${primary_key}`;
 
 const erc721_abi = require('./ERC721-ABI.json');
 
@@ -183,18 +185,15 @@ async function getCollection(slug, network) {
 
     const api_key = (await axios.get(`https://mintaio-auth.herokuapp.com/os/keys/${machine_id}`)).data;
 
-    console.log("getCollection:", api_key);
-    console.log("getCollection:", is_dev ? '2f6f419a083c46de9d83ce3dbe7db601' : api_key.data);
-
     const url = `https://${network}api.opensea.io/api/v1/collection/${slug}`
 
-    console.log("getCollection:", url);
+    console.log("API Keys:", api_key);
 
     try {
         const results = await axios.get(url, {
             headers: {
                 "Accept": "application/json",
-                "X-API-KEY": is_dev ? '2f6f419a083c46de9d83ce3dbe7db601' : api_key
+                "X-API-KEY": is_dev ? '2f6f419a083c46de9d83ce3dbe7db601' : api_key[Math.floor(Math.random() * api_key.length)]
             }
         });
 
@@ -205,9 +204,9 @@ async function getCollection(slug, network) {
         const floor_price = data.collection.stats.floor_price;
         const volume = data.collection.stats.total_volume;
 
-        const name = data.collection.primary_asset_contracts[0].name;
-        const image_url = data.collection.primary_asset_contracts[0].image_url;
-        const seller_fee = data.collection.primary_asset_contracts[0].seller_fee_basis_points;
+        const name = data.collection.name;
+        const image_url = data.collection.image_url;
+        const seller_fee = data.collection.opensea_seller_fee_basis_points;
 
         return {
             item_count,
@@ -219,6 +218,9 @@ async function getCollection(slug, network) {
             seller_fee
         }
     } catch(e) {
+
+        log.info('getCollection error', e.message);
+
         return {
             message: e.message
         }
