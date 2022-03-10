@@ -191,8 +191,11 @@ ipcMain.on('add-os-monitor', (event, data) => {
                 data.delay,
                 data.walletId,
                 "",
+                data.network,
                 data.webhook
             )
+
+            monitor.trait = data.trait;
 
             const obj = {
                 slug: data.slug,
@@ -203,6 +206,8 @@ ipcMain.on('add-os-monitor', (event, data) => {
                 timer_delay: data.delay,
                 wallet_id: data.walletId,
                 proxy: "",
+                network: data.network,
+                trait: data.trait,
                 webhook: data.webhook,
                 id: monitor.id
             }
@@ -1298,8 +1303,9 @@ function loadMonitors() {
 
         if(docs.length > 0) {
             for(const doc of docs) {
-                const monitor = new OSMonitor(doc.slug, doc.desired_price, doc.maxGas, doc.priorityFee, null, doc.public_key, doc.timer_delay, doc.wallet_id, doc.proxy, doc.webhook);
+                const monitor = new OSMonitor(doc.slug, doc.desired_price, doc.maxGas, doc.priorityFee, null, doc.public_key, doc.timer_delay, doc.wallet_id, doc.proxy, doc.network, doc.webhook);
                 monitor.id = doc.id;
+                monitor.trait = doc.trait;
 
                 os_monitor.push(monitor);
             }
@@ -1409,11 +1415,15 @@ const getRendererMonitors = () => {
             timer_delay: monitor.timer_delay,
             wallet_id: monitor.wallet_id,
             proxy: monitor.proxy,
+            network: monitor.network,
+            trait: monitor.trait,
             webhook: monitor.webhook,
             status: monitor.status,
             locked: monitor.private_key === null,
             id: monitor.id
         });
+
+        console.log("trait", monitor.trait);
 
     }
 

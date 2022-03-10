@@ -1,3 +1,7 @@
+// process.env.UV_THREADPOOL_SIZE = 128;
+
+// console.log(process.env.UV_THREADPOOL_SIZE);
+
 const { app, BrowserWindow, Menu } = require('electron')
 const path = require('path')
 const is_dev = require('electron-is-dev');

@@ -10,7 +10,7 @@ function OpenSea() {
 
     const modalRef = useRef();
     const walletDropdownRef = useRef();
-    const proxiesDropdownRef = useRef();
+    const traitsRef = useRef();
     const unlockModalRef = useRef();
     const toastRef = useRef();
 
@@ -18,7 +18,7 @@ function OpenSea() {
 
     const [modal, setModal] = useState([]);
     const [walletDropdown, setWalletDropdown] = useState([]);
-    const [proxiesDropdown, setProxiesDropdown] = useState([]);
+    const [traitsDropdown, setTraitsDropdown] = useState([]);
     const [unlockWalletId, setUnlockWalletId] = useState("");
     const [unlockPassword, setUnlockPassword] = useState("");
     const [unlockModal, setUnlockModal] = useState([]);
@@ -34,8 +34,8 @@ function OpenSea() {
     const [price, setPrice] = useState("");
     const [maxGas, setMaxGas] = useState("");
     const [priority, setPriority] = useState("");
-    const [proxies, setProxies] = useState([]);
-    const [selectedProxy, setSelectedProxy] = useState("")
+    const [selectedTrait, setSelectedTrait] = useState(null);
+    const [network, setNetwork] = useState("mainnet");
 
     const [monitors, setMonitors] = useState([]);
 
@@ -47,8 +47,8 @@ function OpenSea() {
         const walletDropdown = new Dropdown(walletDropdownRef.current, {});
         setWalletDropdown(walletDropdown);
 
-        const proxiesDropdown = new Dropdown(proxiesDropdownRef.current, {});
-        setProxiesDropdown(proxiesDropdown);
+        const traitsDropdown = new Dropdown(traitsRef.current, {});
+        setTraitsDropdown(traitsDropdown);
 
         const unlockModal = new Modal(unlockModalRef.current, {keyboard: false});
         setUnlockModal(unlockModal);
@@ -143,6 +143,8 @@ function OpenSea() {
             price,
             maxGas,
             priority,
+            network,
+            trait: selectedTrait,
             walletId: selectedWallet.id,
             walletPassword
         }
@@ -397,20 +399,20 @@ function OpenSea() {
 
                             </div>
 
-                            <div className="d-flex mb-2">
+                            <div className={`d-flex mb-2 ${(checkProject !== null && Object.keys(checkProject.traits).length > 0) ? '' : 'd-none'}`}>
                                 <div className="dropdown w-25">
                                     <button className="btn btn-primary dropdown-toggle w-100" type="button"
                                             id="wallets-dropdown" data-bs-toggle="dropdown"
                                             aria-expanded="false"
-                                            ref={proxiesDropdownRef}
-                                            onClick={() => {proxiesDropdown.toggle()}}>
-                                        {selectedProxy.length === 0 ? "Select a proxy" : selectedProxy}
+                                            ref={traitsRef}
+                                            onClick={() => {traitsDropdown.toggle()}}>
+                                        {selectedTrait === null ? "Trait" : `${selectedTrait.trait_type} ${(selectedTrait.value)}`}
                                     </button>
                                     <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
                                         {
-                                            proxies.map((p) => (
-                                                <li key={Math.random()}><a className="dropdown-item" onClick={() => {setSelectedProxy(p)} }>{p}</a></li>
-                                            ))
+                                            (checkProject !== null && checkProject.traits.length > 0) ? checkProject.traits.map((t) => (
+                                                <li key={Math.random()}><a className="dropdown-item" onClick={() => {setSelectedTrait(t)} }>{t.trait_type} ({t.value}) {t.percentile}%</a></li>
+                                            )) : ''
                                         }
                                     </ul>
                                 </div>
@@ -434,6 +436,23 @@ function OpenSea() {
                                     </ul>
                                 </div>
                                 <input type="password" className="form-control w-75 ms-2" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
+                            </div>
+
+                            <div className="d-flex mt-3">
+                                <div className="form-check me-3">
+                                    <input className="form-check-input" type="radio" name="flexRadioDefault"
+                                           id="mainnet" onChange={() => {setNetwork('mainnet')}} checked={network === 'mainnet'} />
+                                        <label className="form-check-label" htmlFor="mainnet" style={{color: "white"}}>
+                                            Mainnet
+                                        </label>
+                                </div>
+                                <div className="form-check">
+                                    <input className="form-check-input" type="radio" name="flexRadioDefault"
+                                           id="flashbots" onChange={() => {setNetwork('flashbots')}} checked={network === 'flashbots'} />
+                                        <label className="form-check-label" htmlFor="flashbots" style={{color: "white"}}>
+                                            Flashbots
+                                        </label>
+                                </div>
                             </div>
 
                         </div>

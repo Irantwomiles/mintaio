@@ -25,7 +25,7 @@ const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alche
 const http_endpoint = `https://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 
 // const os_http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
-const os_http_endpoint = `https://eth-mainnet.alchemyapi.io/v2/${primary_key}`;
+const os_http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
 
 const erc721_abi = require('./ERC721-ABI.json');
 
@@ -208,6 +208,27 @@ async function getCollection(slug, network) {
         const image_url = data.collection.image_url;
         const seller_fee = data.collection.opensea_seller_fee_basis_points;
 
+        const traits_obj = data.collection.traits;
+        const traits = [];
+
+        if(Object.keys(traits_obj).length > 0) {
+
+            for(const t of Object.keys(traits_obj)) {
+
+                for(const v of Object.keys(traits_obj[t])) {
+                    traits.push({
+                        trait_type: t,
+                        value: v,
+                        percentile: Number.parseFloat(`${Number.parseInt(traits_obj[t][v]) / item_count}`).toFixed(6) * 100
+                    })
+                }
+
+            }
+
+        }
+
+        console.log(traits);
+
         return {
             item_count,
             owners,
@@ -215,7 +236,8 @@ async function getCollection(slug, network) {
             volume,
             name,
             image_url,
-            seller_fee
+            seller_fee,
+            traits
         }
     } catch(e) {
 

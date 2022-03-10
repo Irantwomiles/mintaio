@@ -11,7 +11,7 @@ const request = require('request');
 
 class OSMonitor {
 
-    constructor(slug, desired_price, maxGas, priorityFee, private_key, public_key, timer_delay, wallet_id, proxy, webhook) {
+    constructor(slug, desired_price, maxGas, priorityFee, private_key, public_key, timer_delay, wallet_id, proxy, network, webhook) {
 
         this.throttled = [];
         this.api_key = [];
@@ -25,6 +25,8 @@ class OSMonitor {
         this.timer_delay = timer_delay;
         this.wallet_id = wallet_id;
         this.proxy = proxy;
+        this.trait = null;
+        this.network = network;
 
         this.proxies = [
             "154.207.4.115:5628:HEUDCHEFD:DCMWIDOF",
@@ -126,7 +128,7 @@ class OSMonitor {
                 this.throttled.push(_key);
             }
 
-            this.get_asset(this.slug, this.desired_price, 10, _key,is_dev ? "rinkeby-" : "");
+            this.get_asset(this.slug, this.desired_price, is_dev ? 60 : 2, _key,is_dev ? "rinkeby-" : "");
 
         }, delay < 1000 ? 1000 : delay);
     }
@@ -172,7 +174,7 @@ class OSMonitor {
 
             log.info(`[OSMonitor] Checking ${this.slug}`);
 
-            const delay = 1000 * 60 * 60 * time;
+            const delay = 1000 * 60 * time;
             const updated_value = Date.now() - delay;
             const date = new Date(updated_value);
 
@@ -184,14 +186,19 @@ class OSMonitor {
             const minutes = date.getUTCMinutes();
             const seconds = date.getUTCSeconds();
 
-            const url = `https://${network}api.opensea.io/api/v1/events?event_type=created&collection_slug=${slug}&occurred_after=${year}-${month > 10 ? month : '0' + month}-${day}T${hour}:${minutes}:${seconds}`;
+            // const url = `https://${network}api.opensea.io/api/v1/events?event_type=created&collection_slug=${slug}&occurred_after=${year}-${month > 10 ? month : '0' + month}-${day}T${hour}:${minutes}:${seconds}`;
 
-            console.log(url);
+            const url = `https://${network}api.opensea.io/api/v1/events?event_type=created&collection_slug=${slug}`;
+
+            log.info(`[OSMonitor] URL ${url}`);
 
             request({
                 method: 'GET',
                 timeout: 3000,
                 url: url,
+                pool: {
+                  maxSockets: 100
+                },
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
                     "Accept": "application/json",
@@ -234,16 +241,12 @@ class OSMonitor {
 
                     address = contract_address;
 
-                    // console.log(`payment_token: ${payment_token} price: ${price} listing_duration: ${listing_duration}`);
-
                     /*
                     Payment type must be Ethereum, price must be <= desired price, and listing duration must be longer than 10 minutes.
                      */
-                    //(is_dev ? 2 : 1)
+                    //
 
-                    if (payment_token === 1 && price <= desired_price && listing_duration > 600) {
-
-                        console.log("PRICE:", price, token_id)
+                    if (payment_token === (is_dev ? 2 : 1) && price <= desired_price && listing_duration > 600) {
 
                         token_ids_query += `&token_ids=${token_id}`;
                         console.log("--------------------------------------------------")
@@ -252,7 +255,7 @@ class OSMonitor {
 
                 if (token_ids_query.length === 0) return;
 
-                const asset_url = `https://${network}api.opensea.io/api/v1/assets?asset_contract_address=${address}${token_ids_query}`
+                const asset_url = `https://${network}api.opensea.io/api/v1/assets?include_orders=true&asset_contract_address=${address}${token_ids_query}`
 
                 console.log("asset_url", asset_url);
 
@@ -284,20 +287,56 @@ class OSMonitor {
                     const data = JSON.parse(body);
                     const output = data.assets;
 
+                    log.info(`[OSMonitor] Checking assets ${output.length}`);
+
                     for (const asset of output) {
 
                         if (asset.sell_orders === null) {
+                            log.info(`[OSMonitor] sell order is null ${asset.token_id}`);
                             continue;
                         }
 
                         const contract = asset.asset_contract.address;
                         const token_id = asset.token_id;
 
+                        if(this.trait !== null) {
+
+                            const asset_traits = asset.traits;
+
+                            if(asset_traits.length > 0) {
+
+                                for(const t of asset_traits) {
+                                    if(`${this.trait.trait_type}`.toLowerCase() !== `${t.trait_type}`.toLowerCase()
+                                        || `${this.trait.value}`.toLowerCase() !== `${t.value}`.toLowerCase()) {
+                                        log.info(`[OSMonitor] Traits do not match`);
+                                        continue;
+                                    }
+                                }
+
+                                log.info(`[OSMonitor] Traits match contract_address:${contract} token_id:${token_id}`);
+
+                            }
+
+                        }
+
+                        const asset_price_str = asset.sell_orders[0].current_price.split(".")[0];
+                        const asset_price = Number.parseFloat(web3.utils.fromWei(`${asset_price_str}`, 'ether'));
+
+                        log.info(`[OSMonitor] asset price is ${asset_price} looking for ${desired_price} contract_address:${contract} token_id:${token_id}`);
+
+                        if(asset_price > desired_price) {
+                            continue;
+                        }
+
                         if (this.buying) {
                             console.log("Already Buying NFT");
                             log.info(`[OSMonitor] Already buying contract:${contract} token_id:${token_id}`);
                             return;
                         }
+
+                        this.buying = true;
+
+                        log.info(`[OSMonitor] buying contract_address:${contract} token_id:${token_id} with price ${asset_price}`);
 
                         await this.fill_order(contract, token_id);
 
@@ -334,7 +373,7 @@ class OSMonitor {
             if (this.wallet === null) {
                 this.keys = [];
                 this.keys.push(this.private_key);
-                this.wallet = new HDWalletProvider(this.keys, os_http_endpoint, 0, this.keys.length);
+                this.wallet = new HDWalletProvider(this.keys, is_dev ? os_http_endpoint : this.network === 'mainnet' ? os_http_endpoint : 'https://rpc.flashbots.net', 0, this.keys.length);
                 log.info(`[OSMonitor] fill_order wallet is null, created new one ${this.id}`);
             }
 
@@ -398,7 +437,14 @@ class OSMonitor {
                 log.info(`[OSMonitor] successfully bought TxHash: ${transaction} ${this.id}`);
 
             } catch (e) {
-                console.log("Testing This:", e);
+                log.info(`[OSMonitor] error while buying ${e.message}`);
+                this.status = {
+                    error: 2,
+                    result: {
+                        message: "Error"
+                    }
+                };
+                this.sendMessage('monitor-status-update');
             }
 
             this.interval = undefined;
@@ -409,7 +455,7 @@ class OSMonitor {
             this.status = {
                 error: 2,
                 result: {
-                    message: e.message
+                    message: 'Error, check logs'
                 }
             };
 
