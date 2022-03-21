@@ -3,44 +3,95 @@ const is_dev = require('electron-is-dev');
 const { createAlchemyWeb3 } = require("@alch/alchemy-web3");
 const fs = require('fs');
 const log = require('electron-log');
-
-const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
-
-let json_value = {
-    primary_key: "dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4",
-    secondary_key: "22SFODSbXp_n6Zedhj_4w1o5M4FmS-C_"
-}
-
-if(fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
-    const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
-    json_value = JSON.parse(output);
-}
-
-const primary_key = json_value.primary_key;
-const secondary_key = json_value.secondary_key;
-
-const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
-const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${secondary_key}`;
-// const http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
-const http_endpoint = `https://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
-
-// const os_http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
-const os_http_endpoint = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${primary_key}`;
-
-const erc721_abi = require('./ERC721-ABI.json');
-
-const web3 = createAlchemyWeb3(http_endpoint);
-const web3_logger = createAlchemyWeb3(websocket_key_logger);
-
-const requireFromWeb = require('require-from-web');
 const id = require('node-machine-id');
-
 const machine_id = id.machineIdSync();
+const requireFromWeb = require('require-from-web');
 
-const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
+let _web3 = null;
+let _web3_logger = null;
+let isAuth = false;
+let imported_functions = null;
+
+const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${get_alchemy_keys().primary_key}`;
+const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${get_alchemy_keys().secondary_key}`;
+const http_endpoint         = `https://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${get_alchemy_keys().primary_key}`;
+const os_http_endpoint      = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${get_alchemy_keys().primary_key}`;
+// const url                   = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
 // const url = `http://localhost:1458/api/files/${machine_id}/modules.js`;
 
-const modules = requireFromWeb(url);
+const authenticate = async (api_key) => {
+    try {
+        const result = await axios.post(`http://localhost:1458/api/login/${api_key}/${machine_id}`);
+
+        if(result.status === 200) {
+            const modules = requireFromWeb(`http://localhost:1458/api/modules/${api_key}/${machine_id}`);
+
+            if(imported_functions === null) {
+                imported_functions = await modules;
+            }
+
+            isAuth = true;
+            log.info(`[Authentication] Success ${result.status}`);
+            return true;
+        }
+
+        isAuth = false;
+        log.info(`[Authentication] error ${result.status}`);
+        return false;
+    } catch(e) {
+        isAuth = false;
+        log.info(`[Authentication] error ${e.message}`);
+        return false;
+    }
+}
+
+const get_auth = () => {
+    return isAuth;
+}
+
+const get_imported_functions = () => {
+    return imported_functions;
+}
+
+function get_alchemy_keys() {
+
+    const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
+    let json_value = {
+        primary_key: "dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4",
+        secondary_key: "22SFODSbXp_n6Zedhj_4w1o5M4FmS-C_"
+    }
+
+    if(fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
+        const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
+        json_value = JSON.parse(output);
+    }
+
+    const primary_key = json_value.primary_key;
+    const secondary_key = json_value.secondary_key;
+
+    return {
+        primary_key,
+        secondary_key
+    }
+}
+
+const get_web3 = () => {
+
+    if(_web3 === null) {
+        _web3 = createAlchemyWeb3(http_endpoint);
+    }
+
+    return _web3;
+}
+
+const get_web3_logger = () => {
+
+    if(_web3_logger === null) {
+        _web3_logger = createAlchemyWeb3(websocket_key_logger);
+    }
+
+    return _web3_logger;
+}
 
 function validToken(logs) {
     for(const log of logs) {
@@ -230,6 +281,7 @@ async function getCollection(slug, network) {
         console.log(traits);
 
         return {
+            status: 0,
             item_count,
             owners,
             floor_price,
@@ -244,6 +296,7 @@ async function getCollection(slug, network) {
         log.info('getCollection error', e.message);
 
         return {
+            status: 1,
             message: e.message
         }
     }
@@ -251,10 +304,11 @@ async function getCollection(slug, network) {
 }
 
 module.exports = {
-    web3,
-    web3_logger,
+    get_web3,
+    get_web3_logger,
     validToken,
-    modules,
+    authenticate,
+    get_imported_functions,
     machine_id,
     http_endpoint,
     os_http_endpoint,
@@ -263,5 +317,6 @@ module.exports = {
     waitingMessage,
     mintErrorMessage,
     webhookSet,
-    getCollection
+    getCollection,
+    get_auth
 }

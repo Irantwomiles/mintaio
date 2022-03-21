@@ -37,6 +37,7 @@ function Tasks() {
     const [updateMethodsDropdown, setUpdateMethodsDropdown] = useState([]);
     const [updateReadDropdown, setUpdateReadDropdown] = useState([]);
     const [abi, setAbi] = useState("");
+    const [contractCreator, setContractCreator] = useState("");
 
     const [contract, setContract] = useState("");
 
@@ -55,6 +56,7 @@ function Tasks() {
     const [price, setPrice] = useState("");
     const [gas, setGas] = useState("");
     const [gasPriorityFee, setGasPriorityFee] = useState("");
+    const [gasLimit, setGasLimit] = useState("-1");
     const [amount, setAmount] = useState("");
 
     const [unlockWalletId, setUnlockWalletId] = useState("");
@@ -95,7 +97,7 @@ function Tasks() {
 
     const handleAdd = (e) => {
 
-        if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0) {
+        if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0 || gasLimit.length === 0) {
             setToastValue({
                 message: "You must fill out all of the input fields.",
                 color: "#d97873"
@@ -146,6 +148,7 @@ function Tasks() {
             amount: amount,
             gas: gas,
             gasPriorityFee: gasPriorityFee,
+            gasLimit: gasLimit,
             walletPassword: walletPassword,
             walletId: selectedWallet.id,
             args: args,
@@ -153,7 +156,8 @@ function Tasks() {
             readFunction: readFunctionName,
             readCurrentValue: readValue,
             timestamp: timer,
-            mode: mode
+            mode: mode,
+            contractCreator: contractCreator
         });
 
         if(output.error === 1) {
@@ -210,6 +214,8 @@ function Tasks() {
         setReadMethods([]);
         setSelectedReadMethod("");
         setReadValue("");
+        setContractCreator("");
+        setAbi("");
 
         setToastValue({
             message: "New task created successfully.",
@@ -644,6 +650,10 @@ function Tasks() {
                 return task.status.result.message
             case 11:
                 return 'Missing Values'
+            case 12:
+                return 'Creator N/A'
+            case 13:
+                return 'Waiting for Tx'
         }
 
         return 'Unknown State';
@@ -820,6 +830,18 @@ function Tasks() {
                             <div className={"m-1"}>
                                 <label className={"mb-1"} style={{color: "white"}}>ABI Manual Entry</label>
                                 <textarea className={"w-100"} onChange={(e) => {setAbi(e.target.value)}} value={abi} />
+                            </div>
+
+                            <div className="d-flex mb-2">
+                                <div className={"w-100"}>
+                                    <label className={"mb-1"} style={{color: "white"}}>Contract Creator</label>
+                                    <input type="text" className="form-control" onChange={(e) => {setContractCreator(e.target.value)}} placeholder="Contract Address" value={contractCreator}/>
+                                </div>
+
+                                <div className={"w-100"}>
+                                    <label className={"mb-1"} style={{color: "white"}}>Gas Limit</label>
+                                    <input type="number" className="form-control" onChange={(e) => {setGasLimit(e.target.value)}} placeholder="Gas Limit" value={gasLimit}/>
+                                </div>
                             </div>
 
                             <div className="d-flex justify-content-evenly">

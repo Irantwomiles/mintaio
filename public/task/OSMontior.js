@@ -1,4 +1,4 @@
-const {web3, os_http_endpoint, machine_id, sendWebhookMessage} = require('../web3_utils');
+const {get_web3, os_http_endpoint, machine_id, sendWebhookMessage} = require('../web3_utils');
 const {OpenSeaPort, Network, EventType} = require('opensea-js');
 const {OrderSide} = require("opensea-js/lib/types");
 const HDWalletProvider = require('@truffle/hdwallet-provider/dist/index.js');
@@ -233,8 +233,8 @@ class OSMonitor {
 
                     if (out.asset === null) continue;
 
-                    const price = Number.parseFloat(web3.utils.fromWei(`${out.starting_price}`, 'ether'));
-                    const payment_token = out.payment_token.id;
+                    const price = Number.parseFloat(get_web3().utils.fromWei(`${out.starting_price}`, 'ether'));
+                    const payment_token = out.payment_token.symbol;
                     const token_id = out.asset.token_id;
                     const contract_address = out.asset.asset_contract.address;
                     const listing_duration = out.duration;
@@ -246,14 +246,22 @@ class OSMonitor {
                      */
                     //
 
-                    if (payment_token === (is_dev ? 2 : 1) && price <= desired_price && listing_duration > 600) {
+                    log.info(`[OSMonitor] checking token ${token_id} and price ${price} | desired_price of ${desired_price} ${price <= desired_price} | payment token ${payment_token} ${payment_token === 'ETH'}`);
+
+                    if (payment_token === 'ETH' && price <= desired_price) {
+
+
 
                         token_ids_query += `&token_ids=${token_id}`;
+                        log.info(`[OSMonitor] adding token ${token_id}`);
                         console.log("--------------------------------------------------")
                     }
                 }
 
-                if (token_ids_query.length === 0) return;
+                if (token_ids_query.length === 0) {
+                    log.info(`[OSMonitor] token query length is 0`);
+                    return;
+                }
 
                 const asset_url = `https://${network}api.opensea.io/api/v1/assets?include_orders=true&asset_contract_address=${address}${token_ids_query}`
 
@@ -320,7 +328,7 @@ class OSMonitor {
                         }
 
                         const asset_price_str = asset.sell_orders[0].current_price.split(".")[0];
-                        const asset_price = Number.parseFloat(web3.utils.fromWei(`${asset_price_str}`, 'ether'));
+                        const asset_price = Number.parseFloat(get_web3().utils.fromWei(`${asset_price_str}`, 'ether'));
 
                         log.info(`[OSMonitor] asset price is ${asset_price} looking for ${desired_price} contract_address:${contract} token_id:${token_id}`);
 
@@ -402,11 +410,11 @@ class OSMonitor {
             };
             this.sendMessage('monitor-status-update');
 
-            const weiMax = web3.utils.toWei(this.maxGas, 'gwei');
-            const weiPrio = web3.utils.toWei(this.priorityFee, 'gwei');
+            const weiMax = get_web3().utils.toWei(this.maxGas, 'gwei');
+            const weiPrio = get_web3().utils.toWei(this.priorityFee, 'gwei');
 
-            const maxFeePerGas = web3.utils.toHex(weiMax);
-            const maxPriorityFeePerGas = web3.utils.toHex(weiPrio);
+            const maxFeePerGas = get_web3().utils.toHex(weiMax);
+            const maxPriorityFeePerGas = get_web3().utils.toHex(weiPrio);
 
             clearInterval(this.interval);
 

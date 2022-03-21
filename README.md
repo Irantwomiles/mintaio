@@ -6,7 +6,6 @@ TODO:
   * Force gas price on active tasks
   * look into better live slug detection.
 * Mintwatch
-  * Enable/Disable viewing of all mints happening at the moment.
   * Setup notifications based on parameters.
 * OpenSea sniper
   * Create monitor

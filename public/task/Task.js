@@ -1,4 +1,5 @@
-const { modules, web3, mintSuccessMessage, waitingMessage, mintErrorMessage} = require('../web3_utils');
+const { get_imported_functions, get_web3, mintSuccessMessage, waitingMessage, mintErrorMessage} = require('../web3_utils');
+const {start_status_watch} = require('../subscriptions');
 const is_dev = require('electron-is-dev');
 const crypto = require('crypto');
 const {getWindow} = require('../window_utils');
@@ -16,7 +17,7 @@ class Task {
      * @param account | Account object of the wallet that is to be used to mint this NFT
      * @param price | Price in ETH (Should account for how many you are buying ex: 1 = 0.06 -> 4 = 0.24)
      */
-    constructor(contract_address, privateKey, publicKey, walletId, price, amount, gas, gasPriorityFee, functionName, args) {
+    constructor(contract_address, privateKey, publicKey, walletId, price, amount, gas, gasPriorityFee, gasLimit, functionName, args) {
         this.id = crypto.randomBytes(16).toString('hex');
         this.contract_address = contract_address;
         this.privateKey = privateKey;
@@ -26,10 +27,13 @@ class Task {
         this.amount = amount;
         this.gas = gas;
         this.gasPriorityFee = gasPriorityFee;
+        this.gasLimit = gasLimit;
         this.functionName = functionName;
         this.args = args;
         this.nonce = null;
         this.active = false;
+        this.contract_creator = '';
+
         /*
         Status:
         -1 : Inactive
@@ -45,6 +49,8 @@ class Task {
         9 : Checking Block (Use message)
         10: Found Block (Use message)
         11: Contract not set
+        12: Contract creator not set
+        13: Waiting for Tx in mempool
 
          */
         this.status = {
@@ -70,10 +76,6 @@ class Task {
 
         log.info(`Started task ${this.id}`);
 
-        if(this.imported_functions === null) {
-            this.imported_functions = await modules;
-        }
-
         if(this.start_mode === "MANUAL") {
             this.start();
         } else if(this.start_mode === "TIMER") {
@@ -81,6 +83,26 @@ class Task {
             console.log("Starting Timer Mode");
         } else if(this.start_mode === "AUTOMATIC") {
             this.start_when_ready();
+        } else if(this.start_mode === "FIRST_BLOCK") {
+
+            if(this.contract_creator.length === 0) {
+                this.status = {
+                    error: 12,
+                    result: ''
+                };
+
+                this.sendMessage('task-status-update');
+                return;
+            }
+
+            this.status = {
+                error: 13,
+                result: ''
+            };
+
+            this.sendMessage('task-status-update');
+
+            start_status_watch();
         }
 
     }
@@ -91,9 +113,23 @@ class Task {
 
         if(this.active) return;
 
+        if(this.abi === null) {
+            this.status = {
+                error: 4,
+                result: {}
+            };
+
+            this.sendMessage('task-status-update');
+            return;
+        }
+
+        if(this.imported_functions === null) {
+            this.imported_functions = get_imported_functions();
+        }
+
         this.active = true;
 
-        this.nonce = await web3.eth.getTransactionCount(this.publicKey, "latest");
+        this.nonce = await get_web3().eth.getTransactionCount(this.publicKey, "latest");
 
         waitingMessage(this.contract_address, this.publicKey, this.price, this.amount, this.gas, this.gasPriorityFee, 'Creating transaction', 13999634, is_dev ? mintaio_webhook_dev : mintaio_webhook);
 
@@ -113,23 +149,25 @@ class Task {
         let gasGwei = '0';
 
         if(this.gas === -1) {
-            this.gas = await web3.eth.getGasPrice();
-            gasGwei = web3.utils.fromWei(`${this.gas}`, 'gwei');
+            this.gas = await get_web3().eth.getGasPrice();
+            gasGwei = get_web3().utils.fromWei(`${this.gas}`, 'gwei');
         } else {
             gasGwei = this.gas;
         }
 
         const transaction_promise = this.imported_functions.sendTransaction(
-            web3,
+            get_web3(),
             this.contract_address,
             this.privateKey,
             this.functionName,
-            `${web3.utils.toWei(`${this.price}`, 'ether')}`,
-            `${web3.utils.toWei(`${gasGwei}`, 'gwei')}`,
-            `${web3.utils.toWei(`${this.gasPriorityFee}`, 'gwei')}`,
+            `${get_web3().utils.toWei(`${this.price}`, 'ether')}`,
+            `${get_web3().utils.toWei(`${gasGwei}`, 'gwei')}`,
+            `${get_web3().utils.toWei(`${this.gasPriorityFee}`, 'gwei')}`,
+            Number.parseInt(`${this.gasLimit}`),
             this.nonce,
             this.args,
-            this.abi);
+            this.abi,
+            log);
 
         this.status = {
             error: 3,
@@ -155,10 +193,10 @@ class Task {
 
             this.sendMessage('task-status-update', result);
 
-            const tx = await web3.eth.getTransaction(result.transactionHash);
-            const _price = web3.utils.fromWei(tx.value, 'ether');
-            const _maxGas = web3.utils.fromWei(tx.maxFeePerGas, 'gwei');
-            const _priority = web3.utils.fromWei(tx.maxPriorityFeePerGas, 'gwei');
+            const tx = await get_web3().eth.getTransaction(result.transactionHash);
+            const _price = get_web3().utils.fromWei(tx.value, 'ether');
+            const _maxGas = get_web3().utils.fromWei(tx.maxFeePerGas, 'gwei');
+            const _priority = get_web3().utils.fromWei(tx.maxPriorityFeePerGas, 'gwei');
 
             mintSuccessMessage(this.contract_address, result.transactionHash, _price, _maxGas, _priority, is_dev ? mintaio_webhook_dev : mintaio_webhook);
 
@@ -236,7 +274,7 @@ class Task {
         this.block_timer = setInterval(() => {
             for(let i = 0; i < 2; i++) {
 
-                web3.eth.getBlock('latest').then((data) => {
+                get_web3().eth.getBlock('latest').then((data) => {
 
                     this.status = {
                         error: 9,
@@ -246,7 +284,7 @@ class Task {
                     };
                     this.sendMessage('task-status-update');
 
-                    if(data.timestamp >= _timestamp) {
+                    if((data.timestamp + (10 * 1000)) >= _timestamp) {
 
                         clearInterval(this.block_timer);
 
@@ -332,7 +370,7 @@ class Task {
             return;
         }
 
-        const contract = new web3.eth.Contract(JSON.parse(this.abi), this.contract_address);
+        const contract = new get_web3().eth.Contract(JSON.parse(this.abi), this.contract_address);
 
         let found = false;
 
