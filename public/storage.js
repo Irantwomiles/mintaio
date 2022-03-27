@@ -8,6 +8,8 @@ class Storage {
         this.wallets = new Datastore({filename: `${dataPath}\\mintaio\\wallets.db`, autoload: true});
         this.tasks = new Datastore({filename: `${dataPath}\\mintaio\\tasks.db`, autoload: true});
         this.osmonitor = new Datastore({filename: `${dataPath}\\mintaio\\osmonitor.db`, autoload: true});
+        this.osbid = new Datastore({filename: `${dataPath}\\mintaio\\osbid.db`, autoload: true});
+        this.projects = new Datastore({filename: `${dataPath}\\mintaio\\projects.db`, autoload: true});
         this.webhooks = new Datastore({filename: `${dataPath}\\mintaio\\webhooks.db`, autoload: true});
 
         this.default_keys = {

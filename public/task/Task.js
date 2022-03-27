@@ -3,7 +3,6 @@ const {start_status_watch} = require('../subscriptions');
 const is_dev = require('electron-is-dev');
 const crypto = require('crypto');
 const {getWindow} = require('../window_utils');
-
 const log = require('electron-log');
 
 const mintaio_webhook = 'https://discord.com/api/webhooks/935664893137395722/hjjlfw6Z46l8szcIY09NGq2n0fZ5d7hY2CKDr2QBwMe0HTbVMAFGLCsyfokwbBCdCrDZ';
@@ -51,7 +50,7 @@ class Task {
         11: Contract not set
         12: Contract creator not set
         13: Waiting for Tx in mempool
-
+        14: Status watch is already running
          */
         this.status = {
             error: -1,
@@ -95,14 +94,23 @@ class Task {
                 return;
             }
 
-            this.status = {
-                error: 13,
-                result: ''
-            };
+            const output = start_status_watch();
 
-            this.sendMessage('task-status-update');
+            if(output.error === 1) {
+                this.status = {
+                    error: 14,
+                    result: ''
+                };
 
-            start_status_watch();
+                this.sendMessage('task-status-update');
+            } else {
+                this.status = {
+                    error: 13,
+                    result: ''
+                };
+
+                this.sendMessage('task-status-update');
+            }
         }
 
     }

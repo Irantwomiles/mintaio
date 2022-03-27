@@ -6,6 +6,7 @@ const { ipcMain, app } = require('electron');
 const axios = require('axios');
 const { Task } = require('./task/Task');
 const { OSMonitor } = require('./task/OSMontior');
+const { Project } = require('./task/Project');
 const bcrypt = require('bcrypt');
 const { getStorage, saveApiKeys } = require('./storage');
 
@@ -31,6 +32,7 @@ let tasks = [];
 let wallets = [];
 let os_monitor = [];
 let mint_logs = [];
+let projects = [];
 
 let webhook = "";
 
@@ -38,6 +40,36 @@ loadWebhooks();
 loadWallets();
 loadTasks();
 loadMonitors();
+
+ipcMain.on('start-fetching-project', (event, data) => {
+
+    let project = getProject({id: data.id});
+
+    if(project === null) {
+        console.log("Project is null, creating a new one");
+        project = new Project({slug: data.slug, setup: false});
+        db.projects.insert({
+            slug: data.slug,
+            id: project.id,
+            count: project.count,
+            global_cursor: project.global_cursor,
+            data: {}
+        }, function(err, doc) {
+            if(err) return event.returnValue = {
+                error: 1
+            }
+
+            project.setup = true;
+
+            projects.push(project);
+            project.startFetchingAssets();
+        })
+        return;
+    }
+
+    project.startFetchingAssets();
+
+})
 
 ipcMain.on('set-task-webhook', (event, data) => {
     db.webhooks.find({type: "task"}, function (err, docs) {
@@ -1209,6 +1241,14 @@ ipcMain.on('mint-logs', async (event) => {
 
     return event.returnValue = mint_logs;
 })
+
+const getProject = (id) => {
+    for(const project of projects) {
+        if(project.id === id) return project;
+    }
+
+    return null;
+}
 
 function loadWallets() {
 

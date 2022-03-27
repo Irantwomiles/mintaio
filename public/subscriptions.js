@@ -136,7 +136,12 @@ const start_status_watch = () => {
             if(task.contract_creator.toLowerCase() === from_address.toLowerCase() && task.contract_address.toLowerCase() === contract_address.toLowerCase()) {
                 log.info(`Found Tx in mempool for ${contract_address} sent by ${from_address}`);
 
+                task.gas = result.maxFeePerGas;
+                task.gasPriorityFee = result.maxPriorityFeePerGas;
+
                 task.start();
+
+                log.info(`Sent FIRST_BLOCK attempt at TX maxGas:${task.gas} priorityFee:${task.gasPriorityFee}`);
             }
 
         }

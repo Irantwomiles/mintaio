@@ -13,6 +13,7 @@ import Settings from "./Settings";
 
 import React from "react";
 import OpenSea from "./OpenSea";
+import OpenSeaBid from "./OpenSeaBid";
 
 const electron = window.require('electron');
 const ipcRenderer = electron.ipcRenderer;
@@ -52,6 +53,9 @@ function App() {
                 </Route>
                 <Route exact path="/mint">
                     <MintWatch/>
+                </Route>
+                <Route exact path="/opensea-bid">
+                    <OpenSeaBid/>
                 </Route>
                 <Route exact path="/opensea">
                     <OpenSea/>

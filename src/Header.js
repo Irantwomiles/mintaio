@@ -79,6 +79,9 @@ function Header() {
                 <div className={current === "opensea" ? "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 selected-header" : "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 default-header"}>
                     <span className="ms-2 d-flex"><Link className="d-flex align-items-center" to="/opensea" onClick={() => setCurrent("opensea")}><img src="https://storage.googleapis.com/opensea-static/Logomark/Logomark-Blue.svg" className="me-2" style={{height: "1.5rem", width: "1.5rem"}} /><span>OpenSea</span></Link></span>
                 </div>
+                <div className={current === "opensea-bid" ? "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 selected-header" : "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 default-header"}>
+                    <span className="ms-2 d-flex"><Link className="d-flex align-items-center" to="/opensea-bid" onClick={() => setCurrent("opensea-bid")}><img src="https://storage.googleapis.com/opensea-static/Logomark/Logomark-Blue.svg" className="me-2" style={{height: "1.5rem", width: "1.5rem"}} /><span>OpenSea Bidding</span></Link></span>
+                </div>
                 <div className={current === "settings" ? "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 selected-header" : "header-btn rounded-3 pt-2 pb-2 ps-2 pe-2 m-1 default-header"}>
                     <span className="ms-2"><Link to="/settings" onClick={() => setCurrent("settings")}><i className="fas fa-cog me-2"></i>Settings</Link></span>
                 </div>
