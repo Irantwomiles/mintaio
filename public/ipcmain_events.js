@@ -40,6 +40,11 @@ loadWebhooks();
 loadWallets();
 loadTasks();
 loadMonitors();
+loadProjects();
+
+ipcMain.on('load-projects', (event) => {
+    return event.returnValue = getRendererProjects();
+})
 
 ipcMain.on('start-fetching-project', (event, data) => {
 
@@ -1250,6 +1255,38 @@ const getProject = (id) => {
     return null;
 }
 
+function loadProjects() {
+
+    db.projects.find({}, async function(err, docs) {
+
+        if(err) {
+            console.log('error while loading projects');
+            return;
+        }
+
+        if(docs.length > 0) {
+            for(const doc of docs) {
+
+                const p = new Project({slug: doc.slug, id: doc.id, count: doc.count, setup: true})
+                const data = doc.data;
+
+                console.log(doc);
+
+                for(const k of Object.keys(data)) {
+                    p.traitsMap.set(k, data[k]);
+                }
+
+                for(const k of p.traitsMap.keys()) {
+                    console.log("Key:", k, "Array:", p.traitsMap.get(k));
+                }
+
+                projects.push(p);
+            }
+        }
+
+    })
+}
+
 function loadWallets() {
 
     db.wallets.find({}, async function(err, docs) {
@@ -1391,6 +1428,22 @@ const getMonitor = (id) => {
     }
 
     return null;
+}
+
+const getRendererProjects = () => {
+    let arr = [];
+
+    for(const p of projects) {
+        arr.push({
+            id: p.id,
+            slug: p.slug,
+            global_cursor: p.global_cursor,
+            count: p.count,
+            traitsMap: p.traitsMap
+        })
+    }
+
+    return arr;
 }
 
 const getRendererTasks = () => {

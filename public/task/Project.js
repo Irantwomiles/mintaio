@@ -45,8 +45,6 @@ class Project {
         this.throttled_cursor = [];
         this.count = count;
         this.db = getStorage();
-
-        console.log("Slug:", this.slug);
     }
 
     getTraitsMap() {
@@ -96,13 +94,13 @@ class Project {
 
                     if(trait_exists) {
 
-                        if(this.traitsMap.get(`${trait.trait_type}_${trait.value}`).includes(asset.token_id)) {
+                        if(this.traitsMap.get(`${trait.trait_type};${trait.value}`).includes(asset.token_id)) {
                             continue;
                         }
-                        this.traitsMap.get(`${trait.trait_type}_${trait.value}`).push(asset.token_id);
+                        this.traitsMap.get(`${trait.trait_type};${trait.value}`).push(asset.token_id);
 
                     } else {
-                        this.traitsMap.set(`${trait.trait_type}_${trait.value}`, [asset.token_id]);
+                        this.traitsMap.set(`${trait.trait_type};${trait.value}`, [asset.token_id]);
                     }
 
                 }
