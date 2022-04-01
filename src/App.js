@@ -5,7 +5,7 @@ import { TaskContext } from "./state/TaskContext";
 
 import {HashRouter as Router, Route, Switch} from 'react-router-dom';
 
-import Header from './Header';
+import Sidebar from './Sidebar';
 import Wallet from './Wallet';
 import Tasks from "./Tasks";
 import MintWatch from "./MintWatch";
@@ -43,27 +43,33 @@ function App() {
 
     return (
         <Router>
-            <Header/>
-            <Switch>
-                <Route exact path="/">
-                    <Tasks/>
-                </Route>
-                <Route exact path="/wallet">
-                    <Wallet/>
-                </Route>
-                <Route exact path="/mint">
-                    <MintWatch/>
-                </Route>
-                <Route exact path="/opensea-bid">
-                    <OpenSeaBid/>
-                </Route>
-                <Route exact path="/opensea">
-                    <OpenSea/>
-                </Route>
-                <Route exact path="/settings">
-                    <Settings/>
-                </Route>
-            </Switch>
+            <div className={"d-flex h-100"}>
+                <div className={"sidebar h-100"}>
+                    <Sidebar/>
+                </div>
+                <div className={"content h-100"}>
+                    <Switch>
+                        <Route exact path="/">
+                            <Tasks/>
+                        </Route>
+                        <Route exact path="/wallet">
+                            <Wallet/>
+                        </Route>
+                        <Route exact path="/mint">
+                            <MintWatch/>
+                        </Route>
+                        <Route exact path="/opensea-bid">
+                            <OpenSeaBid/>
+                        </Route>
+                        <Route exact path="/opensea">
+                            <OpenSea/>
+                        </Route>
+                        <Route exact path="/settings">
+                            <Settings/>
+                        </Route>
+                    </Switch>
+                </div>
+            </div>
         </Router>
     )
 }

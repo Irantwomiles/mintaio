@@ -722,27 +722,27 @@ function Tasks() {
     }, [readMethods]);
 
     return (
-        <div className="tasks-wrapper p-3 h-100">
+        <div className="tasks-wrapper py-3 px-4 h-100">
 
-            <div className="tasks-toolbar d-flex justify-content-between">
-                <div>
-                    <div className="new-task m-1 me-4" onClick={() => {modal.show()}}>
-                        <span><i className="fas fa-plus-circle"></i></span>
-                        <span className="ms-2">New Task</span>
+            <div className={"w-50"}>
+                <h3 style={{fontWeight: "bold", color: "white"}}>Tasks</h3>
+                <div className={"d-flex justify-content-center align-items-center tasks-actionbar rounded-3 p-3"}>
+                    <div className={"new-task m-2 d-flex align-items-center rounded-3 p-2"} onClick={() => {modal.show()}}>
+                        <i className="fa-solid fa-plus fa-1x m-1" style={{color: "white"}}></i>
                     </div>
-                </div>
-                <div className="d-flex">
-                    <div className="new-task m-1 me-4" onClick={() => {handleStartAll()}}>
-                        <span><i className="fas fa-play-circle"></i></span>
-                        <span className="ms-2">Start All</span>
+
+                    <div className={"start-all-task m-2 d-flex align-items-center rounded-3 py-2 px-3"} onClick={() => {handleStartAll()}}>
+                        <i className="fa-solid fa-play me-2 fa-1x" style={{color: "white"}}></i>
+                        Start All
                     </div>
-                    <div className="new-task m-1 me-4" onClick={() => {handleStopAll()}}>
-                        <span><i className="fas fa-stop-circle"></i></span>
-                        <span className="ms-2">Stop All</span>
+
+                    <div className={"stop-all-task m-2 d-flex align-items-center rounded-3 py-2 px-3"} onClick={() => {handleStopAll()}}>
+                        <i className="fa-solid fa-stop me-2 fa-1x" style={{color: "white"}}></i>
+                        Stop All
                     </div>
-                    <div className="new-task m-1" onClick={() => {handleDeleteAll()}}>
-                        <span><i className="fas fa-trash-alt"></i></span>
-                        <span className="ms-2">Delete All</span>
+
+                    <div className={"delete-all-task m-2 d-flex align-items-center rounded-3 p-2"} onClick={() => {handleDeleteAll()}}>
+                        <i className="fa-solid fa-trash-can fa-1x m-1" style={{color: "white"}}></i>
                     </div>
                 </div>
             </div>

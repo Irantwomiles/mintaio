@@ -5,13 +5,14 @@ const { getStorage } = require('../storage');
 
 class Project {
 
-    constructor({slug, id= crypto.randomBytes(16).toString('hex'), count = 0, setup = true}) {
+    constructor({slug, id= crypto.randomBytes(16).toString('hex'), count = 0, contract_address='',setup = true}) {
         this.traitsMap = new Map();
 
         this.slug = slug;
         this.id = id;
         this.global_cursor = '';
         this.network = '';
+        this.schema = 'ERC721';
 
         // making sure the project has been added to the DB before attempting to update.
         this.setup = setup;
@@ -42,19 +43,10 @@ class Project {
             "1a6aaeab958148a3a42d1d801912c91f",
             "790d4e9223714481a11633acbda338de"];
 
+        this.contract_address = contract_address;
         this.throttled_cursor = [];
         this.count = count;
         this.db = getStorage();
-    }
-
-    getTraitsMap() {
-        return this.traitsMap;
-    }
-
-    setTraitsMap(map) {
-        for(const k of map) {
-            this.traitsMap.set(k, map.get(k));
-        }
     }
 
     async getAssetsByTrait (network, slug, cursor, api_key) {
@@ -79,7 +71,13 @@ class Project {
             });
 
             if(res.statusCode !== 200) {
-                log.info(`[Project] Status is ${res.statusCode} API key ${api_key} Proxy: ${p}`);
+
+                if(res.statusCode === 401) {
+                    log.info(`[Project] Status is ${res.statusCode} ${res.body} API key ${api_key} Proxy: ${p}`);
+                    return;
+                }
+
+                log.info(`[Project] Status is ${res.statusCode} ${res.body} API key ${api_key} Proxy: ${p}`);
                 this.throttled = true;
                 return;
             }
@@ -88,19 +86,28 @@ class Project {
 
             for(const asset of json_body.assets) {
 
+                if(this.contract_address.length === 0) {
+                    this.contract_address = asset.asset_contract.address;
+                }
+
+                if(asset.asset_contract.schema_name !== this.schema) {
+                    this.schema = asset.asset_contract.schema_name;
+                }
+
                 for(const trait of asset.traits) {
 
-                    const trait_exists = this.traitsMap.has(`${trait.trait_type}_${trait.value}`);
+                    const trait_str = `${trait.trait_type};${trait.value}`.replace(".", "");
+                    const trait_exists = this.traitsMap.has(trait_str);
 
                     if(trait_exists) {
 
-                        if(this.traitsMap.get(`${trait.trait_type};${trait.value}`).includes(asset.token_id)) {
+                        if(this.traitsMap.get(trait_str).includes(asset.token_id)) {
                             continue;
                         }
-                        this.traitsMap.get(`${trait.trait_type};${trait.value}`).push(asset.token_id);
+                        this.traitsMap.get(trait_str).push(asset.token_id);
 
                     } else {
-                        this.traitsMap.set(`${trait.trait_type};${trait.value}`, [asset.token_id]);
+                        this.traitsMap.set(trait_str, [asset.token_id]);
                     }
 
                 }
@@ -109,12 +116,14 @@ class Project {
             }
 
             if(this.setup) {
-
+                //ultra-miners
                 this.db.projects.update({id: this.id}, {
                 $set: {
                     count: this.count,
                     global_cursor: this.global_cursor,
-                    data: Object.fromEntries(this.traitsMap)
+                    data: Object.fromEntries(this.traitsMap),
+                    contract_address: this.contract_address,
+                    schema: this.schema
                 }}, {}, function(err, numReplaced) {
 
                     if(err) {

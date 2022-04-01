@@ -7,6 +7,7 @@ const axios = require('axios');
 const { Task } = require('./task/Task');
 const { OSMonitor } = require('./task/OSMontior');
 const { Project } = require('./task/Project');
+const { OSBid } = require('./task/OSBid');
 const bcrypt = require('bcrypt');
 const { getStorage, saveApiKeys } = require('./storage');
 
@@ -33,6 +34,7 @@ let wallets = [];
 let os_monitor = [];
 let mint_logs = [];
 let projects = [];
+let bid = null;
 
 let webhook = "";
 
@@ -42,19 +44,79 @@ loadTasks();
 loadMonitors();
 loadProjects();
 
+ipcMain.on('start-bidding', (event, data) => {
+
+    if(bid !== null) {
+        return event.returnValue = {
+            error: 1
+        }
+    }
+
+    const project = getProject(data.project.id);
+
+    if(project === null) {
+        return event.returnValue = {
+            error: 2
+        }
+    }
+
+    bcrypt.compare(data.walletPassword, data.wallet.password, function(err, result) {
+
+        if(err) {
+            return event.returnValue = {
+                error: 3
+            }
+        }
+
+        if(result) {
+
+            const account = get_web3().eth.accounts.decrypt(data.wallet.encrypted, data.walletPassword);
+
+            bid = new OSBid({
+                price: data.price,
+                tokens: data.assets,
+                public_key: account.address,
+                private_key: account.privateKey,
+                contract_address: project.contract_address,
+                expiration: 1,
+                schema: project.schema
+            })
+
+            bid.start();
+
+        } else {
+            return event.returnValue = {
+                error: 2
+            }
+        }
+
+
+    })
+
+})
+
 ipcMain.on('load-projects', (event) => {
     return event.returnValue = getRendererProjects();
 })
 
-ipcMain.on('start-fetching-project', (event, data) => {
+ipcMain.on('start-fetching-project', async (event, data) => {
 
-    let project = getProject({id: data.id});
+    /*
+    error: 0 found project
+    error: 1 created new project
+     */
+
+    let project = getProjectBySlug(data.slug);
 
     if(project === null) {
-        console.log("Project is null, creating a new one");
+        log.info("[Project] Project is null, creating a new one");
+
         project = new Project({slug: data.slug, setup: false});
+
         db.projects.insert({
             slug: data.slug,
+            contract_address: '',
+            schema: 'ERC721',
             id: project.id,
             count: project.count,
             global_cursor: project.global_cursor,
@@ -69,10 +131,17 @@ ipcMain.on('start-fetching-project', (event, data) => {
             projects.push(project);
             project.startFetchingAssets();
         })
-        return;
+
+        return event.returnValue = {
+            error: 1
+        };
     }
 
     project.startFetchingAssets();
+
+    return event.returnValue = {
+        error: 0
+    };
 
 })
 
@@ -212,7 +281,7 @@ ipcMain.on('add-os-monitor', (event, data) => {
 
         if(result) {
 
-            const account = get_web3.eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
+            const account = get_web3().eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
 
             const monitor = new OSMonitor(
                 data.slug,
@@ -418,7 +487,7 @@ ipcMain.on('os-unlock-wallet', async (event, data) => {
     const compare = await compareAsync(data.password, wallet.password);
 
     if(compare) {
-        const account = get_web3.eth.accounts.decrypt(wallet.encrypted, data.password);
+        const account = get_web3().eth.accounts.decrypt(wallet.encrypted, data.password);
         for(const t of os_monitor) {
             if(t.wallet_id === data.walletId) {
                 t.private_key = account.privateKey;
@@ -1255,6 +1324,14 @@ const getProject = (id) => {
     return null;
 }
 
+const getProjectBySlug = (slug) => {
+    for(const project of projects) {
+        if(project.slug.toLowerCase() === slug.toLowerCase()) return project;
+    }
+
+    return null;
+}
+
 function loadProjects() {
 
     db.projects.find({}, async function(err, docs) {
@@ -1267,18 +1344,15 @@ function loadProjects() {
         if(docs.length > 0) {
             for(const doc of docs) {
 
-                const p = new Project({slug: doc.slug, id: doc.id, count: doc.count, setup: true})
+                const p = new Project({slug: doc.slug, id: doc.id, contract_address: doc.contract_address, count: doc.count, setup: true})
                 const data = doc.data;
-
-                console.log(doc);
 
                 for(const k of Object.keys(data)) {
                     p.traitsMap.set(k, data[k]);
                 }
 
-                for(const k of p.traitsMap.keys()) {
-                    console.log("Key:", k, "Array:", p.traitsMap.get(k));
-                }
+                p.global_cursor = doc.global_cursor;
+                p.schema = data.schema;
 
                 projects.push(p);
             }

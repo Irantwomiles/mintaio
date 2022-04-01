@@ -33,18 +33,15 @@ function OpenSeaBid() {
     const [slug, setSlug] = useState("");
     const [checkSlug, setCheckSlug] = useState("");
     const [checkProject, setCheckProject] = useState(null);
-    const [delay, setDelay] = useState("");
     const [price, setPrice] = useState("");
-    const [maxGas, setMaxGas] = useState("");
-    const [priority, setPriority] = useState("");
     const [selectedAssets, setSelectedAssets] = useState([]);
     const [traits, setTraits] = useState([]);
     const [monitors, setMonitors] = useState([]);
 
     useEffect(() => {
 
-        // const walletDropdown = new Dropdown(walletDropdownRef.current, {});
-        // setWalletDropdown(walletDropdown);
+        const walletDropdown = new Dropdown(walletDropdownRef.current, {});
+        setWalletDropdown(walletDropdown);
 
         const projectDropdown = new Dropdown(projectsDropdownRef.current, {});
         setProjectsDropdown(projectDropdown);
@@ -209,16 +206,14 @@ function OpenSeaBid() {
         ipcRenderer.sendSync("start-fetching-project", data);
     }
 
-    const handleStop = (id) => {
-        ipcRenderer.sendSync("stop-os-monitor", id);
-    }
-
-    const handleDelete = (id) => {
-        const output = ipcRenderer.sendSync("delete-os-monitor", id);
-
-        console.log("delete", output);
-
-        setMonitors(output.monitors);
+    const startBidding = (data) => {
+        ipcRenderer.sendSync("start-bidding", {
+            assets: selectedAssets,
+            project: selectedProject,
+            price: Number.parseFloat(price),
+            walletPassword:
+            walletPassword,
+            wallet: selectedWallet});
     }
 
     function kFormatter(num) {
@@ -291,6 +286,26 @@ function OpenSeaBid() {
                     </div>
                 </div>
 
+                <div className="d-flex">
+                    <div className="dropdown w-25">
+                        <button className="btn btn-primary dropdown-toggle w-100" type="button"
+                                id="wallets-dropdown" data-bs-toggle="dropdown"
+                                aria-expanded="false"
+                                ref={walletDropdownRef}
+                                onClick={() => {walletDropdown.toggle()}}>
+                            {selectedWallet === null ? "Select a wallet" : selectedWallet.name}
+                        </button>
+                        <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                            {
+                                wallet.map((w) => (
+                                    <li key={w.id}><a className="dropdown-item" onClick={() => {setSelectedWallet(w)} }>{w.name.length > 0 ? w.name + " | " : ""}0x{w.encrypted.address}</a></li>
+                                ))
+                            }
+                        </ul>
+                    </div>
+                    <input type="password" className="form-control w-75 ms-2" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
+                </div>
+
                 <div>
                     <div className="dropdown w-25">
                         <button className="btn btn-primary dropdown-toggle w-100" type="button"
@@ -336,7 +351,15 @@ function OpenSeaBid() {
                     {typeof selectedAssets !== 'undefined' ? traits.map(t => (
                         <span key={Math.random()} className={"border me-2"}>{t}</span>
                     )) : ""}
-                    <div>{typeof selectedAssets !== 'undefined' ? selectedAssets.length : "N/A"}</div>
+
+                    <div>{typeof selectedAssets !== 'undefined' ?
+                        <div>
+                            <span>{selectedAssets.length}</span>
+                            <input type="text" onChange={(e) => {setPrice(e.target.value)}} value={price} />
+                            <button onClick={startBidding}>Start</button>
+                        </div>
+                        : "N/A"}
+                    </div>
                 </div>
 
             </div>

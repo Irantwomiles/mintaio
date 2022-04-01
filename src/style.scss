@@ -1,6 +1,6 @@
 :root {
-    --background-color: #0B0C10;
-    --background-color-light: #13151c;
+    --background-color: #0b0c10;
+    --background-color-light: #0e101a;
     --color-warning: #FAC762;
     --color-positive: #8a78e9;
     --color-negative: #F47960;
@@ -8,6 +8,14 @@
     --color-separator: #29405B;
     --border-color: #45d39d;
 }
+
+$background-color: #0b0c10;
+$background-color-light: #0e101a;
+$icon-color: #1F243D;
+$blue: #5c5cff;
+$green: #45d39d;
+$yellow: #ffc76f;
+$red: #ff4949;
 
 @import url('https://fonts.googleapis.com/css2?family=Mulish&display=swap');
 
@@ -38,47 +46,47 @@ body, #root {
     overflow: hidden;
 }
 
-.header-wrapper {
-    background-color: var(--background-color);
+.sidebar {
+    width: 10% !important;
+}
 
+.content {
+    width: 90% !important;
+}
 
+.tasks-actionbar {
+    background-color: $background-color-light;
+}
 
-    .selected-header {
+.sidebar-wrapper {
+
+    background-color: $background-color-light;
+    text-align: center;
+
+    .sidebar-logo {
+        img {
+            height: 8rem;
+            width: 8.3rem;
+        }
+    }
+
+    .sidebar-unselected {
         a {
-            color: var(--color-positive);
+            color: $icon-color;
         }
     }
 
-    .default-header {
-        a {
-            color: var(--border-color);
-        }
-    }
-
-    .header-btn {
+    .sidebar-selected {
 
         a {
-            text-decoration: none;
-            transition: color 300ms ease-in;
-
-            &:hover {
-                cursor: pointer;
-                color: var(--color-positive);
-            }
+            color: white;
         }
 
-        color: white;
-        transition: color 300ms ease-in;
-
-        &:hover {
-            cursor: pointer;
-            color: var(--color-positive);
+        i {
+            background-color: $green;
         }
     }
 
-    .header-text {
-        color: white;
-    }
 }
 
 .wallet-wrapper {
@@ -161,15 +169,51 @@ body, #root {
 }
 
 .tasks-wrapper {
-    background-color: var(--background-color-light);
+    background-color: $background-color;
 
     .new-task {
-        color: white;
-        transition: color 300ms ease-in;
+        background-color: $blue;
+        transition: background-color 300ms ease-in;
 
         &:hover {
             cursor: pointer;
-            color: var(--color-positive);
+            background-color: lighten($blue, 3%);
+        }
+    }
+
+    .start-all-task {
+        color: white;
+        background-color: $green;
+
+        transition: background-color 300ms ease-in;
+
+        &:hover {
+            cursor: pointer;
+            background-color: darken($green, 3%);
+        }
+    }
+
+    .stop-all-task {
+        color: white;
+        background-color: $yellow;
+
+        transition: background-color 300ms ease-in;
+
+        &:hover {
+            cursor: pointer;
+            background-color: darken($yellow, 3%);
+        }
+    }
+
+    .delete-all-task {
+        color: white;
+        background-color: $red;
+
+        transition: background-color 300ms ease-in;
+
+        &:hover {
+            cursor: pointer;
+            background-color: lighten($red, 3%);
         }
     }
 
@@ -387,7 +431,6 @@ body, #root {
         overflow-x: hidden;
     }
 }
-
 
 .modal-content {
     background-color: var(--background-color) !important;
