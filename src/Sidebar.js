@@ -50,7 +50,7 @@ function Sidebar() {
         const output = ipcRenderer.sendSync('is-auth');
 
         if(!output.isAuth) {
-            auth_modal.show();
+            // auth_modal.show();
         }
 
         handleGas();
@@ -74,11 +74,6 @@ function Sidebar() {
                 </div>
 
                 <div>
-                    <div className={ current === "wallet" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2" }>
-                        <Link to="/wallet" onClick={() => setCurrent("wallet")}>
-                            <i className="fas fa-wallet fa-2x p-3 rounded"></i>
-                        </Link>
-                    </div>
                     <div className={ current === "wallet" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2" }>
                         <Link to="/wallet" onClick={() => setCurrent("wallet")}>
                             <i className="fas fa-wallet fa-2x p-3 rounded"></i>

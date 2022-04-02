@@ -173,16 +173,23 @@ function Wallet() {
     }, [wallet])
 
     return (
-        <div className="wallet-wrapper p-3 h-100">
+        <div className="wallet-wrapper py-3 px-4 h-100">
 
-            <div className="wallet-toolbar d-flex align-items-center justify-content-between">
-                <div className="add-wallet m-1" onClick={() => {modal.show()}}>
-                    <span><i className="fas fa-plus-circle"></i></span>
-                    <span className="ms-2">Add Wallet</span>
-                </div>
-                <div className="wallet-balance m-1">
-                    <span className="me-3 wallet-balance-text">Total balance: <span style={{color: 'white'}}>{Number.parseFloat(balance)}</span> Ξ</span>
-                    <span className="refresh-wallet" onClick={() => {handleBalanceRefresh()}}><i className="fas fa-sync-alt"></i></span>
+            <div className={"w-50"}>
+                <h3 style={{fontWeight: "bold", color: "white"}}>Wallets</h3>
+                <div className={"d-flex align-items-center wallets-actionbar rounded-3 p-3"}>
+                    <div className={"new-wallet m-2 d-flex align-items-center rounded-3 p-2"} onClick={() => {modal.show()}}>
+                        <i className="fa-solid fa-plus fa-1x m-1" style={{color: "white"}}></i>
+                    </div>
+
+                    <div className={"m-2 d-flex align-items-center rounded-3 p-2"}>
+                        <h5 style={{color: "#515d87", marginBottom: "0px", fontWeight: "bold"}}>Balance: <span style={{color: "white"}}>{Number.parseFloat(balance)}</span> Ξ</h5>
+
+                        <div className="wallet-balance ms-3">
+                            <span className="refresh-wallet" onClick={() => {handleBalanceRefresh()}}><i className="fas fa-sync-alt"></i></span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
@@ -214,7 +221,7 @@ function Wallet() {
                     wallet.length > 0
                         ?
                     wallet.map((w) => (
-                        <div key={w.id} className="row wallet-item d-flex p-3">
+                        <div key={w.id} className="row wallet-item wallet d-flex p-3">
                             <div className="col-3 wallet-name">
                                 <span className="wallet-name-text">{w.name}</span>
                             </div>

@@ -92,13 +92,27 @@ body, #root {
 
 .wallet-wrapper {
 
-    background-color: var(--background-color-light);
+    background-color: $background-color !important;
+
+    .wallets-actionbar {
+        background-color: $background-color-light;
+    }
+
+    .new-wallet {
+        background-color: $blue;
+        transition: background-color 300ms ease-in;
+
+        &:hover {
+            cursor: pointer;
+            background-color: lighten($blue, 3%);
+        }
+    }
 
     .refresh-wallet {
         transition: color 300ms ease-in;
 
         &:hover {
-            color: var(--color-warning);
+            color: $blue;
             cursor: pointer;
         }
     }
@@ -107,7 +121,7 @@ body, #root {
         transition: color 300ms ease-in;
 
         &:hover {
-            color: var(--color-positive);
+            color: $blue;
             cursor: pointer;
         }
     }
@@ -116,7 +130,7 @@ body, #root {
         transition: color 300ms ease-in;
 
         &:hover {
-            color: var(--color-warning);
+            color: $yellow;
             cursor: pointer;
         }
     }
@@ -125,22 +139,35 @@ body, #root {
         transition: color 300ms ease-in;
 
         &:hover {
-            color: var(--color-negative);
+            color: $red;
             cursor: pointer;
         }
     }
 
-    .wallet-address, .wallet-name, .wallet-action, .wallet-single-balance {
+    .wallet-item {
+
+        .wallet-header {
+            color: $light-blue !important;
+            font-weight: bold;
+            border-bottom: 2px solid $light-blue;
+        }
+
         color: white;
+
+    }
+
+    .wallet {
+        &:nth-child(odd) {
+            background-color: $background-color-light;
+        }
+    }
+
+    .wallet-address, .wallet-name, .wallet-action, .wallet-single-balance {
         text-align: center;
     }
 
     .wallet-balance-text {
         color: var(--color-positive);
-    }
-
-    .wallet-header {
-        border-bottom: 2px solid var(--border-color);
     }
 
     .add-wallet {
@@ -154,18 +181,12 @@ body, #root {
     }
 
     .wallet-name-text {
-        color: var(--color-positive);
+        color: $light-blue;
+        font-weight: bold;
     }
 
     .wallet-balance {
         color: white;
-    }
-
-    .wallet-list {
-        height: 38rem;
-        background-color: var(--background-color);
-        border: 2px solid var(--border-color);
-        border-radius: 10px;
     }
 }
 
@@ -234,7 +255,7 @@ body, #root {
         transition: color 300ms ease-in;
 
         &:hover {
-            color: var(--color-positive);
+            color: $green;
             cursor: pointer;
         }
     }
@@ -243,16 +264,7 @@ body, #root {
         transition: color 300ms ease-in;
 
         &:hover {
-            color: var(--color-warning);
-            cursor: pointer;
-        }
-    }
-
-    .load-abi-btn {
-        transition: color 300ms ease-in;
-
-        &:hover {
-            color: var(--border-color);
+            color: $yellow;
             cursor: pointer;
         }
     }
@@ -261,7 +273,7 @@ body, #root {
         transition: color 300ms ease-in;
 
         &:hover {
-            color: var(--color-neutral);
+            color: $blue;
             cursor: pointer;
         }
     }
@@ -270,7 +282,7 @@ body, #root {
         transition: color 300ms ease-in;
 
         &:hover {
-            color: var(--color-negative);
+            color: $red;
             cursor: pointer;
         }
     }
