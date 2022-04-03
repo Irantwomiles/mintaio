@@ -104,6 +104,16 @@ ipcMain.on('stop-mint-watch', async (event, data) => {
 })
 
 ipcMain.on('mint-logs', (event, data) => {
+    let obj = {
+        contract_address: 'mint-aio',
+        name: 'test',
+        value: ''
+    }
+    for(let i = 0; i < 100; i++) {
+        mint_logs.push(obj);
+    }
+
+
     return event.returnValue = {
         logs: mint_logs
     }

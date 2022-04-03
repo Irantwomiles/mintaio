@@ -608,7 +608,7 @@ function Tasks() {
                     tasks.length > 0 ?
 
                         tasks.map((task) => (
-                            <div key={Math.random()} className="row d-flex p-3">
+                            <div key={Math.random()} className="row d-flex task p-3">
                                 <div className="col-2" style={{textAlign: 'center'}}>
                                     {
                                         task.privateKey !== null ? <span style={{color: '#45d39d'}}><i className="fas fa-unlock me-2"></i></span> :

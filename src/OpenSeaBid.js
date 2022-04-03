@@ -259,108 +259,114 @@ function OpenSeaBid() {
     }
 
     return (
-        <div className="tasks-wrapper p-3 h-100">
+        <div className="opensea-bid-wrapper p-3 h-100">
 
-            <div className="tasks-toolbar d-flex justify-content-between">
+            <div className={"w-100"}>
+                <h3 style={{fontWeight: "bold", color: "white"}}>OpenSea Bidding</h3>
 
-                <div>
-                    <div className="new-task m-1 me-4" onClick={() => {modal.show()}}>
-                        <span><i className="fas fa-plus-circle"></i></span>
-                        <span className="ms-2">New Bid</span>
+                <div className={"d-flex flex-column tasks-actionbar rounded-3 p-3"}>
+                    <div className={"d-flex justify-content-between"}>
+                        <div>
+                            <label htmlFor="slug-address" className="form-label" style={{color: "white"}}>Project Slug</label>
+                            <div className="input-group">
+                                <input type="text" className="form-control" id="slug-address" placeholder="Project Slug" onChange={(e) => {setSlug(e.target.value)}} value={slug} />
+                            </div>
+                        </div>
+                        <div className={"mt-auto"}>
+                            <button className={"btn btn-add"} onClick={() => {handleStart({slug: slug})}}>Find Traits</button>
+                        </div>
+                    </div>
+
+                    <div className="d-flex mt-3">
+                        <div className="dropdown w-25">
+                            <button className="btn btn-add dropdown-toggle w-100" type="button"
+                                    id="wallets-dropdown" data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    ref={walletDropdownRef}
+                                    onClick={() => {walletDropdown.toggle()}}>
+                                {selectedWallet === null ? "Select a wallet" : selectedWallet.name}
+                            </button>
+                            <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
+                                {
+                                    wallet.map((w) => (
+                                        <li key={w.id}><a className="dropdown-item" onClick={() => {setSelectedWallet(w)} }>{w.name.length > 0 ? w.name + " | " : ""}0x{w.encrypted.address}</a></li>
+                                    ))
+                                }
+                            </ul>
+                        </div>
+                        <input type="password" className="form-control w-75 ms-2" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
+                    </div>
+
+                    <div className={"d-flex w-100 mt-3"}>
+                        <div className="dropdown w-25 me-2">
+                            <button className="btn btn-add dropdown-toggle w-100" type="button"
+                                    id="projects-dropdown" data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                    ref={projectsDropdownRef}
+                                    onClick={() => {projectsDropdown.toggle()}}>
+                                {selectedProject === null ? "Select a project" : selectedProject.slug}
+                            </button>
+                            <ul className="dropdown-menu">
+                                {
+                                    projects.map((p) => (
+                                        <li key={p.id}><a className="dropdown-item" onClick={() => {setSelectedProject(p)} }>{p.slug}</a></li>
+                                    ))
+                                }
+                            </ul>
+                        </div>
+
+                        <div className={selectedProject === null ? 'd-none w-100' : 'w-100'}>
+                            <div className="dropdown w-25">
+                                <button className="btn btn-add dropdown-toggle w-100" type="button"
+                                        id="traits-dropdown"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false"
+                                        ref={traitsDropdownRef}
+                                        onClick={() => {traitsDropdown.toggle()}}
+                                >
+                                    Select a Trait
+                                </button>
+                                <ul className="dropdown-menu">
+                                    {
+                                        selectedProject === null ? '' :
+                                            Array.from(selectedProject.traitsMap.keys()).map((t) => (
+                                                <li key={Math.random() * Math.random() + Math.random()}><a className="dropdown-item" onClick={() => {handleTraitsFilter(t)} }>{t} ({selectedProject.traitsMap.get(t).length})</a></li>
+                                            ))
+                                    }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className={"d-flex justify-content-evenly w-100"}>
+                        <div className={"d-flex flex-wrap w-75 mt-3"} style={{color: "white"}}>
+                            {typeof selectedAssets !== 'undefined' ? traits.map(t => (
+                                    <div key={Math.random()} className={"trait-selected rounded p-2 me-1 mb-1"}>
+                                        <span>{t}</span>
+                                    </div>
+
+                            )) : ""}
+                        </div>
+                        <div className={"w-25 mt-3"} style={{color: "white"}}>{selectedAssets.length} assets found</div>
+                    </div>
+
+                    <div>{typeof selectedAssets !== 'undefined' ?
+                        <div className={"d-flex mt-2"}>
+                            <div>
+                                <label htmlFor="slug-address" className="form-label" style={{color: "white"}}>Price</label>
+                                <div className="input-group">
+                                    <input type="text" className="form-control" placeholder="Bid Price" onChange={(e) => {setPrice(e.target.value)}} value={price} />
+                                </div>
+                            </div>
+                            <button className={"btn btn-wallet"} onClick={startBidding}>Start Bidding</button>
+                        </div>
+                        : "N/A"}
                     </div>
                 </div>
 
             </div>
 
             <div className="tasks-list mt-3">
-
-                <div className={"d-flex"}>
-                    <div>
-                        <label htmlFor="slug-address" className="form-label" style={{color: "white"}}>Project Slug</label>
-                        <div className="input-group">
-                            <input type="text" className="form-control" id="slug-address" placeholder="Project Slug" onChange={(e) => {setSlug(e.target.value)}} value={slug} />
-                        </div>
-                    </div>
-                    <div>
-                        <button onClick={() => {handleStart({slug: slug})}}>Start</button>
-                    </div>
-                </div>
-
-                <div className="d-flex">
-                    <div className="dropdown w-25">
-                        <button className="btn btn-primary dropdown-toggle w-100" type="button"
-                                id="wallets-dropdown" data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                ref={walletDropdownRef}
-                                onClick={() => {walletDropdown.toggle()}}>
-                            {selectedWallet === null ? "Select a wallet" : selectedWallet.name}
-                        </button>
-                        <ul className="dropdown-menu" aria-labelledby="wallets-dropdown">
-                            {
-                                wallet.map((w) => (
-                                    <li key={w.id}><a className="dropdown-item" onClick={() => {setSelectedWallet(w)} }>{w.name.length > 0 ? w.name + " | " : ""}0x{w.encrypted.address}</a></li>
-                                ))
-                            }
-                        </ul>
-                    </div>
-                    <input type="password" className="form-control w-75 ms-2" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
-                </div>
-
-                <div>
-                    <div className="dropdown w-25">
-                        <button className="btn btn-primary dropdown-toggle w-100" type="button"
-                                id="projects-dropdown" data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                ref={projectsDropdownRef}
-                                onClick={() => {projectsDropdown.toggle()}}>
-                            {selectedProject === null ? "Select a project" : selectedProject.slug}
-                        </button>
-                        <ul className="dropdown-menu">
-                            {
-                                projects.map((p) => (
-                                    <li key={p.id}><a className="dropdown-item" onClick={() => {setSelectedProject(p)} }>{p.slug}</a></li>
-                                ))
-                            }
-                        </ul>
-                    </div>
-                </div>
-
-                <div className={selectedProject === null ? 'd-none' : ''}>
-                    <div className="dropdown w-25">
-                        <button className="btn btn-primary dropdown-toggle w-100" type="button"
-                                id="traits-dropdown"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                                ref={traitsDropdownRef}
-                                onClick={() => {traitsDropdown.toggle()}}
-                        >
-                            Select a Trait
-                        </button>
-                        <ul className="dropdown-menu">
-                            {
-                                selectedProject === null ? '' :
-                                Array.from(selectedProject.traitsMap.keys()).map((t) => (
-                                    <li key={Math.random() * Math.random() + Math.random()}><a className="dropdown-item" onClick={() => {handleTraitsFilter(t)} }>{t} ({selectedProject.traitsMap.get(t).length})</a></li>
-                                ))
-                            }
-                        </ul>
-                    </div>
-                </div>
-
-                <div style={{color: "white"}}>
-                    {typeof selectedAssets !== 'undefined' ? traits.map(t => (
-                        <span key={Math.random()} className={"border me-2"}>{t}</span>
-                    )) : ""}
-
-                    <div>{typeof selectedAssets !== 'undefined' ?
-                        <div>
-                            <span>{selectedAssets.length}</span>
-                            <input type="text" onChange={(e) => {setPrice(e.target.value)}} value={price} />
-                            <button onClick={startBidding}>Start</button>
-                        </div>
-                        : "N/A"}
-                    </div>
-                </div>
 
             </div>
 

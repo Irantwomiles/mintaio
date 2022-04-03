@@ -75,25 +75,27 @@ function MintWatch() {
 
     return (
         <div className="mint-logs-wrapper p-3 h-100" style={{overflowY: 'auto', overflowX: 'hidden'}}>
-            {/*<div className="d-flex justify-content-center">*/}
-            {/*    <h4 style={{color: "#F47960"}}>Currently Disabled<i className="fas fa-exclamation-circle ms-2"></i></h4>*/}
-            {/*</div>*/}
 
-            <div className={"d-flex"}>
-                <div className="start-watch m-1 me-4" onClick={() => {startWatch()}}>
-                    <span><i className="fas fa-play-circle"></i></span>
-                    <span className="ms-2">Start Watch</span>
-                </div>
-                <div className="stop-watch m-1 me-4" onClick={() => {stopWatch()}}>
-                    <span><i className="fas fa-stop-circle"></i></span>
-                    <span className="ms-2">Stop Watch</span>
+
+            <div className={"w-50"}>
+                <h3 style={{fontWeight: "bold", color: "white"}}>Mint Watch</h3>
+                <div className={"d-flex justify-content-center align-items-center tasks-actionbar rounded-3 p-3"}>
+                    <div className={"start-watch m-2 d-flex align-items-center rounded-3 py-2 px-3"} onClick={() => {startWatch()}}>
+                        <i className="fa-solid fa-play me-2 fa-1x" style={{color: "white"}}></i>
+                        Start Watch
+                    </div>
+
+                    <div className={"stop-watch m-2 d-flex align-items-center rounded-3 py-2 px-3"} onClick={() => {stopWatch()}}>
+                        <i className="fa-solid fa-stop me-2 fa-1x" style={{color: "white"}}></i>
+                        Stop Watch
+                    </div>
                 </div>
             </div>
 
             <div className="mint-logs mt-3">
                 { (typeof mints !== 'undefined') && mints.length > 0
                     ?
-                    <div className="row log-item-header log-item d-flex p-3">
+                    <div className="row log-item-header d-flex p-3">
                         <div className="col-3">
                             <span>NFT Name</span>
                         </div>

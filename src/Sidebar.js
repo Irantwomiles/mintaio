@@ -50,7 +50,7 @@ function Sidebar() {
         const output = ipcRenderer.sendSync('is-auth');
 
         if(!output.isAuth) {
-            // auth_modal.show();
+            auth_modal.show();
         }
 
         handleGas();

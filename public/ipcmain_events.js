@@ -32,7 +32,6 @@ const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.
 let tasks = [];
 let wallets = [];
 let os_monitor = [];
-let mint_logs = [];
 let projects = [];
 let bid = null;
 
@@ -1309,11 +1308,6 @@ ipcMain.on('gas-price', async (event) => {
         gas: get_web3().utils.fromWei(`${gas}`, 'gwei'),
         gasLimit: get_web3().utils.fromWei(`${gasLimit}`, 'gwei')
     };
-})
-
-ipcMain.on('mint-logs', async (event) => {
-
-    return event.returnValue = mint_logs;
 })
 
 const getProject = (id) => {
