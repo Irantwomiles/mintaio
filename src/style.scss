@@ -475,6 +475,24 @@ body, #root {
     }
 }
 
+.project-fetching {
+    background-color: $background-color-light;
+}
+
+.bids {
+    background-color: $background-color-light;
+    overflow-x: hidden !important;
+
+    .bid-element {
+        overflow-x: hidden !important;
+    }
+}
+
+.bids-content {
+    max-height: 22rem;
+    overflow-y: auto;
+}
+
 .btn-cancel {
     background-color: $red !important;
     font-weight: bold !important;

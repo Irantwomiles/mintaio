@@ -66,22 +66,27 @@ class OSBid {
             log.info(`[OSBid] SeaPort is null creating new one ${this.id}`);
         }
 
+        let _count = 0;
         for(const t of this.tokens) {
-
+            _count++;
             await this.bid({
                 price: this.price,
                 contract_address: this.contract_address,
                 token_id: t,
                 schema: this.schema,
                 account_address: this.public_key,
-                expiration: this.expiration
+                expiration: this.expiration,
+                count: _count,
+                total_count: this.tokens.length
             })
 
         }
 
+        log.info(`[OSBid] Finished bidding ${this.tokens.length}...`);
+
     }
 
-    async bid({price, contract_address, token_id, schema, account_address, expiration}) {
+    async bid({price, contract_address, token_id, schema, account_address, expiration, count, total_count}) {
 
         log.info(`[OSBid] Attempting to bid with...`);
 
@@ -96,6 +101,8 @@ class OSBid {
             contract_address: contract_address,
             token_id: token_id,
             expiration: expiration,
+            count: count,
+            total_count: total_count,
             status: 0,
             message: 'Not sent'
         }
@@ -121,13 +128,18 @@ class OSBid {
 
         } catch(e) {
             bidObj.status = 2;
-            bidObj.message = `Error: ${e.message}`;
+            bidObj.message = `Error, Check logs`;
             log.info(`[OSBid] Could not bid on ${token_id} ${e.message}`);
         }
 
         this.bids.push(bidObj);
+        this.sendMessage('os-bid-status-update', this.bids);
+
     }
 
+    sendMessage(channel, data) {
+        getWindow().webContents.send(channel, data);
+    }
 
 }
 

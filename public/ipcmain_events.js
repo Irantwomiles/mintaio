@@ -83,6 +83,10 @@ ipcMain.on('start-bidding', (event, data) => {
 
             bid.start();
 
+            return event.returnValue = {
+                error: 0
+            }
+
         } else {
             return event.returnValue = {
                 error: 2
@@ -96,6 +100,22 @@ ipcMain.on('start-bidding', (event, data) => {
 
 ipcMain.on('load-projects', (event) => {
     return event.returnValue = getRendererProjects();
+})
+
+ipcMain.on('stop-fetching-project', async (event, data) => {
+    let project = getProjectBySlug(data.slug);
+
+    if(project === null) {
+        return event.returnValue = {
+            error: 1
+        }
+    }
+
+    project.stop();
+
+    return event.returnValue = {
+        error: 0
+    }
 })
 
 ipcMain.on('start-fetching-project', async (event, data) => {

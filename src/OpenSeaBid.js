@@ -37,6 +37,12 @@ function OpenSeaBid() {
     const [selectedAssets, setSelectedAssets] = useState([]);
     const [traits, setTraits] = useState([]);
     const [monitors, setMonitors] = useState([]);
+    const [bids, setBids] = useState([]);
+    const [projectStatus, setProjectStatus] = useState(null);
+    const [bidPercent, setBidPercent] = useState(0.0);
+    const [bidCount, setBidCount] = useState(0);
+    const [bidTotal, setBidTotal] = useState(1);
+    const [isBidding, setIsBidding] = useState(false);
 
     useEffect(() => {
 
@@ -59,18 +65,25 @@ function OpenSeaBid() {
 
         setProjects(output);
 
-        console.log(output);
+        const status_updater = (event, data) => {
+            console.log("Status Updater:", data);
+            setBidCount(data[data.length - 1].count);
+            setBidTotal(data[data.length - 1].total_count);
+            setBids(data);
+        }
 
-        // const monitor_status_updater = (event, data) => {
-        //     const output = ipcRenderer.sendSync('load-os-monitors');
-        //     setMonitors(output);
-        // }
-        //
-        // ipcRenderer.on('project-status-update', monitor_status_updater)
-        //
-        // return () => {
-        //     ipcRenderer.removeListener('project-status-update', monitor_status_updater);
-        // }
+        const project_status_updater = (event, data) => {
+            console.log("Data:", data);
+            setProjectStatus(data);
+        }
+
+        ipcRenderer.on('os-bid-status-update', status_updater);
+        ipcRenderer.on('project-status-update', project_status_updater);
+
+        return () => {
+            ipcRenderer.removeListener('os-bid-status-update', status_updater);
+            ipcRenderer.removeListener('project-status-update', project_status_updater);
+        }
 
     }, [])
 
@@ -110,7 +123,6 @@ function OpenSeaBid() {
     }
 
     const handleUnlockWallet = (m) => {
-        console.log("m:", m);
         setUnlockWalletId(m.wallet_id);
         unlockModal.show();
     }
@@ -206,6 +218,10 @@ function OpenSeaBid() {
         ipcRenderer.sendSync("start-fetching-project", data);
     }
 
+    const handleStop = (data) => {
+        ipcRenderer.sendSync("stop-fetching-project", data);
+    }
+
     const startBidding = (data) => {
         ipcRenderer.sendSync("start-bidding", {
             assets: selectedAssets,
@@ -214,6 +230,8 @@ function OpenSeaBid() {
             walletPassword:
             walletPassword,
             wallet: selectedWallet});
+
+        setIsBidding(true);
     }
 
     function kFormatter(num) {
@@ -267,13 +285,14 @@ function OpenSeaBid() {
                 <div className={"d-flex flex-column tasks-actionbar rounded-3 p-3"}>
                     <div className={"d-flex justify-content-between"}>
                         <div>
-                            <label htmlFor="slug-address" className="form-label" style={{color: "white"}}>Project Slug</label>
+                            <label htmlFor="slug-address" className="form-label" style={{color: "white", fontWeight: "bold"}}>Project Slug</label>
                             <div className="input-group">
                                 <input type="text" className="form-control" id="slug-address" placeholder="Project Slug" onChange={(e) => {setSlug(e.target.value)}} value={slug} />
                             </div>
                         </div>
                         <div className={"mt-auto"}>
-                            <button className={"btn btn-add"} onClick={() => {handleStart({slug: slug})}}>Find Traits</button>
+                            <button className={"btn btn-add me-2"} onClick={() => {handleStart({slug: slug})}}>Find Traits</button>
+                            <button className={"btn btn-cancel"} onClick={() => {handleStop({slug: slug})}}>Stop</button>
                         </div>
                     </div>
 
@@ -347,18 +366,30 @@ function OpenSeaBid() {
 
                             )) : ""}
                         </div>
-                        <div className={"w-25 mt-3"} style={{color: "white"}}>{selectedAssets.length} assets found</div>
+                        <div className={"w-25 mt-3"} style={{color: "white", textAlign: "right"}}>{selectedAssets.length} assets found</div>
                     </div>
 
                     <div>{typeof selectedAssets !== 'undefined' ?
-                        <div className={"d-flex mt-2"}>
-                            <div>
-                                <label htmlFor="slug-address" className="form-label" style={{color: "white"}}>Price</label>
-                                <div className="input-group">
-                                    <input type="text" className="form-control" placeholder="Bid Price" onChange={(e) => {setPrice(e.target.value)}} value={price} />
+                        <div className={"d-flex mt-2 justify-content-between"}>
+                            <div className={"d-flex"}>
+                                <div>
+                                    <label htmlFor="slug-address" className="form-label" style={{color: "white", fontWeight: "bold"}}>Price</label>
+                                    <div className="input-group">
+                                        <input type="text" className="form-control" placeholder="Bid Price" onChange={(e) => {setPrice(e.target.value)}} value={price} />
+                                    </div>
+                                </div>
+
+                                <div className={"mt-auto ms-3"}>
+                                    {isBidding ?
+                                        <span style={{color: "white"}}>{bidCount}/{bidTotal} bids sent</span>
+                                        : ''
+                                    }
                                 </div>
                             </div>
-                            <button className={"btn btn-wallet"} onClick={startBidding}>Start Bidding</button>
+                            <div className={"mt-auto"}>
+                                <button className={"btn btn-wallet me-2"} onClick={startBidding}>Start Bidding</button>
+                                <button className={"btn btn-cancel mt-auto"} onClick={startBidding}>Stop Bidding</button>
+                            </div>
                         </div>
                         : "N/A"}
                     </div>
@@ -366,10 +397,43 @@ function OpenSeaBid() {
 
             </div>
 
-            <div className="tasks-list mt-3">
+            <div className={"bids-content"}>
+                {projectStatus === null ? '' :
+                    <div className={"project-fetching d-flex justify-content-between p-3 mt-3"}>
+                        <div>
+                            <span className={"me-5"} style={{color:"white", fontWeight: "bold"}}>{projectStatus.slug}</span>
+                            <span>{projectStatus.message}</span>
+                        </div>
 
+                        <span style={{color: "#ffc76f"}}>
+                        <i className="fas fa-exclamation-triangle me-2"></i>
+                        This process may take a few minutes.
+                    </span>
+                    </div>
+                }
+
+                {
+                    typeof bids !== 'undefined' && bids.length > 0 ?
+                        bids.map((bid) => (
+                            <div className={"bids d-flex justify-content-between p-3 my-1 row"}>
+                                <div className={"bid-element col-3"}>
+                                    <span>{bid.price}</span>
+                                </div>
+                                <div className={"bid-element col-3"}>
+                                    <span>{bid.token_id}</span>
+                                </div>
+                                <div className={"bid-element col-3"}>
+                                    <span>{bid.expiration}hr</span>
+                                </div>
+                                <div className={"bid-element col-3"}>
+                                    <span>{bid.message}</span>
+                                </div>
+                            </div>
+                        )).reverse()
+                        :
+                        ''
+                }
             </div>
-
 
             <div className="modal" ref={unlockModalRef} tabIndex="-1">
                 <div className="modal-dialog modal-lg">
