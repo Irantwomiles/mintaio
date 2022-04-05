@@ -633,7 +633,7 @@ function Tasks() {
                             </div>
                         ))
                         :
-                        <div className="d-flex justify-content-center align-items-center w-100 h-100">
+                        <div className="d-flex justify-content-center align-items-center w-100 h-100 mt-5">
                             <h3 style={{color: "white"}}>You don't have any tasks setup yet.</h3>
                         </div>
                 }

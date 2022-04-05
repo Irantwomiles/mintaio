@@ -424,9 +424,11 @@ function OpenSeaBid() {
                                 </button>
                                 <ul className="dropdown-menu">
                                     {
+                                        typeof projects !== 'undefined' ?
                                         projects.map((p) => (
                                             <li key={p.id}><a className="dropdown-item" onClick={() => {setSelectedProject(p)} }>{p.slug}</a></li>
                                         ))
+                                            : ''
                                     }
                                 </ul>
                             </div>

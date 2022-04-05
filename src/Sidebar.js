@@ -89,11 +89,11 @@ function Sidebar() {
                             <i className="far fa-eye fa-2x p-3 rounded"></i>
                         </Link>
                     </div>
-                    <div className={current === "opensea" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2"}>
-                        <Link to="/opensea" onClick={() => setCurrent("opensea")}>
-                            <i className="fa-solid fa-sailboat fa-2x p-3 rounded"></i>
-                        </Link>
-                    </div>
+                    {/*<div className={current === "opensea" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2"}>*/}
+                    {/*    <Link to="/opensea" onClick={() => setCurrent("opensea")}>*/}
+                    {/*        <i className="fa-solid fa-sailboat fa-2x p-3 rounded"></i>*/}
+                    {/*    </Link>*/}
+                    {/*</div>*/}
                     <div className={current === "opensea-bid" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2"}>
                         <Link to="/opensea-bid" onClick={() => setCurrent("opensea-bid")}>
                             <i className="fa-solid fa-sailboat fa-2x p-3 rounded"></i>
@@ -107,7 +107,7 @@ function Sidebar() {
                 </div>
             </div>
 
-            <div className="d-flex align-items-center p-3 w-50">
+            <div className="d-flex align-items-center p-3">
                 {/*<span style={{color: 'white'}}><i className="fas fa-gas-pump me-2" style={{color: '#8a78e9'}}></i>{Number.parseFloat(gas.gas).toFixed(0)} Gwei</span>*/}
                 <span style={{color: "#323857"}}>v2.0.0</span>
             </div>
