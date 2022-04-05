@@ -47,6 +47,7 @@ class Project {
         this.contract_address = contract_address;
         this.count = count;
         this.db = getStorage();
+        this.active = false;
     }
 
     async getAssetsByTrait (network, slug, cursor, api_key) {
@@ -178,6 +179,8 @@ class Project {
             return;
         }
 
+        this.active = true;
+
         let api_key = '';
         let throttle_counter = 0;
         let key_index = 0;
@@ -221,6 +224,8 @@ class Project {
                     message: `Finished`
                 })
                 clearInterval(this.interval);
+                this.active = false;
+                this.sendMessage('project-status-finished');
             }
 
             if(typeof res !== 'undefined') {
@@ -242,6 +247,7 @@ class Project {
         }
 
         clearInterval(this.interval);
+        this.active = false;
 
         this.sendMessage('project-status-update', {
             error: 6,

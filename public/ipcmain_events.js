@@ -45,6 +45,14 @@ loadProjects();
 
 ipcMain.on('start-bidding', (event, data) => {
 
+    /*
+    error: 0 success
+    error: 1 already bidding
+    error: 2 project is null
+    error: 3 error
+    error: 4 invalid wallet password
+     */
+
     if(bid !== null) {
         return event.returnValue = {
             error: 1
@@ -77,7 +85,7 @@ ipcMain.on('start-bidding', (event, data) => {
                 public_key: account.address,
                 private_key: account.privateKey,
                 contract_address: project.contract_address,
-                expiration: 1,
+                expiration: data.expiration,
                 schema: project.schema
             })
 
@@ -89,7 +97,7 @@ ipcMain.on('start-bidding', (event, data) => {
 
         } else {
             return event.returnValue = {
-                error: 2
+                error: 4
             }
         }
 
@@ -103,6 +111,12 @@ ipcMain.on('stop-bidding', (event, data) => {
     if(bid === null) {
         return event.returnValue = {
             error: 1
+        }
+    }
+
+    if(!bid.active) {
+        return event.returnValue = {
+            error: 2
         }
     }
 
@@ -127,6 +141,12 @@ ipcMain.on('stop-fetching-project', async (event, data) => {
         }
     }
 
+    if(!project.active) {
+        return event.returnValue = {
+            error: 1
+        }
+    }
+
     project.stop();
 
     return event.returnValue = {
@@ -139,7 +159,16 @@ ipcMain.on('start-fetching-project', async (event, data) => {
     /*
     error: 0 found project
     error: 1 created new project
+    error: 2 there is already an active project
      */
+
+    for(const p of projects) {
+        if(p.active) {
+            return event.returnValue = {
+                error: 2
+            };
+        }
+    }
 
     let project = getProjectBySlug(data.slug);
 
@@ -165,11 +194,12 @@ ipcMain.on('start-fetching-project', async (event, data) => {
 
             projects.push(project);
             project.startFetchingAssets();
-        })
 
-        return event.returnValue = {
-            error: 1
-        };
+            return event.returnValue = {
+                error: 0,
+                projects: getRendererProjects()
+            };
+        })
     }
 
     project.startFetchingAssets();

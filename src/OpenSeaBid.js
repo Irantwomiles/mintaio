@@ -11,18 +11,13 @@ function OpenSeaBid() {
     const walletDropdownRef = useRef();
     const projectsDropdownRef = useRef();
     const traitsDropdownRef = useRef();
-    const unlockModalRef = useRef();
     const toastRef = useRef();
 
     const [wallet, setWallet] = useContext(WalletContext);
 
-    const [modal, setModal] = useState([]);
     const [walletDropdown, setWalletDropdown] = useState([]);
     const [traitsDropdown, setTraitsDropdown] = useState([]);
     const [projectsDropdown, setProjectsDropdown] = useState([]);
-    const [unlockWalletId, setUnlockWalletId] = useState("");
-    const [unlockPassword, setUnlockPassword] = useState("");
-    const [unlockModal, setUnlockModal] = useState([]);
     const [toastValue, setToastValue] = useState({});
     const [toast, setToast] = useState([]);
 
@@ -31,12 +26,9 @@ function OpenSeaBid() {
     const [selectedWallet, setSelectedWallet] = useState(null);
     const [selectedProject, setSelectedProject] = useState(null);
     const [slug, setSlug] = useState("");
-    const [checkSlug, setCheckSlug] = useState("");
-    const [checkProject, setCheckProject] = useState(null);
     const [price, setPrice] = useState("");
     const [selectedAssets, setSelectedAssets] = useState([]);
     const [traits, setTraits] = useState([]);
-    const [monitors, setMonitors] = useState([]);
     const [bids, setBids] = useState([]);
     const [projectStatus, setProjectStatus] = useState(null);
     const [bidCount, setBidCount] = useState(0);
@@ -55,9 +47,6 @@ function OpenSeaBid() {
         const _traitsDropdown = new Dropdown(traitsDropdownRef.current, {});
         setTraitsDropdown(_traitsDropdown);
 
-        const unlockModal = new Modal(unlockModalRef.current, {keyboard: false});
-        setUnlockModal(unlockModal);
-
         const toast = new Toast(toastRef.current, {autohide: true});
         setToast(toast);
 
@@ -66,19 +55,23 @@ function OpenSeaBid() {
         setProjects(output);
 
         const status_updater = (event, data) => {
-            console.log("Status Updater:", data);
             setBidCount(data[data.length - 1].count);
             setBidTotal(data[data.length - 1].total_count);
             setBids(data);
         }
 
         const project_status_updater = (event, data) => {
-            console.log("Data:", data);
             setProjectStatus(data);
+        }
+
+        const update_projects = () => {
+            const output = ipcRenderer.sendSync('load-projects');
+            setProjects(output);
         }
 
         ipcRenderer.on('os-bid-status-update', status_updater);
         ipcRenderer.on('project-status-update', project_status_updater);
+        ipcRenderer.on('project-status-finished', update_projects);
 
         return () => {
             ipcRenderer.removeListener('os-bid-status-update', status_updater);
@@ -122,60 +115,6 @@ function OpenSeaBid() {
         return result
     }
 
-    const handleUnlockWallet = (m) => {
-        setUnlockWalletId(m.wallet_id);
-        unlockModal.show();
-    }
-
-    const unlockWallet = () => {
-
-        unlockModal.hide();
-
-        const output = ipcRenderer.sendSync('os-unlock-wallet', {walletId: unlockWalletId, password: unlockPassword});
-
-        setUnlockPassword("");
-
-        if(output.error === 1) {
-            setToastValue({
-                message: "Could not find this wallet.",
-                color: "#d97873"
-            });
-            toast.show();
-            return;
-        }
-
-        if(output.error === 2) {
-            setToastValue({
-                message: "Incorrect wallet password.",
-                color: "#d97873"
-            });
-            toast.show();
-            return;
-        }
-
-        setMonitors(output.monitors);
-
-        setToastValue({
-            message: "Wallet unlocked.",
-            color: "#73d9b0"
-        });
-
-        toast.show();
-    }
-
-    const handleCheck = () => {
-        if(checkSlug.length === 0) return;
-
-        const output = ipcRenderer.sendSync('monitor-check-project', checkSlug);
-
-        if(output.error === 1) {
-            console.log("Could not find project");
-            return;
-        }
-
-        setCheckProject(output);
-    }
-
     const handleTraitsFilter = (t) => {
 
         if(traits.includes(t)) {
@@ -187,82 +126,201 @@ function OpenSeaBid() {
 
     }
 
-    const getWalletName = (publicKey) => {
-        let output = '';
-
-        for(const w of wallet) {
-            if(`${publicKey}`.toLowerCase() === `0x${w.encrypted.address}`.toLowerCase()) {
-                output = (w.name.length > 0 ? w.name : publicKey);
-            }
-        }
-
-        return output;
-    }
-
-    const getWalletNameById = (id) => {
-        let output = '';
-
-        for(const w of wallet) {
-            if(id === w.id) {
-                output = (w.name.length > 0 ? w.name : w.encrypted.address);
-            }
-        }
-
-        return output;
-    }
-
-    /*
-    Starts/Creates projects
-     */
     const handleStart = (data) => {
-        ipcRenderer.sendSync("start-fetching-project", data);
+
+        if(slug.length === 0) {
+            setToastValue({
+                message: "Please type the project slug.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        const output = ipcRenderer.sendSync("start-fetching-project", data);
+
+        if(output.error === 1) {
+            setToastValue({
+                message: "Error occured.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "There is already a project fetching assets.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        setProjects(output.projects);
+
+        setToastValue({
+            message: "Fetching project traits.",
+            color: "#45d39d"
+        });
+
+        toast.show();
     }
 
     const handleStop = (data) => {
-        ipcRenderer.sendSync("stop-fetching-project", data);
+        const output = ipcRenderer.sendSync("stop-fetching-project", data);
+
+        if(output.error === 1) {
+            setToastValue({
+                message: "Could not find project.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        setToastValue({
+            message: "Stopped fetching traits.",
+            color: "#45d39d"
+        });
+
+        const _projects = ipcRenderer.sendSync('load-projects');
+        setProjects(_projects);
+
+        toast.show();
     }
 
     const startBidding = (data) => {
-        ipcRenderer.sendSync("start-bidding", {
+
+        if(selectedAssets.length === 0) {
+            setToastValue({
+                message: "No assets selected.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        if(selectedProject === null) {
+            setToastValue({
+                message: "No project selected.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        if(isNaN(price)) {
+            setToastValue({
+                message: "Price must be a number.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        if(isNaN(expiration)) {
+            setToastValue({
+                message: "Expiration must be a number.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        if(selectedWallet === null) {
+            setToastValue({
+                message: "No wallet selected.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        if(walletPassword.length === 0) {
+            setToastValue({
+                message: "Enter your wallets password.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        const output = ipcRenderer.sendSync("start-bidding", {
             assets: selectedAssets,
             project: selectedProject,
             price: Number.parseFloat(price),
-            walletPassword:
-            walletPassword,
-            wallet: selectedWallet});
+            walletPassword: walletPassword,
+            wallet: selectedWallet,
+            expiration: expiration
+        });
+
+        if(output.error === 1) {
+            setToastValue({
+                message: "You are already bidding on a project.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "Selected project is null.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 3) {
+            setToastValue({
+                message: "Error occured.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 4) {
+            setToastValue({
+                message: "Incorrect wallet password.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
 
         setBidCount(0);
         setBidTotal(1);
         setIsBidding(true);
+
+        setToastValue({
+            message: `Started bidding on ${selectedAssets.length} assets.`,
+            color: "#45d39d"
+        });
+        toast.show();
     }
 
     const stopBidding = (data) => {
-        ipcRenderer.sendSync("stop-bidding");
+        const output = ipcRenderer.sendSync("stop-bidding");
+
+        if(output.error === 1 || output.error === 2) {
+            setToastValue({
+                message: "You are not bidding on anything.",
+                color: "#ff4949"
+            });
+            toast.show();
+            return;
+        }
 
         setIsBidding(false);
-    }
 
-    function kFormatter(num) {
-        return Math.abs(num) > 999 ? Math.sign(num)*((Math.abs(num)/1000).toFixed(1)) + 'k' : Math.sign(num)*Math.abs(num)
-    }
-
-    function getStatus(status) {
-        switch(status.error) {
-            case -1:
-                return 'Inactive';
-            case 0:
-                return 'Found Order'
-            case 1:
-                return 'Sniped Successfully'
-            case 2:
-                return status.result.message
-            case 3:
-                return 'Searching...'
-            case 4:
-                return 'Unlock Wallet'
-            case 5:
-                return 'Started'
-        }
+        setToastValue({
+            message: `Stopped bidding.`,
+            color: "#45d39d"
+        });
+        toast.show();
     }
 
     function getBidMessageClass(status) {
@@ -294,7 +352,6 @@ function OpenSeaBid() {
                 return 'project-stopped'
         }
     }
-
 
     return (
         <div className="opensea-bid-wrapper p-3 h-100">
@@ -470,27 +527,6 @@ function OpenSeaBid() {
                         :
                         ''
                 }
-            </div>
-
-            <div className="modal" ref={unlockModalRef} tabIndex="-1">
-                <div className="modal-dialog modal-lg">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title">Unlock Wallet</h5>
-                            <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
-                        </div>
-                        <div className="modal-body">
-                            <div className="d-flex justify-content-center">
-                                <span className="mb-1" style={{color: 'white'}}>{getWalletNameById(unlockWalletId)}</span>
-                            </div>
-                            <input type="password" className="form-control m-1" onChange={(e) => {setUnlockPassword(e.target.value)}} placeholder="Password" value={unlockPassword}/>
-                        </div>
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" className="btn btn-add" onClick={(e) => unlockWallet() }>Unlock</button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <div className="toast position-fixed bottom-0 end-0 m-4" ref={toastRef} role="alert" aria-live="assertive" aria-atomic="true" style={{borderColor: `${toastValue.color}`}}>
