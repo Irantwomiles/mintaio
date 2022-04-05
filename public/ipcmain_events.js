@@ -98,6 +98,22 @@ ipcMain.on('start-bidding', (event, data) => {
 
 })
 
+ipcMain.on('stop-bidding', (event, data) => {
+
+    if(bid === null) {
+        return event.returnValue = {
+            error: 1
+        }
+    }
+
+    bid.stop();
+
+    return event.returnValue = {
+        error: 0
+    }
+
+})
+
 ipcMain.on('load-projects', (event) => {
     return event.returnValue = getRendererProjects();
 })

@@ -39,10 +39,10 @@ function OpenSeaBid() {
     const [monitors, setMonitors] = useState([]);
     const [bids, setBids] = useState([]);
     const [projectStatus, setProjectStatus] = useState(null);
-    const [bidPercent, setBidPercent] = useState(0.0);
     const [bidCount, setBidCount] = useState(0);
     const [bidTotal, setBidTotal] = useState(1);
     const [isBidding, setIsBidding] = useState(false);
+    const [expiration, setExpiration] = useState(1);
 
     useEffect(() => {
 
@@ -231,7 +231,15 @@ function OpenSeaBid() {
             walletPassword,
             wallet: selectedWallet});
 
+        setBidCount(0);
+        setBidTotal(1);
         setIsBidding(true);
+    }
+
+    const stopBidding = (data) => {
+        ipcRenderer.sendSync("stop-bidding");
+
+        setIsBidding(false);
     }
 
     function kFormatter(num) {
@@ -257,24 +265,36 @@ function OpenSeaBid() {
         }
     }
 
-    function getStatusClass(status) {
-        switch(status.error) {
-            case -1:
-                return 'task-inactive';
+    function getBidMessageClass(status) {
+        switch(status) {
             case 0:
-                return 'task-pending'
+                return 'bid-not-sent'
             case 1:
-                return 'task-success'
+                return 'bid-success'
             case 2:
-                return 'task-error'
-            case 3:
-                return 'task-pending'
-            case 4:
-                return 'task-error'
-            case 5:
-                return 'task-warning'
+                return 'bid-error'
         }
     }
+
+    function getProjectStatusClass(status) {
+        switch(status) {
+            case 0:
+                return 'project-success'
+            case 1:
+                return 'project-throttled'
+            case 2:
+                return 'project-error'
+            case 3:
+                return 'project-throttled'
+            case 4:
+                return 'project-throttled'
+            case 5:
+                return 'project-finished'
+            case 6:
+                return 'project-stopped'
+        }
+    }
+
 
     return (
         <div className="opensea-bid-wrapper p-3 h-100">
@@ -282,7 +302,8 @@ function OpenSeaBid() {
             <div className={"w-100"}>
                 <h3 style={{fontWeight: "bold", color: "white"}}>OpenSea Bidding</h3>
 
-                <div className={"d-flex flex-column tasks-actionbar rounded-3 p-3"}>
+                <div className={"d-flex flex-column tasks-actionbar rounded-3 p-3 mb-2"}>
+
                     <div className={"d-flex justify-content-between"}>
                         <div>
                             <label htmlFor="slug-address" className="form-label" style={{color: "white", fontWeight: "bold"}}>Project Slug</label>
@@ -296,6 +317,23 @@ function OpenSeaBid() {
                         </div>
                     </div>
 
+                    {projectStatus === null ? '' :
+                        <div className={"project-fetching d-flex justify-content-between p-3 mt-3"}>
+                            <div>
+                                <span className={"me-5"} style={{color:"white", fontWeight: "bold"}}>{projectStatus.slug}</span>
+                                <span className={`${getProjectStatusClass(projectStatus.error)}`}>{projectStatus.message}</span>
+                            </div>
+
+                            <span style={{color: "#ffc76f"}}>
+                            <i className="fas fa-exclamation-triangle me-2"></i>
+                            This process may take a few minutes.
+                            </span>
+                        </div>
+                    }
+
+                </div>
+
+                <div className={"d-flex flex-column tasks-actionbar rounded-3 p-3"}>
                     <div className="d-flex mt-3">
                         <div className="dropdown w-25">
                             <button className="btn btn-add dropdown-toggle w-100" type="button"
@@ -316,66 +354,79 @@ function OpenSeaBid() {
                         <input type="password" className="form-control w-75 ms-2" onChange={(e) => {setWalletPassword(e.target.value)}} placeholder="Password" value={walletPassword}/>
                     </div>
 
-                    <div className={"d-flex w-100 mt-3"}>
-                        <div className="dropdown w-25 me-2">
-                            <button className="btn btn-add dropdown-toggle w-100" type="button"
-                                    id="projects-dropdown" data-bs-toggle="dropdown"
-                                    aria-expanded="false"
-                                    ref={projectsDropdownRef}
-                                    onClick={() => {projectsDropdown.toggle()}}>
-                                {selectedProject === null ? "Select a project" : selectedProject.slug}
-                            </button>
-                            <ul className="dropdown-menu">
-                                {
-                                    projects.map((p) => (
-                                        <li key={p.id}><a className="dropdown-item" onClick={() => {setSelectedProject(p)} }>{p.slug}</a></li>
-                                    ))
-                                }
-                            </ul>
-                        </div>
+                    <div className={"w-100 mt-3"}>
 
-                        <div className={selectedProject === null ? 'd-none w-100' : 'w-100'}>
-                            <div className="dropdown w-25">
+                        <div className={"d-flex"}>
+                            <div className="dropdown w-25 me-2">
                                 <button className="btn btn-add dropdown-toggle w-100" type="button"
-                                        id="traits-dropdown"
-                                        data-bs-toggle="dropdown"
+                                        id="projects-dropdown" data-bs-toggle="dropdown"
                                         aria-expanded="false"
-                                        ref={traitsDropdownRef}
-                                        onClick={() => {traitsDropdown.toggle()}}
-                                >
-                                    Select a Trait
+                                        ref={projectsDropdownRef}
+                                        onClick={() => {projectsDropdown.toggle()}}>
+                                    {selectedProject === null ? "Select a project" : selectedProject.slug}
                                 </button>
                                 <ul className="dropdown-menu">
                                     {
-                                        selectedProject === null ? '' :
-                                            Array.from(selectedProject.traitsMap.keys()).map((t) => (
-                                                <li key={Math.random() * Math.random() + Math.random()}><a className="dropdown-item" onClick={() => {handleTraitsFilter(t)} }>{t} ({selectedProject.traitsMap.get(t).length})</a></li>
-                                            ))
+                                        projects.map((p) => (
+                                            <li key={p.id}><a className="dropdown-item" onClick={() => {setSelectedProject(p)} }>{p.slug}</a></li>
+                                        ))
                                     }
                                 </ul>
                             </div>
-                        </div>
-                    </div>
 
-                    <div className={"d-flex justify-content-evenly w-100"}>
-                        <div className={"d-flex flex-wrap w-75 mt-3"} style={{color: "white"}}>
-                            {typeof selectedAssets !== 'undefined' ? traits.map(t => (
+                            <div className={selectedProject === null ? 'd-none w-100' : 'w-100'}>
+                                <div className="dropdown w-25">
+                                    <button className="btn btn-add dropdown-toggle w-100" type="button"
+                                            id="traits-dropdown"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false"
+                                            ref={traitsDropdownRef}
+                                            onClick={() => {traitsDropdown.toggle()}}
+                                    >
+                                        Select a Trait
+                                    </button>
+                                    <ul className="dropdown-menu">
+                                        {
+                                            selectedProject === null ? '' :
+                                                Array.from(selectedProject.traitsMap.keys()).map((t) => (
+                                                    <li key={Math.random() * Math.random() + Math.random()}><a className="dropdown-item" onClick={() => {handleTraitsFilter(t)} }>{t} ({selectedProject.traitsMap.get(t).length})</a></li>
+                                                ))
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+
+                        </div>
+
+
+                        <div className={"d-flex justify-content-evenly w-100"}>
+                            <div className={"d-flex flex-wrap w-75 mt-3"} style={{color: "white"}}>
+                                {typeof selectedAssets !== 'undefined' ? traits.map(t => (
                                     <div key={Math.random()} className={"trait-selected rounded p-2 me-1 mb-1"}>
                                         <span>{t}</span>
                                     </div>
 
-                            )) : ""}
+                                )) : ""}
+                            </div>
+                            <div className={"w-25 mt-3"} style={{color: "white", textAlign: "right"}}>{selectedAssets.length} assets found</div>
                         </div>
-                        <div className={"w-25 mt-3"} style={{color: "white", textAlign: "right"}}>{selectedAssets.length} assets found</div>
+
                     </div>
 
                     <div>{typeof selectedAssets !== 'undefined' ?
                         <div className={"d-flex mt-2 justify-content-between"}>
                             <div className={"d-flex"}>
-                                <div>
+                                <div className={"me-2"}>
                                     <label htmlFor="slug-address" className="form-label" style={{color: "white", fontWeight: "bold"}}>Price</label>
                                     <div className="input-group">
                                         <input type="text" className="form-control" placeholder="Bid Price" onChange={(e) => {setPrice(e.target.value)}} value={price} />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label htmlFor="slug-address" className="form-label" style={{color: "white", fontWeight: "bold"}}>Expiration (in hours)</label>
+                                    <div className="input-group">
+                                        <input type="text" className="form-control" placeholder="Expiration in hours" onChange={(e) => {setExpiration(e.target.value)}} value={expiration} />
                                     </div>
                                 </div>
 
@@ -388,7 +439,7 @@ function OpenSeaBid() {
                             </div>
                             <div className={"mt-auto"}>
                                 <button className={"btn btn-wallet me-2"} onClick={startBidding}>Start Bidding</button>
-                                <button className={"btn btn-cancel mt-auto"} onClick={startBidding}>Stop Bidding</button>
+                                <button className={"btn btn-cancel mt-auto"} onClick={stopBidding}>Stop Bidding</button>
                             </div>
                         </div>
                         : "N/A"}
@@ -398,35 +449,21 @@ function OpenSeaBid() {
             </div>
 
             <div className={"bids-content"}>
-                {projectStatus === null ? '' :
-                    <div className={"project-fetching d-flex justify-content-between p-3 mt-3"}>
-                        <div>
-                            <span className={"me-5"} style={{color:"white", fontWeight: "bold"}}>{projectStatus.slug}</span>
-                            <span>{projectStatus.message}</span>
-                        </div>
-
-                        <span style={{color: "#ffc76f"}}>
-                        <i className="fas fa-exclamation-triangle me-2"></i>
-                        This process may take a few minutes.
-                    </span>
-                    </div>
-                }
-
                 {
                     typeof bids !== 'undefined' && bids.length > 0 ?
                         bids.map((bid) => (
-                            <div className={"bids d-flex justify-content-between p-3 my-1 row"}>
+                            <div key={Math.random() * Math.random() + Math.random()} className={"bids d-flex justify-content-between p-3 my-1 row"}>
                                 <div className={"bid-element col-3"}>
-                                    <span>{bid.price}</span>
+                                    <span style={{color: "white"}}>{bid.price}</span>
                                 </div>
                                 <div className={"bid-element col-3"}>
-                                    <span>{bid.token_id}</span>
+                                    <span style={{color: "white"}}>{bid.token_id}</span>
                                 </div>
                                 <div className={"bid-element col-3"}>
-                                    <span>{bid.expiration}hr</span>
+                                    <span style={{color: "white"}}>{bid.expiration}hr</span>
                                 </div>
                                 <div className={"bid-element col-3"}>
-                                    <span>{bid.message}</span>
+                                    <span className={`${getBidMessageClass(bid.status)}`}>{bid.message}</span>
                                 </div>
                             </div>
                         )).reverse()

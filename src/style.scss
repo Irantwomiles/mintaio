@@ -477,20 +477,57 @@ body, #root {
 
 .project-fetching {
     background-color: $background-color-light;
+
+    .project-success {
+        color: $green;
+    }
+
+    .project-throttled {
+        color: $yellow;
+    }
+
+    .project-success {
+        color: $green;
+    }
+
+    .project-error {
+        color: $red;
+    }
+
+    .project-finished {
+        color: $blue;
+    }
+
+    .project-stopped {
+        color: $light-blue;
+    }
+
 }
 
 .bids {
     background-color: $background-color-light;
-    overflow-x: hidden !important;
 
     .bid-element {
-        overflow-x: hidden !important;
+        text-align: center;
+    }
+
+    .bid-not-sent {
+        color: $yellow;
+    }
+
+    .bid-success {
+        color: $green;
+    }
+
+    .bid-error {
+        color: $red;
     }
 }
 
 .bids-content {
     max-height: 22rem;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .btn-cancel {

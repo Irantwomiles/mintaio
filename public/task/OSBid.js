@@ -46,9 +46,12 @@ class OSBid {
         this.expiration = expiration;
         this.schema = schema;
         this.bids = [];
+        this.active = false;
     }
 
     async start() {
+
+        this.active = true;
 
         if (this.wallet === null) {
             this.keys = [];
@@ -68,6 +71,11 @@ class OSBid {
 
         let _count = 0;
         for(const t of this.tokens) {
+
+            if(!this.active) {
+                break;
+            }
+
             _count++;
             await this.bid({
                 price: this.price,
@@ -84,6 +92,10 @@ class OSBid {
 
         log.info(`[OSBid] Finished bidding ${this.tokens.length}...`);
 
+    }
+
+    stop() {
+        this.active = false;
     }
 
     async bid({price, contract_address, token_id, schema, account_address, expiration, count, total_count}) {
