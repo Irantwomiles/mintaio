@@ -6,7 +6,7 @@ const {getWindow} = require("../window_utils");
 
 class Project {
 
-    constructor({slug, id= crypto.randomBytes(16).toString('hex'), count = 0, contract_address='',setup = true}) {
+    constructor({slug, id= crypto.randomBytes(16).toString('hex'), count = 0, contract_address='',setup = true, proxies = []}) {
         this.traitsMap = new Map();
 
         this.slug = slug;
@@ -18,12 +18,7 @@ class Project {
         // making sure the project has been added to the DB before attempting to update.
         this.setup = setup;
 
-        this.proxies = [
-            "199.187.188.185:10742:dzyamayd:gzP4w13qT0",
-            "199.187.190.31:10160:dzyamayd:gzP4w13qT0",
-            "199.187.188.240:11838:dzyamayd:gzP4w13qT0",
-            "199.187.191.125:11893:dzyamayd:gzP4w13qT0",
-            "199.187.188.122:12070:dzyamayd:gzP4w13qT0"];
+        this.proxies = proxies;
 
         this.api_keys = [
             "852d4657fe794045abf12f206af777ad",
@@ -52,8 +47,7 @@ class Project {
 
     async getAssetsByTrait (network, slug, cursor, api_key) {
 
-        const p = this.proxies[Math.floor(Math.random() * this.proxies.length)].split(':');
-        const username = p[2], password = p[3], host = p[0], port = p[1];
+        const p = this.proxies[Math.floor(Math.random() * this.proxies.length)];
 
         log.info(`[Project] Checking project ${slug} cursor ${cursor} with Proxy ${p}`);
 
@@ -68,7 +62,7 @@ class Project {
                     "Accept": "application/json",
                     "X-API-KEY": api_key
                 },
-                proxy: `http://${username}:${password}@${host}:${port}`
+                proxy: this.proxies.length === 0 ? '' : `http://${p.user}:${p.pass}@${p.host}:${p.port}`
             });
 
             if(res.statusCode !== 200) {

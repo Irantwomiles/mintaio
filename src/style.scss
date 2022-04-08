@@ -413,8 +413,17 @@ body, #root {
 .proxy-wrapper {
     background-color: $background-color;
 
+    .proxy-content {
+        max-height: 38rem;
+        overflow-y: auto;
+    }
+
     .check {
         color: white;
+    }
+
+    .checking {
+        color: $yellow;
     }
 
     .success{

@@ -2,6 +2,7 @@ const is_dev = require('electron-is-dev');
 const fs = require('fs');
 const crypto = require('crypto');
 const log = require('electron-log');
+const request = require('request');
 const { ipcMain, app } = require('electron');
 const axios = require('axios');
 const { Task } = require('./task/Task');
@@ -10,6 +11,7 @@ const { Project } = require('./task/Project');
 const { OSBid } = require('./task/OSBid');
 const bcrypt = require('bcrypt');
 const { getStorage, saveApiKeys } = require('./storage');
+const {getWindow} = require('./window_utils');
 
 const db = getStorage();
 
@@ -47,6 +49,55 @@ loadProxies();
 
 ipcMain.on('load-proxies', (event) => {
     return event.returnValue = proxies;
+})
+
+ipcMain.on('test-proxies', (event) => {
+
+    for(const p of proxies) {
+
+        p.status = 'Checking';
+        sendMessage('proxy-status', proxies);
+
+        request({
+            method: 'GET',
+            timeout: 3000,
+            url: 'https://accounts.google.com',
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
+                "Accept": "application/json"
+            },
+            proxy: `http://${p.user}:${p.pass}@${p.host}:${p.port}`
+        }, (err, res, body) => {
+            if(err) {
+                p.status = 'Error';
+                sendMessage('proxy-status', proxies);
+                return;
+            }
+
+            p.status = `Success ${res.statusCode}`;
+            sendMessage('proxy-status', proxies);
+        })
+
+    }
+})
+
+ipcMain.on('delete-proxies', (event, data) => {
+    db.proxies.update({type: "proxies"}, { $set: {proxies: []}}, function(err, numReplaced) {
+
+        if(err) {
+            console.log(err);
+            return event.returnValue = {
+                error: 1,
+                proxies: proxies
+            }
+        }
+
+        proxies = [];
+        return event.returnValue = {
+            error: 0,
+            proxies: proxies
+        }
+    })
 })
 
 ipcMain.on('save-proxies', (event, data) => {
@@ -266,7 +317,7 @@ ipcMain.on('start-fetching-project', async (event, data) => {
     if(project === null) {
         log.info("[Project] Project is null, creating a new one");
 
-        project = new Project({slug: data.slug, setup: false});
+        project = new Project({slug: data.slug, setup: false, proxies: proxies});
 
         db.projects.insert({
             slug: data.slug,
@@ -293,6 +344,7 @@ ipcMain.on('start-fetching-project', async (event, data) => {
         })
     }
 
+    project.proxies = proxies;
     project.startFetchingAssets();
 
     return event.returnValue = {
@@ -1774,6 +1826,11 @@ function validJson(json) {
     return true;
 }
 
+function sendMessage(channel, data) {
+    getWindow().webContents.send(channel, data);
+}
+
 module.exports = {
-    tasks
+    tasks,
+    proxies
 }

@@ -76,6 +76,7 @@ function OpenSeaBid() {
         return () => {
             ipcRenderer.removeListener('os-bid-status-update', status_updater);
             ipcRenderer.removeListener('project-status-update', project_status_updater);
+            ipcRenderer.removeListener('project-status-finished', update_projects);
         }
 
     }, [])
