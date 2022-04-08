@@ -558,7 +558,7 @@ function Tasks() {
     }, [readMethods]);
 
     return (
-        <div ref={globalRef} className="tasks-wrapper py-3 px-4 h-100">
+        <div ref={globalRef} className="tasks-wrapper p-3 h-100">
 
             <div className={"w-50"}>
                 <h3 style={{fontWeight: "bold", color: "white"}}>Tasks</h3>

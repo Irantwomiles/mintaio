@@ -410,6 +410,62 @@ body, #root {
     }
 }
 
+.proxy-wrapper {
+    background-color: $background-color;
+
+    .check {
+        color: white;
+    }
+
+    .success{
+        color: $green;
+    }
+
+    .error {
+        color: $red;
+    }
+
+    .proxy {
+        &:nth-child(odd) {
+            background-color: $background-color-light !important;
+        }
+    }
+
+    .add-proxies {
+        background-color: $blue;
+        transition: background-color 300ms ease-in;
+
+        &:hover {
+            cursor: pointer;
+            background-color: lighten($blue, 3%);
+        }
+    }
+
+    .check-all-proxy {
+        color: white;
+        background-color: $green;
+        font-weight: bold;
+        transition: background-color 300ms ease-in;
+
+        &:hover {
+            cursor: pointer;
+            background-color: darken($green, 3%);
+        }
+    }
+
+    .delete-all-proxy {
+        color: white;
+        background-color: $red;
+
+        transition: background-color 300ms ease-in;
+
+        &:hover {
+            cursor: pointer;
+            background-color: lighten($red, 3%);
+        }
+    }
+}
+
 .modal-content {
     background-color: $background-color !important;
 

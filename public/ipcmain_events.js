@@ -34,6 +34,7 @@ let wallets = [];
 let os_monitor = [];
 let projects = [];
 let bid = null;
+let proxies = [];
 
 let webhook = "";
 
@@ -42,6 +43,96 @@ loadWallets();
 loadTasks();
 loadMonitors();
 loadProjects();
+loadProxies();
+
+ipcMain.on('load-proxies', (event) => {
+    return event.returnValue = proxies;
+})
+
+ipcMain.on('save-proxies', (event, data) => {
+
+    /*
+    error: 0 no error
+    error: 1 error
+    error: 2 invalid proxies list
+     */
+
+    console.log("data", data, typeof data);
+
+    if(typeof data !== 'undefined') {
+
+        let _p = data.split('\n');
+
+        let _arr = [];
+
+        for(const p of _p) {
+            const proxy = p.split(':');
+            if(proxy.length !== 4) continue;
+
+            _arr.push({
+                host: proxy[0],
+                port: proxy[1],
+                user: proxy[2],
+                pass: proxy[3],
+                status: 'Check'
+            })
+        }
+
+        proxies.push(..._arr);
+    }
+
+    db.proxies.find({type: "proxies"}, function (err, docs) {
+
+        if(err) {
+            return event.returnValue = {
+                error: 1
+            }
+        }
+
+        if(docs.length === 0) {
+
+            const obj = {
+                type: "proxies",
+                proxies: proxies
+            }
+
+            db.proxies.insert(obj, function(err, doc) {
+                if(err) {
+                    return event.returnValue = {
+                        error: 1
+                    }
+                }
+
+                return event.returnValue = {
+                    error: 0,
+                    proxies: proxies
+                }
+            });
+
+        } else {
+
+            const obj = {
+                type: "proxies",
+                proxies: proxies
+            }
+
+            db.proxies.update({type: "proxies"}, obj, function (err, doc) {
+                if(err) {
+                    return event.returnValue = {
+                        error: 1
+                    }
+                }
+
+                return event.returnValue = {
+                    error: 0,
+                    proxies: proxies
+                }
+            });
+
+        }
+
+    })
+})
 
 ipcMain.on('start-bidding', (event, data) => {
 
@@ -1521,6 +1612,24 @@ function loadWebhooks() {
 
         if(docs.length > 0) {
             webhook = docs[0].webhook;
+        }
+
+        log.info(`Loaded ${os_monitor.length} monitors.`);
+
+    })
+}
+
+function loadProxies() {
+    db.proxies.find({}, function(err, docs) {
+
+        if(err) {
+            console.log('error while loading webhooks');
+            return;
+        }
+
+        if(docs.length > 0) {
+            const p = docs[0].type;
+            proxies = docs[0].proxies;
         }
 
         log.info(`Loaded ${os_monitor.length} monitors.`);

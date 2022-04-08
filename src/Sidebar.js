@@ -99,6 +99,11 @@ function Sidebar() {
                             <i className="fa-solid fa-sailboat fa-2x p-3 rounded"></i>
                         </Link>
                     </div>
+                    <div className={current === "proxy" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2"}>
+                        <Link to="/proxy" onClick={() => setCurrent("proxy")}>
+                            <i className="fa-solid fa-wifi fa-2x p-3 rounded"></i>
+                        </Link>
+                    </div>
                     <div className={current === "settings" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2"}>
                         <Link to="/settings" onClick={() => setCurrent("settings")}>
                             <i className="fas fa-cog fa-2x p-3 rounded"></i>
