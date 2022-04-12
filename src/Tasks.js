@@ -490,7 +490,7 @@ function Tasks() {
             case 1:
                 return 'Successful Mint'
             case 2:
-                return 'Error'
+                return 'Error (Check logs)'
             case 3:
                 return 'Pending'
             case 4:
@@ -517,6 +517,45 @@ function Tasks() {
 
         return 'Unknown State';
     }
+
+    const getTaskStatusColor = (task) => {
+
+        switch(task.status.error) {
+            case -1:
+                return 'inactive';
+            case 0:
+                return 'warning'
+            case 1:
+                return 'success'
+            case 2:
+                return 'error'
+            case 3:
+                return 'waiting'
+            case 4:
+                return 'warning'
+            case 5:
+                return 'waiting'
+            case 6:
+                return 'waiting'
+            case 7:
+                return 'warning'
+            case 8:
+                return 'warning'
+            case 9:
+                return 'waiting'
+            case 10:
+                return 'waiting'
+            case 11:
+                return 'warning'
+            case 12:
+                return 'warning'
+            case 13:
+                return 'waiting'
+        }
+
+        return 'Unknown State';
+    }
+
 
     useEffect(() => {
 
@@ -620,7 +659,7 @@ function Tasks() {
                                     <span style={{color: 'white'}}>{task.contract_address}</span>
                                 </div>
                                 <div className="col-2" style={{textAlign: 'center'}}>
-                                    <span onClick={() => {handleTaskModal(task)}}>
+                                    <span className={getTaskStatusColor(task)} onClick={() => {handleTaskModal(task)}}>
                                         {getTaskStatus(task)}
                                     </span>
                                 </div>

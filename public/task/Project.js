@@ -68,7 +68,7 @@ class Project {
             if(res.statusCode !== 200) {
 
                 if(res.statusCode === 401) {
-                    log.info(`[Project] Status is ${res.statusCode} ${res.body} API key ${api_key} Proxy: ${p}`);
+                    log.info(`[Project] Status is ${res.statusCode} Proxy: ${p}`);
                     this.sendMessage('project-status-update', {
                         error: 1,
                         slug: this.slug,
@@ -77,7 +77,7 @@ class Project {
                     return;
                 }
 
-                log.info(`[Project] Status is ${res.statusCode} ${res.body} API key ${api_key} Proxy: ${p}`);
+                log.info(`[Project] Status is ${res.statusCode} ${res.body} Proxy: ${p}`);
                 this.sendMessage('project-status-update', {
                     error: 3,
                     slug: this.slug,
@@ -147,7 +147,7 @@ class Project {
                 message: `Got Assets ${res.statusCode}`
             })
 
-            log.info(`[Project] Success got asset with API key ${api_key} Proxy: ${p} next Cursor: ${json_body.next === null ? 'NULL' : json_body.next} Count: ${this.count}`);
+            log.info(`[Project] Success got asset with Proxy: ${p} next Cursor: ${json_body.next === null ? 'NULL' : json_body.next} Count: ${this.count}`);
             log.info("-----------------------------------------");
 
             return json_body.next === null ? '' : json_body.next;
@@ -157,7 +157,7 @@ class Project {
                 slug: this.slug,
                 message: `Error ${e.message}`
             })
-            log.info(`[Project] Error ${e.message} while getting asset ${api_key} Proxy: ${p} ${this.count}`);
+            log.info(`[Project] Error ${e.message} while getting asset Proxy: ${p} ${this.count}`);
             log.info("-----------------------------------------");
             return cursor; // if error, return the cursor we just went with
         }

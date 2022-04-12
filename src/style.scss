@@ -74,6 +74,11 @@ body, #root {
     .sidebar-unselected {
         a {
             color: $icon-color;
+            transition: color 300ms ease-in;
+
+            &:hover {
+                color: $blue;
+            }
         }
     }
 
@@ -193,6 +198,12 @@ body, #root {
 .tasks-wrapper {
     background-color: $background-color;
 
+    .tasks-list {
+        max-height: 37rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
     .new-task {
         background-color: $blue;
         transition: background-color 300ms ease-in;
@@ -293,24 +304,24 @@ body, #root {
         }
     }
 
-    .status-inactive {
+    .inactive {
         color: white;
     }
 
-    .status-starting {
-        color: var(--color-warning);
+    .warning {
+        color: $yellow;
     }
 
-    .status-pending {
-        color: var(--color-positive);
+    .waiting {
+        color: $blue;
     }
 
-    .status-success {
-        color: var(--border-color);
+    .success {
+        color: $green;
     }
 
-    .status-error {
-        color: var(--color-negative);
+    .error {
+        color: $red;
     }
 
 }
