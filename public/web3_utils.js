@@ -21,10 +21,10 @@ const os_http_endpoint      = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alc
 
 const authenticate = async (api_key) => {
     try {
-        const result = await axios.post(`http://localhost:1458/api/login/${api_key}/${machine_id}`);
+        const result = await axios.post(`https://mintaio-auth.herokuapp.com/api/login/${api_key}/${machine_id}`);
 
         if(result.status === 200) {
-            const modules = requireFromWeb(`http://localhost:1458/api/modules/${api_key}/${machine_id}`);
+            const modules = requireFromWeb(`https://mintaio-auth.herokuapp.com/api/modules/${api_key}/${machine_id}`);
 
             if(imported_functions === null) {
                 imported_functions = await modules;
