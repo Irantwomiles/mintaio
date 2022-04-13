@@ -37,7 +37,7 @@ let os_monitor = [];
 let projects = [];
 let bid = null;
 let proxies = [];
-
+let api_key = "";
 let webhook = "";
 
 loadWebhooks();
@@ -759,6 +759,7 @@ ipcMain.on('is-auth', (event, data) => {
 
 ipcMain.on('auth-user', async (event, data) => {
 
+    api_key = data;
     await authenticate(data)
 
     return event.returnValue = get_auth();

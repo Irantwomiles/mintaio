@@ -16,24 +16,7 @@ class OSBid {
 
         this.id = crypto.randomBytes(16).toString('hex');
         this.price = price;
-        this.api_keys = [
-            "852d4657fe794045abf12f206af777ad",
-            "72fdb7cff7064b70807e0f32d4ec3fa3",
-            "d0c85ca2a84143c393992626e26c10f7",
-            "d81bee3e75c64ae79541373f4c32295b",
-            "57fcc64ba50648d6a93f21a0e05fc1a7",
-            "2fe149332c264e008aa46f2fce2301d1",
-            "b0fb08d7c8f049009ef4b32440d2c4cc",
-            "2e7ef0ac679f4860bbe49a34a98cf5ac",
-            "72fdb7cff7064b70807e0f32d4ec3fa3",
-            "d0c85ca2a84143c393992626e26c10f7",
-            "284ac5f7b70846faa889f8af0bff60c8",
-            "d81bee3e75c64ae79541373f4c32295b",
-            "54f28eb29db648719c2eaaabccc414fc",
-            "2af2cffde08c407590529cdbab8d1646",
-            "fd19e5cba6e243719640f90f9f1f1d1e",
-            "1a6aaeab958148a3a42d1d801912c91f",
-            "790d4e9223714481a11633acbda338de"];
+        this.api_keys = ['852d4657fe794045abf12f206af777ad', '2e7ef0ac679f4860bbe49a34a98cf5ac', 'a97239276ae0463297a18436a424c676', '2f603e64a3ea42f9b0cb39466ca036df'];;
         this.network = '';
         this.throttled = false;
         this.tokens = tokens;
@@ -47,6 +30,7 @@ class OSBid {
         this.schema = schema;
         this.bids = [];
         this.active = false;
+
     }
 
     async start() {
