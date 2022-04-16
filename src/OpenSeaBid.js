@@ -83,7 +83,10 @@ function OpenSeaBid() {
 
     useEffect(() => {
 
-        if(typeof traits === 'undefined' || traits.length === 0) return;
+        if(typeof traits === 'undefined' || traits.length === 0) {
+            setSelectedAssets([]);
+            return;
+        }
 
         if(selectedProject === null) return;
 
@@ -125,6 +128,19 @@ function OpenSeaBid() {
 
         setTraits([...traits, t]);
 
+    }
+
+    const removeTrait = (t) => {
+        const clone = [...traits];
+        const idx = clone.indexOf(t);
+
+        if(idx === -1) {
+            console.log("Nothing to remove");
+            return;
+        }
+
+        clone.splice(idx, 1);
+        setTraits(clone);
     }
 
     const handleStart = (data) => {
@@ -463,7 +479,9 @@ function OpenSeaBid() {
                             <div className={"d-flex flex-wrap w-75 mt-3"} style={{color: "white"}}>
                                 {typeof selectedAssets !== 'undefined' ? traits.map(t => (
                                     <div key={Math.random()} className={"trait-selected rounded p-2 me-1 mb-1"}>
-                                        <span>{t}</span>
+                                        <span onClick={() => {
+                                            removeTrait(t)
+                                        }}>{t}</span>
                                     </div>
 
                                 )) : ""}

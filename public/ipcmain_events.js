@@ -195,7 +195,7 @@ ipcMain.on('start-bidding', (event, data) => {
     error: 4 invalid wallet password
      */
 
-    if(bid !== null) {
+    if(bid !== null && bid.active) {
         return event.returnValue = {
             error: 1
         }
