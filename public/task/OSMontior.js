@@ -5,7 +5,8 @@ const HDWalletProvider = require('@truffle/hdwallet-provider/dist/index.js');
 const axios = require('axios');
 const crypto = require("crypto");
 const {getWindow} = require("../window_utils");
-const is_dev = require('electron-is-dev');
+// const is_dev = require('electron-is-dev');
+const is_dev = false;
 const log = require('electron-log');
 const request = require('request');
 
@@ -14,7 +15,7 @@ class OSMonitor {
     constructor(slug, desired_price, maxGas, priorityFee, private_key, public_key, timer_delay, wallet_id, proxy, network, webhook) {
 
         this.throttled = [];
-        this.api_key = [];
+        this.api_key = ['852d4657fe794045abf12f206af777ad', '2e7ef0ac679f4860bbe49a34a98cf5ac', 'a97239276ae0463297a18436a424c676', '2f603e64a3ea42f9b0cb39466ca036df'];
         this.id = crypto.randomBytes(16).toString('hex');
         this.slug = slug;
         this.desired_price = desired_price;
@@ -29,16 +30,11 @@ class OSMonitor {
         this.network = network;
 
         this.proxies = [
-            "154.207.4.115:5628:HEUDCHEFD:DCMWIDOF",
-            "154.207.4.110:5628:HEUDCHEFD:DCMWIDOF",
-            "154.207.4.137:5628:HEUDCHEFD:DCMWIDOF",
-            "154.207.4.114:5628:HEUDCHEFD:DCMWIDOF",
-            "154.207.6.176:5628:dRyd9qcq:dKsB8nHJ",
-            "154.207.6.177:5628:dRyd9qcq:dKsB8nHJ",
-            "154.207.6.178:5628:dRyd9qcq:dKsB8nHJ",
-            "154.207.6.179:5628:dRyd9qcq:dKsB8nHJ",
-            "154.207.6.180:5628:dRyd9qcq:dKsB8nHJ"
-        ];
+            "199.187.188.185:10742:dzyamayd:gzP4w13qT0",
+            "199.187.190.31:10160:dzyamayd:gzP4w13qT0",
+            "199.187.188.240:11838:dzyamayd:gzP4w13qT0",
+            "199.187.191.125:11893:dzyamayd:gzP4w13qT0",
+            "199.187.188.122:12070:dzyamayd:gzP4w13qT0"];
 
         this.webhook = webhook;
 
@@ -174,20 +170,6 @@ class OSMonitor {
 
             log.info(`[OSMonitor] Checking ${this.slug}`);
 
-            const delay = 1000 * 60 * time;
-            const updated_value = Date.now() - delay;
-            const date = new Date(updated_value);
-
-            const year = date.getUTCFullYear();
-            const month = date.getUTCMonth() + 1;
-            const day = date.getUTCDate();
-
-            const hour = date.getUTCHours();
-            const minutes = date.getUTCMinutes();
-            const seconds = date.getUTCSeconds();
-
-            // const url = `https://${network}api.opensea.io/api/v1/events?event_type=created&collection_slug=${slug}&occurred_after=${year}-${month > 10 ? month : '0' + month}-${day}T${hour}:${minutes}:${seconds}`;
-
             const url = `https://${network}api.opensea.io/api/v1/events?event_type=created&collection_slug=${slug}`;
 
             log.info(`[OSMonitor] URL ${url}`);
@@ -237,7 +219,6 @@ class OSMonitor {
                     const payment_token = out.payment_token.symbol;
                     const token_id = out.asset.token_id;
                     const contract_address = out.asset.asset_contract.address;
-                    const listing_duration = out.duration;
 
                     address = contract_address;
 

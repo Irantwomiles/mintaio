@@ -241,12 +241,14 @@ function OpenSea() {
     return (
         <div className="tasks-wrapper p-3 h-100">
 
-            <div className="tasks-toolbar d-flex justify-content-between">
+            <div className="tasks-toolbar d-flex">
 
-                <div>
-                    <div className="new-task m-1 me-4" onClick={() => {modal.show()}}>
-                        <span><i className="fas fa-plus-circle"></i></span>
-                        <span className="ms-2">New Monitor</span>
+                <div className={"w-50"}>
+                    <h3 style={{fontWeight: "bold", color: "white"}}>OpenSea Sniper</h3>
+                    <div className={"d-flex align-items-center tasks-actionbar rounded-3 p-3"}>
+                        <div className={"new-task m-2 d-flex align-items-center rounded-3 p-2"} onClick={() => {modal.show()}}>
+                            <i className="fa-solid fa-plus fa-1x m-1" style={{color: "white"}}></i>
+                        </div>
                     </div>
                 </div>
 
@@ -255,12 +257,12 @@ function OpenSea() {
             <div className="tasks-list mt-3">
                 {
                     (typeof monitors !== 'undefined' && monitors.length > 0) ?
-                        <div className="row d-flex p-3">
-                            <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Wallet</span></div>
-                            <div className="col-4 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Project</span></div>
-                            <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Price</span></div>
-                            <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Status</span></div>
-                            <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Actions</span></div>
+                        <div className="tasks-header row d-flex p-3">
+                            <div className="col-2 tasks-header-item pb-2" style={{textAlign: 'center'}}><span>Wallet</span></div>
+                            <div className="col-4 tasks-header-item pb-2" style={{textAlign: 'center'}}><span>Project</span></div>
+                            <div className="col-2 tasks-header-item pb-2" style={{textAlign: 'center'}}><span>Price</span></div>
+                            <div className="col-2 tasks-header-item pb-2" style={{textAlign: 'center'}}><span>Status</span></div>
+                            <div className="col-2 tasks-header-item pb-2" style={{textAlign: 'center'}}><span>Actions</span></div>
                         </div>
                         :
                         ''
@@ -270,7 +272,7 @@ function OpenSea() {
                     (typeof monitors !== 'undefined' && monitors.length > 0) ?
 
                         monitors.map((m) => (
-                            <div key={Math.random()} className="row d-flex p-3">
+                            <div key={Math.random()} className="task row d-flex p-3">
 
                                 <div className="col-2" style={{textAlign: 'center'}}>
                                     {

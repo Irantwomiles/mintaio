@@ -79,7 +79,7 @@ function MintWatch() {
 
             <div className={"w-50"}>
                 <h3 style={{fontWeight: "bold", color: "white"}}>Mint Watch</h3>
-                <div className={"d-flex justify-content-center align-items-center tasks-actionbar rounded-3 p-3"}>
+                <div className={"d-flex align-items-center tasks-actionbar rounded-3 p-3"}>
                     <div className={"start-watch m-2 d-flex align-items-center rounded-3 py-2 px-3"} onClick={() => {startWatch()}}>
                         <i className="fa-solid fa-play me-2 fa-1x" style={{color: "white"}}></i>
                         Start Watch

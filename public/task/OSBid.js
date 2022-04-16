@@ -16,7 +16,7 @@ class OSBid {
 
         this.id = crypto.randomBytes(16).toString('hex');
         this.price = price;
-        this.api_keys = ['852d4657fe794045abf12f206af777ad', '2e7ef0ac679f4860bbe49a34a98cf5ac', 'a97239276ae0463297a18436a424c676', '2f603e64a3ea42f9b0cb39466ca036df'];;
+        this.api_keys = ['852d4657fe794045abf12f206af777ad', '2e7ef0ac679f4860bbe49a34a98cf5ac', 'a97239276ae0463297a18436a424c676', '2f603e64a3ea42f9b0cb39466ca036df'];
         this.network = '';
         this.throttled = false;
         this.tokens = tokens;

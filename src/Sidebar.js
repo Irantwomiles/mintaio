@@ -89,11 +89,11 @@ function Sidebar() {
                             <i className="far fa-eye fa-2x p-3 rounded"></i>
                         </Link>
                     </div>
-                    {/*<div className={current === "opensea" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2"}>*/}
-                    {/*    <Link to="/opensea" onClick={() => setCurrent("opensea")}>*/}
-                    {/*        <i className="fa-solid fa-sailboat fa-2x p-3 rounded"></i>*/}
-                    {/*    </Link>*/}
-                    {/*</div>*/}
+                    <div className={current === "opensea" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2"}>
+                        <Link to="/opensea" onClick={() => setCurrent("opensea")}>
+                            <i className="fa-solid fa-sailboat fa-2x p-3 rounded"></i>
+                        </Link>
+                    </div>
                     <div className={current === "opensea-bid" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2"}>
                         <Link to="/opensea-bid" onClick={() => setCurrent("opensea-bid")}>
                             <i className="fa-solid fa-sailboat fa-2x p-3 rounded"></i>
