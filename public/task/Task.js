@@ -82,7 +82,8 @@ class Task {
             console.log("Starting Timer Mode");
         } else if(this.start_mode === "AUTOMATIC") {
             this.start_when_ready();
-        } else if(this.start_mode === "FIRST_BLOCK") {
+        }
+        /*else if(this.start_mode === "FIRST_BLOCK") {
 
             if(this.contract_creator.length === 0) {
                 this.status = {
@@ -111,7 +112,7 @@ class Task {
 
                 this.sendMessage('task-status-update');
             }
-        }
+        }*/
 
     }
 
@@ -341,6 +342,7 @@ class Task {
     async start_when_ready() {
 
         if(typeof this.automatic_interval !== 'undefined') {
+            log.info(`Interval already running ${this.contract_address} ${this.id}`);
             return;
         }
 
@@ -378,7 +380,7 @@ class Task {
             return;
         }
 
-        const contract = new get_web3().eth.Contract(JSON.parse(this.abi), this.contract_address);
+        const contract = new (get_web3()).eth.Contract(JSON.parse(this.abi), this.contract_address);
 
         let found = false;
 

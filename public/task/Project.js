@@ -126,11 +126,14 @@ class Project {
 
             }
 
-            this.sendMessage('project-status-update', {
-                error: 0,
-                slug: this.slug,
-                message: `Got Assets ${res.statusCode}`
-            })
+            if(this.active) {
+                this.sendMessage('project-status-update', {
+                    error: 0,
+                    slug: this.slug,
+                    message: `Got Assets ${this.count}`
+                })
+            }
+
 
             log.info(`[Project] Success got asset with Proxy: ${p} next Cursor: ${json_body.next === null ? 'NULL' : json_body.next} Count: ${this.count}`);
             log.info("-----------------------------------------");

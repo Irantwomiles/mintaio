@@ -570,6 +570,7 @@ ipcMain.on('start-os-monitor', (event, data) => {
         }
     }
 
+    monitor.proxies = proxies;
     monitor.start();
 
     return event.returnValue = {

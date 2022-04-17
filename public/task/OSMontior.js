@@ -29,12 +29,7 @@ class OSMonitor {
         this.trait = null;
         this.network = network;
 
-        this.proxies = [
-            "199.187.188.185:10742:dzyamayd:gzP4w13qT0",
-            "199.187.190.31:10160:dzyamayd:gzP4w13qT0",
-            "199.187.188.240:11838:dzyamayd:gzP4w13qT0",
-            "199.187.191.125:11893:dzyamayd:gzP4w13qT0",
-            "199.187.188.122:12070:dzyamayd:gzP4w13qT0"];
+        this.proxies = [];
 
         this.webhook = webhook;
 
@@ -75,12 +70,6 @@ class OSMonitor {
          */
 
         log.info(`Starting monitor ${this.id}`);
-
-        if (this.api_key.length === 0) {
-            this.api_key = (await axios.get(`https://mintaio-auth.herokuapp.com/os/keys/${machine_id}`)).data;
-
-            log.info(`[OSMonitor] API Key not found, fetching`);
-        }
 
         if (isNaN(this.timer_delay)) {
             log.info(`[OSMonitor] timer_delay is NaN ${this.id}`);
@@ -186,7 +175,7 @@ class OSMonitor {
                     "Accept": "application/json",
                     "X-API-KEY": is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : _key
                 },
-                proxy: `http://${username}:${password}@${host}:${port}`
+                proxy: this.proxies.length > 0 ? `http://${username}:${password}@${host}:${port}` : ''
             }, (err, res, body) => {
                 if (err) {
                     console.log("Error:", `${host}:${port}:${username}:${password}`, err);

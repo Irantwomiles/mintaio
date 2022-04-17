@@ -91,7 +91,7 @@ function Sidebar() {
                     </div>
                     <div className={current === "opensea" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2"}>
                         <Link to="/opensea" onClick={() => setCurrent("opensea")}>
-                            <i className="fa-solid fa-sailboat fa-2x p-3 rounded"></i>
+                            <i className="fa-solid fa-crosshairs fa-2x p-3 rounded"></i>
                         </Link>
                     </div>
                     <div className={current === "opensea-bid" ? "sidebar-selected mt-2" : "sidebar-unselected mt-2"}>
@@ -114,7 +114,7 @@ function Sidebar() {
 
             <div className="d-flex align-items-center p-3">
                 {/*<span style={{color: 'white'}}><i className="fas fa-gas-pump me-2" style={{color: '#8a78e9'}}></i>{Number.parseFloat(gas.gas).toFixed(0)} Gwei</span>*/}
-                <span style={{color: "#323857"}}>v2.0.0</span>
+                <span style={{color: "#323857"}}>v2.0.1</span>
             </div>
 
             <div className="modal" ref={authRef} tabIndex="-1">

@@ -61,6 +61,7 @@ function OpenSeaBid() {
         }
 
         const project_status_updater = (event, data) => {
+            console.log(data);
             setProjectStatus(data);
         }
 
