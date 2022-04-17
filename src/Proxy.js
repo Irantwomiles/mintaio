@@ -88,7 +88,7 @@ function Proxy() {
         <div ref={globalRef} className={"proxy-wrapper p-3 h-100"}>
             <div className={"w-50"}>
                 <h3 style={{fontWeight: "bold", color: "white"}}>Proxies</h3>
-                <div className={"d-flex justify-content-center align-items-center tasks-actionbar rounded-3 p-3"}>
+                <div className={"d-flex align-items-center tasks-actionbar rounded-3 p-3"}>
                     <div className={"add-proxies m-2 d-flex align-items-center rounded-3 p-2"} onClick={() => {modal.show()}}>
                         <i className="fa-solid fa-plus fa-1x m-1" style={{color: "white"}}></i>
                     </div>
