@@ -234,7 +234,7 @@ async function webhookSet(webhook) {
 
 async function getCollection(slug, network) {
 
-    const api_key = (await axios.get(`https://mintaio-auth.herokuapp.com/os/keys/${machine_id}`)).data;
+    const api_key = ['852d4657fe794045abf12f206af777ad', '2e7ef0ac679f4860bbe49a34a98cf5ac', 'a97239276ae0463297a18436a424c676', '2f603e64a3ea42f9b0cb39466ca036df'];
 
     const url = `https://${network}api.opensea.io/api/v1/collection/${slug}`
 

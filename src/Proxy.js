@@ -126,7 +126,7 @@ function Proxy() {
                             <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
                         </div>
                         <div className="modal-body">
-                            <textarea className="form-control" id="exampleFormControlTextarea1" style={{color: "white"}} rows="6" onChange={(e) => setTextArea(e.target.value)}></textarea>
+                            <textarea className="form-control" id="exampleFormControlTextarea1" style={{color: "white"}} rows="6" onChange={(e) => setTextArea(e.target.value)} placeholder={"host:port:username:password\nhost:port:username:password"}></textarea>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>

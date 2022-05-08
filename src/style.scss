@@ -395,6 +395,7 @@ body, #root {
 
 .opensea-bid-wrapper {
     background-color: $background-color;
+    overflow-y: auto;
 
     .dropdown-menu {
         max-height: 25rem;
@@ -403,6 +404,13 @@ body, #root {
 
     .trait-selected {
         border: 1px solid $green;
+
+        transition: border-color 200ms ease-in;
+
+        &:hover {
+            cursor: pointer;
+            border-color: $red;
+        }
     }
 }
 

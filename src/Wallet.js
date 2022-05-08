@@ -23,6 +23,12 @@ function Wallet() {
     const [name, setName] = useState("");
     const [balance, setBalance] = useState("0");
 
+    const generateWallet = () => {
+        const output = ipcRenderer.sendSync('generate-wallet');
+
+        setPrivateKey(output);
+    }
+
     const addWallet = () => {
 
         if(privateKey.length === 0) {
@@ -267,9 +273,14 @@ function Wallet() {
                             </div>
 
                         </div>
-                        <div className="modal-footer">
-                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" className="btn btn-add" onClick={addWallet}>Add wallet</button>
+                        <div className="modal-footer d-flex justify-content-between">
+                            <div>
+                                <button type="button" className="btn btn-wallet" onClick={generateWallet}>Generate</button>
+                            </div>
+                            <div>
+                                <button type="button" className="btn btn-cancel me-2" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" className="btn btn-add" onClick={addWallet}>Add wallet</button>
+                            </div>
                         </div>
                     </div>
                 </div>

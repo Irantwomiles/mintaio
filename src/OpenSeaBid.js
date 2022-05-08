@@ -8,6 +8,7 @@ const ipcRenderer = electron.ipcRenderer;
 
 function OpenSeaBid() {
 
+    const globalRef = useRef();
     const walletDropdownRef = useRef();
     const projectsDropdownRef = useRef();
     const traitsDropdownRef = useRef();
@@ -25,6 +26,7 @@ function OpenSeaBid() {
     const [walletPassword, setWalletPassword] = useState("");
     const [selectedWallet, setSelectedWallet] = useState(null);
     const [selectedProject, setSelectedProject] = useState(null);
+    const [traitType, setTraitType] = useState([]);
     const [slug, setSlug] = useState("");
     const [price, setPrice] = useState("");
     const [selectedAssets, setSelectedAssets] = useState([]);
@@ -36,6 +38,9 @@ function OpenSeaBid() {
     const [isBidding, setIsBidding] = useState(false);
     const [expiration, setExpiration] = useState(1);
 
+    const [traitsList, setTraitsList] = useState(null);
+    const [dropdowns, setDropdowns] = useState([]);
+
     useEffect(() => {
 
         const walletDropdown = new Dropdown(walletDropdownRef.current, {});
@@ -44,8 +49,10 @@ function OpenSeaBid() {
         const projectDropdown = new Dropdown(projectsDropdownRef.current, {});
         setProjectsDropdown(projectDropdown);
 
-        const _traitsDropdown = new Dropdown(traitsDropdownRef.current, {});
-        setTraitsDropdown(_traitsDropdown);
+        // const _traitsDropdown = new Dropdown(traitsDropdownRef.current, {});
+        // setTraitsDropdown(_traitsDropdown);
+
+        //setWalletDropdown(new Dropdown(globalRef.current.querySelector('.traits-dropdown'), {}));
 
         const toast = new Toast(toastRef.current, {autohide: true});
         setToast(toast);
@@ -84,12 +91,27 @@ function OpenSeaBid() {
 
     useEffect(() => {
 
+        if(traitsList === null) return;
+
+        const dropdownElementList = [].slice.call(globalRef.current.querySelectorAll('.dropdown-toggle'))
+        const dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+            return new Dropdown(dropdownToggleEl, {});
+        })
+
+        setDropdowns(dropdownList);
+
+    }, [traitsList])
+
+    useEffect(() => {
+
         if(typeof traits === 'undefined' || traits.length === 0) {
             setSelectedAssets([]);
             return;
         }
 
         if(selectedProject === null) return;
+
+        console.log("SelectedProject:", selectedProject);
 
         const arrays = [];
         for(const t of traits) {
@@ -99,6 +121,33 @@ function OpenSeaBid() {
         setSelectedAssets(intersection(...arrays));
 
     }, [traits])
+
+    useEffect(() => {
+
+        if(selectedProject === null) {
+            setTraitType([]);
+            return;
+        }
+
+        const _keys = selectedProject.traitsMap.keys();
+        const map = new Map();
+
+        for(const k of _keys) {
+            const args = k.split(";");
+
+            if(map.has(args[0])) {
+                map.get(args[0]).add(args[1])
+            } else {
+                map.set(args[0], new Set());
+                map.get(args[0]).add(args[1])
+            }
+        }
+
+        setTraitsList(map);
+
+        console.log("keys", map);
+
+    }, [selectedProject]);
 
     function intersection(...arrays) {
         const myMap = new Map()
@@ -371,8 +420,22 @@ function OpenSeaBid() {
         }
     }
 
+    function openDropdown(id) {
+
+        if(typeof dropdowns === 'undefined') return;
+
+        for(const d of dropdowns) {
+            if(d._element.id === id) {
+                console.log("Found", id);
+                d.show();
+                return;
+            }
+
+        }
+    }
+
     return (
-        <div className="opensea-bid-wrapper p-3 h-100">
+        <div ref={globalRef} className="opensea-bid-wrapper p-3 h-100">
 
             <div className={"w-100"}>
                 <h3 style={{fontWeight: "bold", color: "white"}}>OpenSea Bidding</h3>
@@ -431,8 +494,8 @@ function OpenSeaBid() {
 
                     <div className={"w-100 mt-3"}>
 
-                        <div className={"d-flex"}>
-                            <div className="dropdown w-25 me-2">
+                        <div className={"d-flex flex-column"}>
+                            <div className="dropdown w-25 mb-2 me-2">
                                 <button className="btn btn-add dropdown-toggle w-100" type="button"
                                         id="projects-dropdown" data-bs-toggle="dropdown"
                                         aria-expanded="false"
@@ -451,26 +514,35 @@ function OpenSeaBid() {
                                 </ul>
                             </div>
 
-                            <div className={selectedProject === null ? 'd-none w-100' : 'w-100'}>
-                                <div className="dropdown w-25">
-                                    <button className="btn btn-add dropdown-toggle w-100" type="button"
-                                            id="traits-dropdown"
-                                            data-bs-toggle="dropdown"
-                                            aria-expanded="false"
-                                            ref={traitsDropdownRef}
-                                            onClick={() => {traitsDropdown.toggle()}}
-                                    >
-                                        Select a Trait
-                                    </button>
-                                    <ul className="dropdown-menu">
-                                        {
-                                            selectedProject === null ? '' :
-                                                Array.from(selectedProject.traitsMap.keys()).map((t) => (
-                                                    <li key={Math.random() * Math.random() + Math.random()}><a className="dropdown-item" onClick={() => {handleTraitsFilter(t)} }>{t} ({selectedProject.traitsMap.get(t).length})</a></li>
-                                                ))
-                                        }
-                                    </ul>
-                                </div>
+                            <div className={selectedProject === null ? 'd-none w-100' : 'w-100 d-flex flex-wrap'}>
+
+                                {
+                                    traitsList !== null ?
+                                        Array.from(traitsList.keys()).map((trait, index) => (
+
+                                            <div key={index} className="dropdown m-1">
+                                                <button className="btn btn-add dropdown-toggle w-100" type="button"
+                                                        data-bs-toggle="dropdown"
+                                                        aria-expanded="false"
+                                                        id={trait}
+                                                        onClick={() => {openDropdown(trait)}}
+                                                >
+                                                    {trait}
+                                                </button>
+                                                <ul className="dropdown-menu">
+                                                    {
+                                                        Array.from(traitsList.get(trait)).map((t) => (
+                                                                <li key={Math.random() * Math.random() + Math.random()}><a className="dropdown-item" onClick={() => {handleTraitsFilter(`${trait};${t}`)} }>{t} ({typeof selectedProject.traitsMap.get(`${trait};${t}`) !== 'undefined' ? selectedProject.traitsMap.get(`${trait};${t}`).length: 'N/A'})</a></li>
+                                                            ))
+                                                    }
+                                                </ul>
+                                            </div>
+                                        ))
+
+                                        :
+                                        ''
+                                }
+
                             </div>
 
                         </div>
@@ -533,10 +605,10 @@ function OpenSeaBid() {
                         bids.map((bid) => (
                             <div key={Math.random() * Math.random() + Math.random()} className={"bids d-flex justify-content-between p-3 my-1 row"}>
                                 <div className={"bid-element col-3"}>
-                                    <span style={{color: "white"}}>{bid.price}</span>
+                                    <span style={{color: "white"}}>{bid.price} <i className="fab fa-ethereum" style={{color: "#DB417E"}}></i></span>
                                 </div>
                                 <div className={"bid-element col-3"}>
-                                    <span style={{color: "white"}}>{bid.token_id}</span>
+                                    <span style={{color: "white"}}>#{bid.token_id}</span>
                                 </div>
                                 <div className={"bid-element col-3"}>
                                     <span style={{color: "white"}}>{bid.expiration}hr</span>

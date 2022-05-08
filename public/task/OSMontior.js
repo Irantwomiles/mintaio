@@ -152,10 +152,19 @@ class OSMonitor {
 
         try {
 
-            const p = this.proxies[Math.floor(Math.random() * this.proxies.length)].split(':');
-            const username = p[2], password = p[3], host = p[0], port = p[1];
+            let p = null;
+            let username = '', password = '', host = '', port = '';
 
-            console.log(`Checking using ${host}:${port}:${username}:${password}`);
+            if(this.proxies.length > 0) {
+                p = this.proxies[Math.floor(Math.random() * this.proxies.length)].split(':');
+                username = p[2];
+                password = p[3];
+                host = p[0];
+                port = p[1];
+
+                log.info(`Checking using ${host}:${port}:${username}:${password}`);
+
+            }
 
             log.info(`[OSMonitor] Checking ${this.slug}`);
 
@@ -163,22 +172,26 @@ class OSMonitor {
 
             log.info(`[OSMonitor] URL ${url}`);
 
-            request({
+            const find_req_obj = {
                 method: 'GET',
                 timeout: 3000,
                 url: url,
                 pool: {
-                  maxSockets: 100
+                    maxSockets: 100
                 },
                 headers: {
                     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
                     "Accept": "application/json",
                     "X-API-KEY": is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : _key
                 },
-                proxy: this.proxies.length > 0 ? `http://${username}:${password}@${host}:${port}` : ''
-            }, (err, res, body) => {
+            }
+
+            if(this.proxies.length > 0) {
+                find_req_obj.proxy = `http://${username}:${password}@${host}:${port}`;
+            }
+
+            request(find_req_obj, (err, res, body) => {
                 if (err) {
-                    console.log("Error:", `${host}:${port}:${username}:${password}`, err);
                     log.info("[OSMonitor] Error(1)", err, _key);
                     return;
                 }
@@ -224,7 +237,7 @@ class OSMonitor {
 
                         token_ids_query += `&token_ids=${token_id}`;
                         log.info(`[OSMonitor] adding token ${token_id}`);
-                        console.log("--------------------------------------------------")
+                        log.info("--------------------------------------------------")
                     }
                 }
 
@@ -239,7 +252,7 @@ class OSMonitor {
 
                 log.info("[OSMonitor] Checking listed items, found", output.length, "status", res.statusCode);
 
-                request({
+                let asset_req_obj = {
                     method: 'GET',
                     timeout: 3000,
                     url: asset_url,
@@ -247,9 +260,14 @@ class OSMonitor {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0 Win64 x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36',
                         "Accept": "application/json",
                         "X-API-KEY": is_dev ? "2f6f419a083c46de9d83ce3dbe7db601" : _key
-                    },
-                    proxy: `http://${username}:${password}@${host}:${port}`
-                }, async (err, res, body) => {
+                    }
+                };
+
+                if(this.proxies.length > 0) {
+                    asset_req_obj.proxy = `http://${username}:${password}@${host}:${port}`;
+                }
+
+                request(asset_req_obj, async (err, res, body) => {
 
                     if (err) {
                         console.log("AssetError:", `${host}:${port}:${username}:${password}`, err);
@@ -283,15 +301,27 @@ class OSMonitor {
 
                             if(asset_traits.length > 0) {
 
+                                let _totalFound = 0;
+
                                 for(const t of asset_traits) {
+
+                                    log.info(`[OSMonitor] Checking ${this.trait.trait_type}:${this.trait.value} vs ${t.trait_type}:${t.value}`)
+
                                     if(`${this.trait.trait_type}`.toLowerCase() !== `${t.trait_type}`.toLowerCase()
                                         || `${this.trait.value}`.toLowerCase() !== `${t.value}`.toLowerCase()) {
                                         log.info(`[OSMonitor] Traits do not match`);
                                         continue;
+                                    } else {
+                                        _totalFound++;
+                                        log.info(`[OSMonitor] Traits ${this.trait.trait_type}:${this.trait.value} vs ${t.trait_type}:${t.value} match contract_address:${contract} token_id:${token_id}`);
+                                        break;
                                     }
                                 }
 
-                                log.info(`[OSMonitor] Traits match contract_address:${contract} token_id:${token_id}`);
+                                if(_totalFound === 0) {
+                                    continue;
+                                }
+                                _totalFound = 0;
 
                             }
 
@@ -307,7 +337,6 @@ class OSMonitor {
                         }
 
                         if (this.buying) {
-                            console.log("Already Buying NFT");
                             log.info(`[OSMonitor] Already buying contract:${contract} token_id:${token_id}`);
                             return;
                         }
@@ -325,14 +354,14 @@ class OSMonitor {
             })
 
         } catch (e) {
-            console.log("Error:", e.message);
+            log.info(`[OSMonitor] Error: ${e.message}`);
         }
     }
 
     async fill_order(contract_address, token_id) {
         try {
 
-            console.log("Found order ", contract_address, token_id);
+            log.info(`Found order contract_address:${contract_address} token_id:${token_id}`);
 
             if (this.private_key === null) {
                 this.status = {

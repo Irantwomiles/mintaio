@@ -1,4 +1,5 @@
-const is_dev = require('electron-is-dev');
+// const is_dev = require('electron-is-dev');
+const is_dev = false;
 const fs = require('fs');
 const crypto = require('crypto');
 const log = require('electron-log');
@@ -668,6 +669,12 @@ ipcMain.on('delete-os-monitor', (event, id) => {
 
 ipcMain.on('load-os-monitors', (event, data) => {
     return event.returnValue = getRendererMonitors();
+})
+
+ipcMain.on('generate-wallet', (event, data) => {
+    const account =  get_web3().eth.accounts.create();
+
+    return event.returnValue = account.privateKey;
 })
 
 ipcMain.on('os-unlock-wallet', async (event, data) => {
