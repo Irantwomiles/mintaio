@@ -15,6 +15,7 @@ function Sidebar() {
     const [authModal, setAuthModal] = useState([]);
     const [api, setApi] = useState("");
     const [current, setCurrent] = useState("tasks");
+    const [authStatus, setAuthStatus] = useState({auth: false, message: ''});
 
     const authRef = useRef();
 
@@ -38,6 +39,10 @@ function Sidebar() {
 
     }
 
+    const handleDiscordAuth = () => {
+        ipcRenderer.send('auth-user-discord', api);
+    }
+
     useEffect(() => {
 
         if(localStorage.getItem("api_key") !== null) {
@@ -59,8 +64,24 @@ function Sidebar() {
             handleGas();
         }, 15 * 1000);
 
+        const handle_discord_auth = (event, data) => {
+            console.log("discord auth:", data);
+
+            setAuthStatus(data);
+
+            if(data.auth) {
+                setTimeout(() => {
+                    console.log(auth_modal);
+                    auth_modal.hide();
+                }, 2 * 1000);
+            }
+        }
+
+        ipcRenderer.on('auth-user-discord', handle_discord_auth);
+
         return () => {
             clearInterval(interval);
+            ipcRenderer.removeListener('auth-user-discord', handle_discord_auth);
         }
 
     }, []);
@@ -125,11 +146,19 @@ function Sidebar() {
                             <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
                         </div>
                         <div className="modal-body">
-                            <input type="text" className="form-control w-100 m-1" onChange={(e) => setApi(e.target.value)} value={api} placeholder="API Key"/>
+                            <div className={"d-flex"}>
+                                <input type="text" className="form-control w-100 me-2" onChange={(e) => setApi(e.target.value)} value={api} placeholder="API Key"/>
+                                <button type="button" className="btn btn-add" onClick={handleAuth}>Authorize</button>
+                            </div>
+                            <div className={"my-3"} style={{color: "white"}}>or</div>
+                            <div>
+                                <button className={"btn btn-discord"} onClick={handleDiscordAuth}>Login with Discord</button>
+                            </div>
+
+                                <div className={`my-3 ${authStatus.auth ? 'success-auth' : 'failed-auth'}`} style={{fontWeight: "3rem"}}>{authStatus.message}</div>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" className="btn btn-add" onClick={handleAuth}>Authorize</button>
                         </div>
                     </div>
                 </div>

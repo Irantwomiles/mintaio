@@ -118,9 +118,9 @@ function OpenSea() {
     }
 
     const handleCheck = () => {
-        if(checkSlug.length === 0) return;
+        if(slug.length === 0) return;
 
-        const output = ipcRenderer.sendSync('monitor-check-project', checkSlug);
+        const output = ipcRenderer.sendSync('monitor-check-project', slug);
 
         if(output.error === 1) {
             console.log("Could not find project");
@@ -316,7 +316,7 @@ function OpenSea() {
                                 <div className={"w-75"}>
                                     <label htmlFor="slug-address" className="form-label" style={{color: "white"}}>Check Slug</label>
                                     <div className="input-group">
-                                        <input type="text" className="form-control" id="slug-address" placeholder="Project Slug" onChange={(e) => {setCheckSlug(e.target.value)}} value={checkSlug} />
+                                        <input type="text" className="form-control" id="slug-address" placeholder="Project Slug" onChange={(e) => {setSlug(e.target.value)}} value={slug} />
                                     </div>
                                 </div>
 

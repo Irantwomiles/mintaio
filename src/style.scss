@@ -620,6 +620,22 @@ body, #root {
     }
 }
 
+.btn-discord {
+    background-color: #7289DA !important;
+    font-weight: bold !important;;
+    color: white !important;;
+    transition: background-color 300ms ease-in !important;;
+
+    &:hover {
+        background-color: lighten(#7289DA, 3%) !important;;
+        color: white !important;
+    }
+
+    &:focus {
+        outline: none !important;
+    }
+}
+
 .dropdown-menu {
     background-color: $background-color-light !important;
     border-color: $light-blue !important;
@@ -732,4 +748,11 @@ hr {
 
 .task-error {
     color: var(--color-negative);
+}
+
+.success-auth {
+    color: $green;
+}
+.failed-auth {
+    color: $red;
 }

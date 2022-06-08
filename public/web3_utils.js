@@ -6,6 +6,7 @@ const log = require('electron-log');
 const id = require('node-machine-id');
 const machine_id = id.machineIdSync();
 const requireFromWeb = require('require-from-web');
+const {getAuthWindow, getWindow} = require("./window_utils");
 
 let _web3 = null;
 let _web3_logger = null;
@@ -45,12 +46,51 @@ const authenticate = async (api_key) => {
     }
 }
 
+const authenticate_discord = async (code) => {
+    try {
+        const result = await axios.post(`http://localhost:1458/api/discord/${code}`);
+
+        if(result.status === 200) {
+
+            const modules = requireFromString(result.data, 'modules.js');
+
+            if(imported_functions === null) {
+                imported_functions = modules;
+            }
+
+            getAuthWindow().close();
+            isAuth = true;
+            sendMessage('auth-user-discord', {auth: true, message: 'Authentication success.'});
+            log.info(`[Authentication] Discord auth success ${result.status}`);
+            return true;
+        }
+
+        sendMessage('auth-user-discord', {auth: false, message: 'Could not authenticate.'});
+        getAuthWindow().reload();
+        log.info(`[Authentication] Discord auth failed ${result.status}`);
+        return false;
+    } catch(e) {
+        isAuth = false;
+        getAuthWindow().close();
+        sendMessage('auth-user-discord', {auth: false, message: 'Could not authenticate.'});
+        log.info(`[Authentication] error ${e.message}`);
+        return false;
+    }
+}
+
 const get_auth = () => {
     return isAuth;
 }
 
 const get_imported_functions = () => {
     return imported_functions;
+}
+
+function requireFromString(src, filename) {
+    let m = new module.constructor();
+    m.paths = module.paths;
+    m._compile(src, filename);
+    return m.exports;
 }
 
 function get_alchemy_keys() {
@@ -303,11 +343,16 @@ async function getCollection(slug, network) {
 
 }
 
+function sendMessage(channel, data) {
+    getWindow().webContents.send(channel, data);
+}
+
 module.exports = {
     get_web3,
     get_web3_logger,
     validToken,
     authenticate,
+    authenticate_discord,
     get_imported_functions,
     machine_id,
     http_endpoint,

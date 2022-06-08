@@ -11,14 +11,16 @@ const { OSMonitor } = require('./task/OSMontior');
 const { Project } = require('./task/Project');
 const { OSBid } = require('./task/OSBid');
 const bcrypt = require('bcrypt');
+
 const { getStorage, saveApiKeys } = require('./storage');
-const {getWindow} = require('./window_utils');
+const {getWindow, getAuthWindow} = require('./window_utils');
 
 const db = getStorage();
 
 const {
     get_web3,
     authenticate,
+    authenticate_discord,
     get_imported_functions,
     get_auth,
     machine_id,
@@ -772,6 +774,9 @@ ipcMain.on('auth-user', async (event, data) => {
 
     return event.returnValue = get_auth();
 
+})
+
+ipcMain.on('auth-user-discord', async (event, data) => {
 })
 
 ipcMain.on('check-balance', async (event, data) => {

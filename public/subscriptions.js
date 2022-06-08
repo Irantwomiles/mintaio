@@ -116,7 +116,6 @@ ipcMain.on('start-mint-status', (event, data) => {
 const start_status_watch = () => {
 
     if(status_watch !== null) {
-
         log.info('status_watch is not null');
         return {
             error: 1

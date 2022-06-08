@@ -83,36 +83,44 @@ class Task {
         } else if(this.start_mode === "AUTOMATIC") {
             this.start_when_ready();
         }
-        /*else if(this.start_mode === "FIRST_BLOCK") {
+        else if(this.start_mode === "FIRST_BLOCK") {
+            this.start_first_block();
+        }
 
-            if(this.contract_creator.length === 0) {
-                this.status = {
-                    error: 12,
-                    result: ''
-                };
+    }
 
-                this.sendMessage('task-status-update');
-                return;
-            }
+    async start_first_block() {
 
-            const output = start_status_watch();
+        if(this.contract_creator.length === 0) {
+            this.status = {
+                error: 12,
+                result: ''
+            };
 
-            if(output.error === 1) {
-                this.status = {
-                    error: 14,
-                    result: ''
-                };
+            this.sendMessage('task-status-update');
+            return;
+        }
 
-                this.sendMessage('task-status-update');
-            } else {
-                this.status = {
-                    error: 13,
-                    result: ''
-                };
+        const output = start_status_watch();
 
-                this.sendMessage('task-status-update');
-            }
-        }*/
+        // error while starting subscription watch
+        if(output.error === 1) {
+            this.status = {
+                error: 14,
+                result: ''
+            };
+
+            this.sendMessage('task-status-update');
+            return;
+        }
+
+        // start checking
+        this.status = {
+            error: 13,
+            result: ''
+        };
+
+        this.sendMessage('task-status-update');
 
     }
 
@@ -432,6 +440,19 @@ class Task {
             }
 
         }, 1000 * 1);
+
+        // const blockData = await get_web3().eth.getBlock('latest');
+        //
+        // if(currentBlock !== blockData.number) {
+        //     currentBlock = blockData.number;
+        //     console.log(`Transactions: ${blockData.transactions.length} - Block Number: ${currentBlock}`);
+        //
+        //     for(const txHash of blockData.transactions) {
+        //         getTransactionSender(txHash);
+        //     }
+        //
+        //     return;
+        // }
     }
 
     stop_automatic() {
@@ -470,6 +491,14 @@ class Task {
         return (typeof this.block_timer !== 'undefined' || typeof this.automatic_interval !== 'undefined');
     }
 
+    async getTransactionSender(txHash) {
+        try {
+            const transaction = await get_web3().eth.getTransaction(txHash);
+            console.log(transaction.from);
+        } catch(e) {
+            console.log("error:", e);
+        }
+    }
 }
 
 module.exports = {
