@@ -1,5 +1,6 @@
 const Datastore = require('nedb');
 const fs = require('fs');
+const path = require('path');
 
 const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
 
@@ -13,20 +14,51 @@ class Storage {
         this.webhooks = new Datastore({filename: `${dataPath}\\mintaio\\webhooks.db`, autoload: true});
 
         this.default_keys = {
-            primary_key: "dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4",
-            secondary_key: "22SFODSbXp_n6Zedhj_4w1o5M4FmS-C_"
+            primary_key: "Xl9CjNo9SjtCLYcYH-X9cdQWqi4c5l39",
+            secondary_key: "Vtc8QvrFfVlcUch4cTUuxqpJ9SR4HCpL"
         }
 
-        if(fs.existsSync(`${dataPath}\\mintaio`)) {
+        if(process.platform === 'darwin') {
+            if(fs.existsSync(path.join(dataPath, 'mintaio'))) {
+                console.log("file path exists");
+                fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(this.default_keys));
+                if(!fs.existsSync(path.join(dataPath, 'mintaio', 'api_keys.json'))) {
+                    console.log("api_keys.json doesn't exist", dataPath);
+                    fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(this.default_keys));
+                } else {
 
-            if(!fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
-                fs.writeFileSync(`${dataPath}\\mintaio\\api_keys.json`, JSON.stringify(this.default_keys));
+                    console.log("api_keys.json exists", dataPath);
+
+                    const output = fs.readFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'));
+                    const json_value = JSON.parse(output);
+
+                    this.default_keys = json_value;
+                }
+
+
             } else {
+                console.log("file path does not exist");
+                fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(this.default_keys));
+            }
+        } else {
+            if(fs.existsSync(`${dataPath}\\mintaio`)) {
 
-                const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
-                const json_value = JSON.parse(output);
+                console.log("mintaio path exists");
 
-                this.default_keys = json_value;
+                if(!fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
+                    console.log("api_keys.json doesn't exist", dataPath);
+                    fs.writeFileSync(`${dataPath}\\mintaio\\api_keys.json`, JSON.stringify(this.default_keys));
+                } else {
+
+                    console.log("api_keys.json exists", dataPath);
+
+                    const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
+                    const json_value = JSON.parse(output);
+
+                    this.default_keys = json_value;
+                }
+            } else {
+                console.log("mintaio path does not exist", `${dataPath}\\mintaio`);
             }
         }
 
@@ -40,7 +72,11 @@ function getStorage() {
 }
 
 function saveApiKeys() {
-    fs.writeFileSync(`${dataPath}\\mintaio\\api_keys.json`, JSON.stringify(getStorage().default_keys));
+    if(process.platform === 'darwin') {
+        fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(getStorage().default_keys));
+    } else {
+        fs.writeFileSync(`${dataPath}\\mintaio\\api_keys.json`, JSON.stringify(getStorage().default_keys));
+    }
 }
 
 module.exports = {

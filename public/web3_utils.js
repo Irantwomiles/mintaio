@@ -7,6 +7,7 @@ const id = require('node-machine-id');
 const machine_id = id.machineIdSync();
 const requireFromWeb = require('require-from-web');
 const {getAuthWindow, getWindow} = require("./window_utils");
+const path = require("path");
 
 let _web3 = null;
 let _web3_logger = null;
@@ -97,13 +98,20 @@ function get_alchemy_keys() {
 
     const dataPath = process.env.APPDATA || (process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + "/.local/share");
     let json_value = {
-        primary_key: "dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4",
-        secondary_key: "22SFODSbXp_n6Zedhj_4w1o5M4FmS-C_"
+        primary_key: "Xl9CjNo9SjtCLYcYH-X9cdQWqi4c5l39",
+        secondary_key: "Vtc8QvrFfVlcUch4cTUuxqpJ9SR4HCpL"
     }
 
-    if(fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
-        const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
-        json_value = JSON.parse(output);
+    if(process.platform === 'darwin') {
+        if(fs.existsSync(path.join(dataPath, 'mintaio', 'api_keys.json'))) {
+            const output = fs.readFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'));
+            json_value = JSON.parse(output);
+        }
+    } else {
+        if(fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
+            const output = fs.readFileSync(`${dataPath}\\mintaio\\api_keys.json`);
+            json_value = JSON.parse(output);
+        }
     }
 
     const primary_key = json_value.primary_key;
