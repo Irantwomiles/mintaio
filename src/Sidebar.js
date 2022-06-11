@@ -135,7 +135,7 @@ function Sidebar() {
 
             <div className="d-flex align-items-center p-3">
                 {/*<span style={{color: 'white'}}><i className="fas fa-gas-pump me-2" style={{color: '#8a78e9'}}></i>{Number.parseFloat(gas.gas).toFixed(0)} Gwei</span>*/}
-                <span style={{color: "#323857"}}>v2.0.5</span>
+                <span style={{color: "#323857"}}>v2.0.9</span>
             </div>
 
             <div className="modal" ref={authRef} tabIndex="-1">

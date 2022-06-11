@@ -56,6 +56,12 @@ ipcMain.on('load-proxies', (event) => {
 
 ipcMain.on('test-proxies', (event) => {
 
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     for(const p of proxies) {
 
         p.status = 'Checking';
@@ -85,6 +91,13 @@ ipcMain.on('test-proxies', (event) => {
 })
 
 ipcMain.on('delete-proxies', (event, data) => {
+
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     db.proxies.update({type: "proxies"}, { $set: {proxies: []}}, function(err, numReplaced) {
 
         if(err) {
@@ -111,7 +124,11 @@ ipcMain.on('save-proxies', (event, data) => {
     error: 2 invalid proxies list
      */
 
-    console.log("data", data, typeof data);
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
 
     if(typeof data !== 'undefined') {
 
@@ -198,6 +215,12 @@ ipcMain.on('start-bidding', (event, data) => {
     error: 4 invalid wallet password
      */
 
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     if(bid !== null && bid.active) {
         return event.returnValue = {
             error: 1
@@ -253,6 +276,12 @@ ipcMain.on('start-bidding', (event, data) => {
 
 ipcMain.on('stop-bidding', (event, data) => {
 
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     if(bid === null) {
         return event.returnValue = {
             error: 1
@@ -278,6 +307,13 @@ ipcMain.on('load-projects', (event) => {
 })
 
 ipcMain.on('stop-fetching-project', async (event, data) => {
+
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     let project = getProjectBySlug(data.slug);
 
     if(project === null) {
@@ -306,6 +342,12 @@ ipcMain.on('start-fetching-project', async (event, data) => {
     error: 1 created new project
     error: 2 there is already an active project
      */
+
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
 
     for(const p of projects) {
         if(p.active) {
@@ -442,6 +484,12 @@ ipcMain.on('update-alchemy-key-primary', (event, data) => {
 
 ipcMain.on('monitor-check-project', async (event, data) => {
 
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     const output = await getCollection(data, is_dev ? 'rinkeby-' : '');
 
     if(output.hasOwnProperty('message')) {
@@ -557,6 +605,12 @@ ipcMain.on('start-os-monitor', (event, data) => {
     2: already active
      */
 
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     const monitor = getMonitor(data);
 
     if(monitor === null) {
@@ -588,6 +642,12 @@ ipcMain.on('stop-os-monitor', (event, data) => {
     1: monitor is null
     2: already active
      */
+
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
 
     const monitor = getMonitor(data);
 
@@ -744,28 +804,6 @@ ipcMain.on('update-alchemy-key-secondary', (event, data) => {
 ipcMain.on('is-auth', (event, data) => {
     return event.returnValue = get_auth();
 })
-
-// ipcMain.on('auth-user', async (event, data) => {
-//     const output = await axios.get(`https://mintaio-auth.herokuapp.com/api/${data}/${machine_id}`);
-//
-//     // const output = await axios.get(`http://localhost:1458/api/${data}/${machine_id}`);
-//
-//     if(output.data === "redeemed") {
-//         app.relaunch();
-//         app.exit();
-//         return;
-//     }
-//
-//     const modules = requireFromWeb(url);
-//
-//     if(imported_functions === null) {
-//         imported_functions = await modules;
-//     }
-//
-//     if(output.data.length > 0) isAuth = true;
-//
-//     return event.returnValue = isAuth;
-// })
 
 ipcMain.on('auth-user', async (event, data) => {
 
@@ -1461,6 +1499,13 @@ ipcMain.on('load-task-abi', async (event, id) => {
     1: Task not found
      */
 
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500,
+            tasks: []
+        }
+    }
+
     const task = getTask(id);
 
     if(task === null) {
@@ -1482,6 +1527,12 @@ ipcMain.on('load-task-abi', async (event, id) => {
 
 ipcMain.on('start-all-tasks', (event) => {
 
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
+
     for(const task of tasks) {
         if(task.active) continue;
         if(task.abi === null) continue;
@@ -1494,6 +1545,12 @@ ipcMain.on('start-all-tasks', (event) => {
 })
 
 ipcMain.on('stop-all-tasks', (event) => {
+
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500
+        }
+    }
 
     for(const task of tasks) {
         if(task.active) continue;

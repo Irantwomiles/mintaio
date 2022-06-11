@@ -48,7 +48,7 @@ const authenticate = async (api_key) => {
 
 const authenticate_discord = async (code) => {
     try {
-        const result = await axios.post(`http://localhost:1458/api/discord/${code}`);
+        const result = await axios.post(`https://mintaio-auth.herokuapp.com/api/discord/${code}`);
 
         if(result.status === 200) {
 
