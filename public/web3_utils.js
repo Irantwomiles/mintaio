@@ -365,6 +365,7 @@ module.exports = {
     machine_id,
     http_endpoint,
     os_http_endpoint,
+    websocket_key,
     sendWebhookMessage,
     mintSuccessMessage,
     waitingMessage,

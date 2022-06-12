@@ -1,4 +1,4 @@
-const {get_web3, os_http_endpoint, machine_id, sendWebhookMessage} = require('../web3_utils');
+const {get_web3, websocket_key, machine_id, sendWebhookMessage} = require('../web3_utils');
 const {OpenSeaPort, Network, EventType} = require('opensea-js');
 const {OrderSide} = require("opensea-js/lib/types");
 const HDWalletProvider = require('@truffle/hdwallet-provider/dist/index.js');
@@ -380,7 +380,7 @@ class OSMonitor {
             if (this.wallet === null) {
                 this.keys = [];
                 this.keys.push(this.private_key);
-                this.wallet = new HDWalletProvider(this.keys, is_dev ? os_http_endpoint : this.network === 'mainnet' ? os_http_endpoint : 'https://rpc.flashbots.net', 0, this.keys.length);
+                this.wallet = new HDWalletProvider(this.keys, is_dev ? websocket_key : this.network === 'mainnet' ? websocket_key : 'https://rpc.flashbots.net', 0, this.keys.length);
                 log.info(`[OSMonitor] fill_order wallet is null, created new one ${this.id}`);
             }
 

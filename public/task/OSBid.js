@@ -1,5 +1,5 @@
 const request = require('async-request');
-const {get_web3, machine_id, sendWebhookMessage} = require('../web3_utils');
+const {get_web3, machine_id, sendWebhookMessage, websocket_key} = require('../web3_utils');
 const {OpenSeaPort, Network, EventType} = require('opensea-js');
 const {OrderSide} = require("opensea-js/lib/types");
 const HDWalletProvider = require('@truffle/hdwallet-provider/dist/index.js');
@@ -8,7 +8,6 @@ const crypto = require("crypto");
 const {getWindow} = require("../window_utils");
 const is_dev = require('electron-is-dev');
 const log = require('electron-log');
-const os_http_endpoint = 'https://eth-mainnet.alchemyapi.io/v2/dv8VF3LbDTYOXbTIhiSFl89CBQ_wvxE4';
 
 class OSBid {
 
@@ -40,7 +39,7 @@ class OSBid {
         if (this.wallet === null) {
             this.keys = [];
             this.keys.push(this.private_key);
-            this.wallet = new HDWalletProvider(this.keys, os_http_endpoint, 0, this.keys.length);
+            this.wallet = new HDWalletProvider(this.keys, websocket_key, 0, this.keys.length);
             log.info(`[OSBid] wallet is null, created new one ${this.id}`);
         }
 

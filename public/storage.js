@@ -21,24 +21,14 @@ class Storage {
         if(process.platform === 'darwin') {
             if(fs.existsSync(path.join(dataPath, 'mintaio'))) {
                 console.log("file path exists");
-                fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(this.default_keys));
-                if(!fs.existsSync(path.join(dataPath, 'mintaio', 'api_keys.json'))) {
-                    console.log("api_keys.json doesn't exist", dataPath);
-                    fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(this.default_keys));
-                } else {
 
-                    console.log("api_keys.json exists", dataPath);
-
-                    const output = fs.readFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'));
-                    const json_value = JSON.parse(output);
-
-                    this.default_keys = json_value;
-                }
-
+                createMacFiles(this.default_keys);
 
             } else {
                 console.log("file path does not exist");
-                fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(this.default_keys));
+                fs.mkdirSync(path.join(dataPath, 'mintaio'));
+                console.log("creating mintaio directory");
+                createMacFiles(this.default_keys);
             }
         } else {
             if(fs.existsSync(`${dataPath}\\mintaio`)) {
@@ -69,6 +59,22 @@ const storage = new Storage();
 
 function getStorage() {
     return storage;
+}
+
+function createMacFiles(data) {
+    fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(data));
+    if(!fs.existsSync(path.join(dataPath, 'mintaio', 'api_keys.json'))) {
+        console.log("api_keys.json doesn't exist", dataPath);
+        fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(data));
+    } else {
+
+        console.log("api_keys.json exists", dataPath);
+
+        const output = fs.readFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'));
+        const json_value = JSON.parse(output);
+
+        this.default_keys = json_value;
+    }
 }
 
 function saveApiKeys() {
