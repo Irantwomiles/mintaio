@@ -19,21 +19,17 @@ class Storage {
         }
 
         if(process.platform === 'darwin') {
-            if(fs.existsSync(path.join(dataPath, 'mintaio'))) {
-                console.log("file path exists");
-
-                createMacFiles(this.default_keys);
-
-            } else {
+            if(!fs.existsSync(path.join(dataPath, 'mintaio'))) {
                 console.log("file path does not exist");
                 fs.mkdirSync(path.join(dataPath, 'mintaio'));
-                console.log("creating mintaio directory");
-                createMacFiles(this.default_keys);
+            } else {
+                console.log("file path does exist");
             }
+
+            this.default_keys = createMacFiles(this.default_keys);
+
         } else {
             if(fs.existsSync(`${dataPath}\\mintaio`)) {
-
-                console.log("mintaio path exists");
 
                 if(!fs.existsSync(`${dataPath}\\mintaio\\api_keys.json`)) {
                     console.log("api_keys.json doesn't exist", dataPath);
@@ -62,10 +58,11 @@ function getStorage() {
 }
 
 function createMacFiles(data) {
-    fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(data));
+
     if(!fs.existsSync(path.join(dataPath, 'mintaio', 'api_keys.json'))) {
         console.log("api_keys.json doesn't exist", dataPath);
         fs.writeFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'), JSON.stringify(data));
+        return data;
     } else {
 
         console.log("api_keys.json exists", dataPath);
@@ -73,7 +70,8 @@ function createMacFiles(data) {
         const output = fs.readFileSync(path.join(dataPath, 'mintaio', 'api_keys.json'));
         const json_value = JSON.parse(output);
 
-        this.default_keys = json_value;
+        console.log("Found file, json values:", data);
+        return json_value;
     }
 }
 
