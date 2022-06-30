@@ -25,7 +25,8 @@ const {
     get_auth,
     machine_id,
     webhookSet,
-    getCollection
+    getCollection,
+    get_alchemy_keys
 } = require('./web3_utils.js');
 
 const url = `https://mintaio-auth.herokuapp.com/api/files/${machine_id}/modules.js`;
@@ -465,7 +466,7 @@ ipcMain.on('set-task-webhook', (event, data) => {
 
 ipcMain.on('get-alchemy-keys', (event, data) => {
     return event.returnValue = {
-        keys: getStorage().default_keys
+        keys: get_alchemy_keys()
     }
 })
 
@@ -475,9 +476,7 @@ ipcMain.on('get-webhook', (event, data) => {
 
 ipcMain.on('update-alchemy-key-primary', (event, data) => {
 
-    if(!fs.existsSync(`${dataPath}\\mintaio`)) {
-        saveApiKeys();
-    }
+    console.log("updating primary key:", getStorage().default_keys);
 
     getStorage().default_keys.primary_key = data;
     saveApiKeys();
@@ -866,9 +865,7 @@ ipcMain.on('wallets-unlock-wallet', async (event, data) => {
 
 ipcMain.on('update-alchemy-key-secondary', (event, data) => {
 
-    if(!fs.existsSync(`${dataPath}\\mintaio`)) {
-        saveApiKeys();
-    }
+    console.log("updating secondary key:", getStorage().default_keys);
 
     getStorage().default_keys.secondary_key = data;
     saveApiKeys();

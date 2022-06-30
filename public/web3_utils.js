@@ -378,5 +378,6 @@ module.exports = {
     mintErrorMessage,
     webhookSet,
     getCollection,
-    get_auth
+    get_auth,
+    get_alchemy_keys
 }
