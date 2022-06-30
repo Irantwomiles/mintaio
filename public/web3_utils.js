@@ -14,7 +14,7 @@ let _web3_logger = null;
 let isAuth = false;
 let imported_functions = null;
 
-const websocket_key         = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${get_alchemy_keys().primary_key}`;
+const websocket_key         = `wss://eth-${is_dev ? 'mainnet' : 'mainnet'}.alchemyapi.io/v2/${get_alchemy_keys().primary_key}`;
 const websocket_key_logger  = `wss://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${get_alchemy_keys().secondary_key}`;
 const http_endpoint         = `https://eth-${is_dev ? 'ropsten' : 'mainnet'}.alchemyapi.io/v2/${get_alchemy_keys().primary_key}`;
 const os_http_endpoint      = `https://eth-${is_dev ? 'rinkeby' : 'mainnet'}.alchemyapi.io/v2/${get_alchemy_keys().primary_key}`;
@@ -125,11 +125,17 @@ function get_alchemy_keys() {
 
 const get_web3 = () => {
 
-    if(_web3 === null) {
-        _web3 = createAlchemyWeb3(http_endpoint);
+    try {
+        if(_web3 === null) {
+            _web3 = createAlchemyWeb3(http_endpoint);
+        }
+
+        return _web3;
+    } catch(e) {
+        log.info(e);
     }
 
-    return _web3;
+    return null;
 }
 
 const get_web3_logger = () => {

@@ -12,6 +12,7 @@ function Wallet() {
 
     const modalRef = useRef();
     const toastRef = useRef();
+    const globalRef = useRef();
 
     const [modal, setModal] = useState([]);
     const [toast, setToast] = useState([]);
@@ -23,10 +24,32 @@ function Wallet() {
     const [name, setName] = useState("");
     const [balance, setBalance] = useState("0");
 
+    const [unlockWalletId, setUnlockWalletId] = useState("");
+    const [unlockPassword, setUnlockPassword] = useState("");
+
+    const [unlockModal, setUnlockModal] = useState([]);
+
     const generateWallet = () => {
         const output = ipcRenderer.sendSync('generate-wallet');
 
         setPrivateKey(output);
+    }
+
+    const getWalletNameById = (id) => {
+        let output = '';
+
+        for(const w of wallet) {
+            if(id === w.id) {
+                output = (w.name.length > 0 ? w.name : w.encrypted.address);
+            }
+        }
+
+        return output;
+    }
+
+    const handleUnlockWallet = (id) => {
+        setUnlockWalletId(id);
+        unlockModal.show();
     }
 
     const addWallet = () => {
@@ -158,8 +181,48 @@ function Wallet() {
         navigator.clipboard.writeText("0x" + address);
     }
 
+    const copyPrivateKey = (address) => {
+        navigator.clipboard.writeText(address);
+    }
+
     const openExternal = (address) => {
         electron.shell.openExternal(`https://etherscan.io/address/0x${address}`);
+    }
+
+    const unlockWallet = () => {
+
+        unlockModal.hide();
+
+        const output = ipcRenderer.sendSync('wallets-unlock-wallet', {walletId: unlockWalletId, password: unlockPassword});
+
+        setUnlockPassword("");
+
+        if(output.error === 1) {
+            setToastValue({
+                message: "Could not find this wallet.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "Incorrect wallet password.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        copyPrivateKey(output.privateKey);
+
+        setToastValue({
+            message: "[DON'T SHARE] Copied private key to clipboard.",
+            color: "#73d9b0"
+        });
+
+        toast.show();
     }
 
     useEffect(() => {
@@ -170,6 +233,8 @@ function Wallet() {
         const toast = new Toast(toastRef.current, {autohide: true});
         setToast(toast);
 
+        setUnlockModal(new Modal(globalRef.current.querySelector('#unlock-wallet-modal'), {keyboard: false}));
+
     }, []);
 
     useEffect(() => {
@@ -179,7 +244,7 @@ function Wallet() {
     }, [wallet])
 
     return (
-        <div className="wallet-wrapper py-3 px-4 h-100">
+        <div ref={globalRef} className="wallet-wrapper py-3 px-4 h-100">
 
             <div className={"w-50"}>
                 <h3 style={{fontWeight: "bold", color: "white"}}>Wallets</h3>
@@ -242,6 +307,7 @@ function Wallet() {
                             </div>
                             <div className="col-2 wallet-action">
                                 <span className="ms-1 me-1 copy-wallet" onClick={() => {copyAddress(w.encrypted.address)}}><i className="fas fa-copy"></i></span>
+                                <span className="ms-1 me-1 copy-wallet" onClick={() => {handleUnlockWallet(w.id)}}><i className="fa-solid fa-key"></i></span>
                                 <span className="ms-1 me-1 external-link" onClick={() => {openExternal(w.encrypted.address)}}><i className="fas fa-external-link-square-alt"></i></span>
                                 <span className="ms-1 me-1 delete-wallet" onClick={() => {deleteWallet(w.id)}}><i className="fas fa-trash-alt"></i></span>
                             </div>
@@ -281,6 +347,27 @@ function Wallet() {
                                 <button type="button" className="btn btn-cancel me-2" data-bs-dismiss="modal">Cancel</button>
                                 <button type="button" className="btn btn-add" onClick={addWallet}>Add wallet</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="modal" id={"unlock-wallet-modal"} tabIndex="-1">
+                <div className="modal-dialog modal-lg">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Unlock Wallet</h5>
+                            <div className="modal-close" data-bs-dismiss="modal"><i className="far fa-times-circle"></i></div>
+                        </div>
+                        <div className="modal-body">
+                            <div className="d-flex justify-content-center">
+                                <span className="mb-1" style={{color: 'white'}}>{getWalletNameById(unlockWalletId)}</span>
+                            </div>
+                            <input type="password" className="form-control m-1" onChange={(e) => {setUnlockPassword(e.target.value)}} placeholder="Password" value={unlockPassword}/>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" className="btn btn-add" onClick={(e) => unlockWallet() }>Unlock</button>
                         </div>
                     </div>
                 </div>

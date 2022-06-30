@@ -69,6 +69,11 @@ class OSMonitor {
         Check if this.buying is false before sending a fulfillOrder
          */
 
+        if(get_web3() === null) {
+            log.info(`[OSMonitor] Alchemy keys are invalid.`);
+            return;
+        }
+
         log.info(`Starting monitor ${this.id}`);
 
         if (isNaN(this.timer_delay)) {

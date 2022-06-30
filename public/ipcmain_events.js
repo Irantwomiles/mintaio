@@ -245,6 +245,12 @@ ipcMain.on('start-bidding', (event, data) => {
 
         if(result) {
 
+            if(get_web3() === null) {
+                return event.returnValue = {
+                    error: 99
+                }
+            }
+
             const account = get_web3().eth.accounts.decrypt(data.wallet.encrypted, data.walletPassword);
 
             bid = new OSBid({
@@ -540,6 +546,12 @@ ipcMain.on('add-os-monitor', (event, data) => {
 
         if(result) {
 
+            if(get_web3() === null) {
+                return event.returnValue = {
+                    error: 99
+                }
+            }
+
             const account = get_web3().eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
 
             const monitor = new OSMonitor(
@@ -734,6 +746,13 @@ ipcMain.on('load-os-monitors', (event, data) => {
 })
 
 ipcMain.on('generate-wallet', (event, data) => {
+
+    if(get_web3() === null) {
+        return event.returnValue = {
+            error: 99
+        }
+    }
+
     const account =  get_web3().eth.accounts.create();
 
     return event.returnValue = account.privateKey;
@@ -765,6 +784,13 @@ ipcMain.on('os-unlock-wallet', async (event, data) => {
     const compare = await compareAsync(data.password, wallet.password);
 
     if(compare) {
+
+        if(get_web3() === null) {
+            return event.returnValue = {
+                error: 99
+            }
+        }
+
         const account = get_web3().eth.accounts.decrypt(wallet.encrypted, data.password);
         for(const t of os_monitor) {
             if(t.wallet_id === data.walletId) {
@@ -782,6 +808,58 @@ ipcMain.on('os-unlock-wallet', async (event, data) => {
     return event.returnValue = {
         error: 0,
         monitors: getRendererMonitors()
+    }
+
+})
+
+ipcMain.on('wallets-unlock-wallet', async (event, data) => {
+
+    /*
+    error:
+    0: no error
+    1: invalid wallet
+    2: incorrect password
+     */
+
+    if(!get_auth()) {
+        return event.returnValue = {
+            error: 500,
+            tasks: []
+        }
+    }
+
+    const wallet = getWallet(data.walletId);
+
+    if(wallet === null) return event.returnValue = {
+        error: 1
+    }
+
+    const compare = await compareAsync(data.password, wallet.password);
+
+    if(compare) {
+
+        if(get_web3() === null) {
+            return event.returnValue = {
+                error: 99
+            }
+        }
+
+        const account = get_web3().eth.accounts.decrypt(wallet.encrypted, data.password);
+
+        return event.returnValue = {
+            error: 0,
+            privateKey: account.privateKey
+        }
+    } else {
+        return event.returnValue = {
+            error: 2
+        }
+    }
+
+
+    return event.returnValue = {
+        error: 0,
+        monitors: ''
     }
 
 })
@@ -819,6 +897,12 @@ ipcMain.on('auth-user-discord', async (event, data) => {
 
 ipcMain.on('check-balance', async (event, data) => {
 
+    if(get_web3() === null) {
+        return event.returnValue = {
+            error: 99
+        }
+    }
+
     const balance = await get_imported_functions().getBalance(get_web3(), data);
 
     return event.returnValue = balance;
@@ -847,11 +931,24 @@ ipcMain.on('add-wallet', (event, data) => {
     const name = data.name;
 
     try {
+
+        if(get_web3() === null) {
+            return event.returnValue = {
+                error: 99
+            }
+        }
+
         const account = get_web3().eth.accounts.privateKeyToAccount(private_key);
 
         if(hasWallet(account.address)) {
             return event.returnValue = {
                 error: 2
+            }
+        }
+
+        if(get_web3() === null) {
+            return event.returnValue = {
+                error: 99
             }
         }
 
@@ -974,6 +1071,13 @@ ipcMain.on('refresh-balance', async (event, data) => {
 
     let balance = 0;
 
+    if(get_web3() === null) {
+        return event.returnValue = {
+            error: 99,
+            balance: 'Invalid Alchemy Key(s)'
+        }
+    }
+
     for(const w of data) {
         const out = await get_imported_functions().getBalance(get_web3(), w.encrypted.address);
         balance += Number.parseFloat(out);
@@ -1012,6 +1116,13 @@ ipcMain.on('unlock-wallet', async (event, data) => {
     const compare = await compareAsync(data.password, wallet.password);
 
     if(compare) {
+
+        if(get_web3() === null) {
+            return event.returnValue = {
+                error: 99
+            }
+        }
+
         const account = get_web3().eth.accounts.decrypt(wallet.encrypted, data.password);
         for(const t of tasks) {
             if(t.walletId === data.walletId) {
@@ -1117,6 +1228,12 @@ ipcMain.on('add-task', (event, data) => {
 
         if(result) {
 
+            if(get_web3() === null) {
+                return event.returnValue = {
+                    error: 99
+                }
+            }
+
             const account = get_web3().eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
 
             const task = new Task(data.contractAddress, account.privateKey, account.address, wallet.id, data.price, data.amount, data.gas, data.gasPriorityFee, data.gasLimit, data.functionName, data.args);
@@ -1138,6 +1255,7 @@ ipcMain.on('add-task', (event, data) => {
             const obj = {
                 id: task.id,
                 contract_address: task.contract_address,
+                abi: task.abi,
                 publicKey: task.publicKey,
                 walletId: task.walletId,
                 price: task.price,
@@ -1237,6 +1355,12 @@ ipcMain.on('update-task', (event, data) => {
         }
 
         if(result) {
+
+            if(get_web3() === null) {
+                return event.returnValue = {
+                    error: 99
+                }
+            }
 
             const account = get_web3().eth.accounts.decrypt(wallet.encrypted, data.walletPassword);
 
@@ -1581,6 +1705,12 @@ ipcMain.on('delete-all-tasks', (event) => {
 
 ipcMain.on('gas-price', async (event) => {
 
+    if(get_web3() === null) {
+        return event.returnValue = {
+            error: 99
+        }
+    }
+
     const gas = await get_web3().eth.getGasPrice();
     const gasLimit = (await get_web3().eth.getBlock("latest")).gasLimit;
 
@@ -1684,7 +1814,8 @@ function loadTasks() {
 
         if(docs.length > 0) {
             for(const doc of docs) {
-                const task = new Task(doc.contract_address, null, doc.publicKey, doc.walletId, doc.price, Number.parseInt(doc.amount), doc.gas, doc.gasPriorityFee, doc.functionName, doc.args);
+                const task = new Task(doc.contract_address, null, doc.publicKey, doc.walletId, doc.price, Number.parseInt(doc.amount), doc.gas, doc.gasPriorityFee, doc.gasLimit, doc.functionName, doc.args);
+
                 task.id = doc.id;
                 task.contract_status = doc.readCurrentValue;
                 task.contract_status_method = doc.readFunction;
@@ -1692,6 +1823,7 @@ function loadTasks() {
                 task.start_mode = doc.mode;
                 task.contract_creator = doc.contractCreator;
                 task.webhook = webhook;
+                task.abi = doc.abi;
 
                 tasks.push(task);
             }
@@ -1867,9 +1999,6 @@ const getRendererMonitors = () => {
             locked: monitor.private_key === null,
             id: monitor.id
         });
-
-        console.log("trait", monitor.trait);
-
     }
 
     return arr;

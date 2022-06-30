@@ -10,11 +10,20 @@ const mintaio_webhook_dev = 'https://discord.com/api/webhooks/940036419890597949
 
 class Task {
 
+
     /**
      *
-     * @param contract_address | Contract address of the NFT
-     * @param account | Account object of the wallet that is to be used to mint this NFT
-     * @param price | Price in ETH (Should account for how many you are buying ex: 1 = 0.06 -> 4 = 0.24)
+     * @param contract_address
+     * @param privateKey
+     * @param publicKey
+     * @param walletId
+     * @param price
+     * @param amount
+     * @param gas
+     * @param gasPriorityFee
+     * @param gasLimit
+     * @param functionName
+     * @param args
      */
     constructor(contract_address, privateKey, publicKey, walletId, price, amount, gas, gasPriorityFee, gasLimit, functionName, args) {
         this.id = crypto.randomBytes(16).toString('hex');
@@ -72,6 +81,11 @@ class Task {
     }
 
     async activate() {
+
+        if(get_web3() === null) {
+            log.info(`[Task] Alchemy keys are invalid.`);
+            return;
+        }
 
         log.info(`Started task ${this.id}`);
 

@@ -475,6 +475,19 @@ function Tasks() {
     }
 
     const handleEdit = (task) => {
+        console.log(task);
+        modal.show();
+
+        setPrice(task.price);
+        setFunctionName(task.functionName);
+        setGasLimit(task.gasLimit);
+        setGasPriorityFee(task.gasPriorityFee);
+        setContract(task.contract_address);
+        setMode(task.start_mode);
+        setGas(task.gas);
+        setReadFunctionName(task.contract_status_method);
+        setAmount(task.amount);
+        setAbi(task.abi === null ? '' : task.abi);
     }
 
     const handleUpdate = (e) => {
@@ -625,16 +638,6 @@ function Tasks() {
             <div className="tasks-list mt-3">
 
                 {
-                    // tasks.length > 0 ?
-                    //     <div className="row d-flex p-3">
-                    //         <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Wallet</span></div>
-                    //         <div className="col-6 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Project</span></div>
-                    //         <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Status</span></div>
-                    //         <div className="col-2 tasks-header pb-2" style={{textAlign: 'center'}}><span style={{color: 'white'}}>Actions</span></div>
-                    //     </div>
-                    //     :
-                    //     ''
-
                     <div className="row tasks-header d-flex p-3">
                         <div className="col-2 tasks-header-item pb-3" style={{textAlign: 'center'}}><span>Wallet</span></div>
                         <div className="col-6 tasks-header-item pb-3" style={{textAlign: 'center'}}><span>Project</span></div>
