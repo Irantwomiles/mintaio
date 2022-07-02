@@ -52,6 +52,9 @@ function Tasks() {
     const [mode, setMode] = useState("MANUAL");
     const [updateMode, setUpdateMode] = useState("MANUAL");
 
+    const [edit, setEdit] = useState(false);
+    const [editTask, setEditTask] = useState('');
+
     const [timer, setTimer] = useState("");
 
     // 0x63e0Cd76d11da01aef600E56175523aD39e35b01
@@ -62,8 +65,6 @@ function Tasks() {
         if(contract.length === 0 && abi.length === 0) return; //send toast
 
         let output = ipcRenderer.sendSync('contract-info', {contract, abi});
-
-        console.log("output:", output);
 
         if(output.error === 1) {
             setMethods([]);
@@ -83,6 +84,11 @@ function Tasks() {
     }
 
     const handleAdd = (e) => {
+
+        if(edit) {
+            handleUpdate(e);
+            return;
+        }
 
         if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0 || gasLimit.length === 0) {
             setToastValue({
@@ -109,7 +115,7 @@ function Tasks() {
 
         if(mode === 'AUTOMATIC') {
 
-            if(readValue.length === 0 || selectedReadMethod.length === 0) {
+            if(readValue.length === 0 || selectedReadMethod === null) {
                 setToastValue({
                     message: "You must fill out all of the input fields.",
                     color: "#d97873"
@@ -186,23 +192,23 @@ function Tasks() {
         setTasks(output.tasks);
         modal.hide();
 
-        setContract('');
-        setPrice('');
-        setGas('');
-        setGasPriorityFee('');
-        setWalletPassword('');
-        setSelectedWallet(null);
-        setFunctionName('');
-        setInputs([]);
-        setSelectedMethod(null);
-        setMethods([]);
-        setAmount("");
-        setTimer("");
-        setReadMethods([]);
-        setSelectedReadMethod("");
-        setReadValue("");
-        setContractCreator("");
-        setAbi("");
+        // setContract('');
+        // setPrice('');
+        // setGas('');
+        // setGasPriorityFee('');
+        // setWalletPassword('');
+        // setSelectedWallet(null);
+        // setFunctionName('');
+        // setInputs([]);
+        // setSelectedMethod(null);
+        // setMethods([]);
+        // setAmount("");
+        // setTimer("");
+        // setReadMethods([]);
+        // setSelectedReadMethod(null);
+        // setReadValue("");
+        // setContractCreator("");
+        // setAbi("");
 
         setToastValue({
             message: "New task created successfully.",
@@ -400,6 +406,7 @@ function Tasks() {
         }
 
         setSelectedTask(task);
+        setEdit(false);
 
         taskModal.show();
     }
@@ -475,8 +482,10 @@ function Tasks() {
     }
 
     const handleEdit = (task) => {
-        console.log(task);
         modal.show();
+
+        setEdit(true);
+        setEditTask(task.id);
 
         setPrice(task.price);
         setFunctionName(task.functionName);
@@ -491,6 +500,133 @@ function Tasks() {
     }
 
     const handleUpdate = (e) => {
+
+        if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0 || gasLimit.length === 0, editTask.length === 0) {
+            setToastValue({
+                message: "You must fill out all of the input fields.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        let args = [];
+
+        for(const i of inputs) {
+            args.push(i.value);
+            if(i.value.length === 0) {
+                setToastValue({
+                    message: "You must fill out all of the input fields.",
+                    color: "#d97873"
+                });
+                toast.show();
+                return;
+            }
+        }
+
+        if(mode === 'AUTOMATIC') {
+
+            if(readValue.length === 0 || selectedReadMethod === null) {
+                setToastValue({
+                    message: "You must fill out all of the input fields.",
+                    color: "#d97873"
+                });
+                toast.show();
+                return;
+            }
+
+        } else if(mode === 'TIMER') {
+            if(timer.length === 0) {
+                setToastValue({
+                    message: "You must fill out all of the input fields.",
+                    color: "#d97873"
+                });
+                toast.show();
+                return;
+            }
+        }
+
+        const output = ipcRenderer.sendSync('update-task', {
+            taskId: editTask,
+            contractAddress: contract,
+            price: price,
+            amount: amount,
+            gas: gas,
+            gasPriorityFee: gasPriorityFee,
+            gasLimit: gasLimit,
+            walletPassword: walletPassword,
+            walletId: selectedWallet.id,
+            args: args,
+            functionName: functionName,
+            readFunction: readFunctionName,
+            readCurrentValue: readValue,
+            timestamp: timer,
+            mode: mode,
+            contractCreator: contractCreator
+        });
+
+        if(output.error === 1) {
+            setToastValue({
+                message: "Invalid wallet ID.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 2) {
+            setToastValue({
+                message: "Incorrect wallet password.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 3) {
+            setToastValue({
+                message: "Error while creating task.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        if(output.error === 4) {
+            setToastValue({
+                message: "Tasks are active.",
+                color: "#d97873"
+            });
+            toast.show();
+            return;
+        }
+
+        setTasks(output.tasks);
+        modal.hide();
+
+        // setContract('');
+        // setPrice('');
+        // setGas('');
+        // setGasPriorityFee('');
+        // setWalletPassword('');
+        // setSelectedWallet(null);
+        // setFunctionName('');
+        // setInputs([]);
+        // setSelectedMethod(null);
+        // setMethods([]);
+        // setAmount("");
+        // setTimer("");
+        // setReadMethods([]);
+        // setSelectedReadMethod(null);
+        // setReadValue("");
+        // setContractCreator("");
+        // setAbi("");
+
+        setToastValue({
+            message: "Task updated successfully.",
+            color: "#73d9b0"
+        });
+        toast.show();
     }
 
     const getTaskStatus = (task) => {
@@ -925,7 +1061,7 @@ function Tasks() {
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-cancel" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" className="btn btn-add" onClick={(e) => {handleAdd(e)}}>Add Task</button>
+                            <button type="button" className="btn btn-add" onClick={(e) => {handleAdd(e)}}>{edit ? 'Edit Task' : 'Add Task'}</button>
                         </div>
                     </div>
                 </div>

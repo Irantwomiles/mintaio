@@ -1313,7 +1313,12 @@ ipcMain.on('update-task', (event, data) => {
 
     const wallet = getWallet(data.walletId);
 
+    console.log("wallet:", wallet);
+
     if(wallet === null) {
+
+        console.log("is null", wallet);
+
         return event.returnValue = {
             error: 1
         }
@@ -1330,6 +1335,8 @@ ipcMain.on('update-task', (event, data) => {
             tasks: getRendererTasks()
         }
     }
+
+    console.log("task:", task);
 
     if(task.is_on_timer()) {
         return event.returnValue = {
@@ -1794,6 +1801,7 @@ const hasWallet = (address) => {
 }
 
 const getWallet = (id) => {
+    console.log("all", wallets)
     for(const wallet of wallets) {
         if(wallet.id === id) return wallet;
     }
