@@ -120,6 +120,10 @@ function Settings() {
                     </div>
                 </div>
 
+                <div className={"ms-3 mt-3"} style={{color: "white"}}>
+                    Developed by <span style={{color: "#8a78e9"}}>Irantwomiles</span> <i className="ms-1 fab fa-twitter" style={{color: "#1DA1F2"}} onClick={() => {electron.shell.openExternal(`https://twitter.com/MintAIO_`);}}></i>
+                </div>
+
             </div>
 
         </div>
