@@ -90,7 +90,7 @@ function Tasks() {
             return;
         }
 
-        if(contract.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0 || gasLimit.length === 0) {
+        if(contract.length === 0 || abi.length === 0 || price.length === 0 || amount.length === 0 || gas.length === 0 || gasPriorityFee.length === 0 || walletPassword.length === 0 || selectedWallet === null || functionName.length === 0 || gasLimit.length === 0) {
             setToastValue({
                 message: "You must fill out all of the input fields.",
                 color: "#d97873"
@@ -150,7 +150,8 @@ function Tasks() {
             readCurrentValue: readValue,
             timestamp: timer,
             mode: mode,
-            contractCreator: contractCreator
+            contractCreator: contractCreator,
+            abi: abi
         });
 
         if(output.error === 1) {
@@ -484,14 +485,15 @@ function Tasks() {
     const handleEdit = (task) => {
         modal.show();
 
+        console.log(task);
+
         setEdit(true);
         setEditTask(task.id);
-
         setPrice(task.price);
         setFunctionName(task.functionName);
         setGasLimit(task.gasLimit);
-        setGasPriorityFee(task.gasPriorityFee);
-        setContract(task.contract_address);
+        setGasPriorityFee(task.gasPriorityFee); //good
+        setContract(task.contract_address); //good
         setMode(task.start_mode);
         setGas(task.gas);
         setReadFunctionName(task.contract_status_method);
@@ -562,7 +564,8 @@ function Tasks() {
             readCurrentValue: readValue,
             timestamp: timer,
             mode: mode,
-            contractCreator: contractCreator
+            contractCreator: contractCreator,
+            abi: abi
         });
 
         if(output.error === 1) {
@@ -705,6 +708,11 @@ function Tasks() {
         return 'Unknown State';
     }
 
+    const handleNewTaskModal = () => {
+        modal.show();
+        setEdit(false);
+    }
+
 
     useEffect(() => {
 
@@ -751,7 +759,7 @@ function Tasks() {
             <div className={"w-50"}>
                 <h3 style={{fontWeight: "bold", color: "white"}}>Tasks</h3>
                 <div className={"d-flex align-items-center tasks-actionbar rounded-3 p-3"}>
-                    <div className={"new-task m-2 d-flex align-items-center rounded-3 p-2"} onClick={() => {modal.show()}}>
+                    <div className={"new-task m-2 d-flex align-items-center rounded-3 p-2"} onClick={() => {handleNewTaskModal()}}>
                         <i className="fa-solid fa-plus fa-1x m-1" style={{color: "white"}}></i>
                     </div>
 

@@ -1246,8 +1246,8 @@ ipcMain.on('add-task', (event, data) => {
                 task.contract_creator = data.contractCreator;
             }
 
-            const abi = await get_imported_functions().getContractABI(axios, is_dev, task.contract_address);
-            task.abi = abi;
+            //const abi = await get_imported_functions().getContractABI(axios, is_dev, task.contract_address);
+            task.abi = data.abi;
 
             const obj = {
                 id: task.id,
@@ -1377,6 +1377,7 @@ ipcMain.on('update-task', (event, data) => {
             task.price = data.price;
             task.amount = data.amount;
             task.gas = data.gas;
+            task.gasLimit = data.gasLimit;
             task.gasPriorityFee = data.gasPriorityFee;
             task.functionName = data.functionName;
             task.args = data.args;
@@ -1386,6 +1387,7 @@ ipcMain.on('update-task', (event, data) => {
             task.contract_status_method = data.readFunction;
             task.nonce = nonce;
             task.webhook = webhook;
+            task.abi = data.abi;
 
             const obj = {
                 id: task.id,
@@ -1395,13 +1397,15 @@ ipcMain.on('update-task', (event, data) => {
                 price: task.price,
                 amount: task.amount,
                 gas: task.gas,
+                gasLimit: task.gasLimit,
                 gasPriorityFee: task.gasPriorityFee,
                 args: task.args,
                 functionName: task.functionName,
                 readFunction: task.contract_status_method,
                 readCurrentValue: task.contract_status,
                 timestamp: task.timestamp,
-                mode: task.start_mode
+                mode: task.start_mode,
+                abi: task.abi
             }
 
             db.tasks.update({id: task.id}, obj, function (err, doc) {

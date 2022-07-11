@@ -4,7 +4,7 @@ import {Link} from 'react-router-dom';
 
 import {Modal} from "bootstrap";
 import './style.scss';
-import logo from './images/aa-logo.png';
+import logo from './images/mint-aio-transparent.png';
 
 const electron = window.require('electron');
 const ipcRenderer = electron.ipcRenderer;
